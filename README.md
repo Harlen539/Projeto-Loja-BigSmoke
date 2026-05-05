@@ -1,77 +1,87 @@
-# BigSmoke Organizado
+# BigSmoke Project
 
-Projeto da loja BigSmoke reorganizado em tres partes: painel administrativo, loja publica e backend Node.js.
+Loja de streetwear BigSmoke refatorada para React.js + Vite nos dois frontends e Node.js/Express no backend.
 
 ## Estrutura
 
 ```text
-bigsmoke-organizado/
+bigsmoke-project/
 |-- backend/
+|   |-- server.js
 |   |-- package.json
 |   |-- test/
 |   `-- src/
+|       |-- app.js
+|       |-- controllers/
+|       |-- middleware/
+|       |-- routes/
+|       |-- services/
 |       |-- data/
 |       |-- scripts/
-|       |-- supabase/
-|       `-- server.js
-|-- frontend-admin/
-|   |-- package.json
-|   `-- src/
-|       |-- assets/
-|       |-- imagens/
-|       |-- index.html
-|       |-- script.js
-|       `-- style.css
+|       `-- supabase/
 |-- frontend-loja/
-|   |-- package.json
+|   |-- index.html
+|   |-- vite.config.js
+|   |-- public/
 |   `-- src/
-|       |-- assets/
-|       |-- imagens/
-|       |-- index.html
-|       |-- script.js
-|       |-- Style.css
-|       |-- manifest.webmanifest
-|       |-- robots.txt
-|       `-- sitemap.xml
+|       |-- components/
+|       |-- context/
+|       |-- hooks/
+|       |-- locales/
+|       |-- pages/
+|       |-- services/
+|       `-- styles/
+|-- frontend-admin/
+|   |-- index.html
+|   |-- vite.config.js
+|   `-- src/
+|       |-- components/
+|       |-- context/
+|       |-- hooks/
+|       |-- pages/
+|       |-- services/
+|       `-- styles/
+|-- .gitignore
 `-- README.md
 ```
 
-## Como rodar
+## Pré-requisitos
 
-Instale as dependencias e suba o backend:
+- Node.js >= 18
+- npm >= 9
+
+## Setup rápido
 
 ```bash
 cd backend
 npm install
+cp .env.example .env
 npm run dev
 ```
-
-O backend sobe em `http://localhost:3000` por padrao e tambem serve:
-
-- Loja: `http://localhost:3000/loja/index.html`
-- Admin: `http://localhost:3000/admin/index.html`
-- Health check: `http://localhost:3000/healthz`
-
-Para abrir cada frontend separadamente com Vite:
 
 ```bash
 cd frontend-loja
 npm install
+cp .env.example .env
 npm run dev
 ```
 
 ```bash
 cd frontend-admin
 npm install
+cp .env.example .env
 npm run dev
 ```
 
-## Observacoes
+## URLs
 
-O backend serve os arquivos estaticos a partir da estrutura organizada:
+- Loja: http://localhost:5173
+- Admin: http://localhost:5174
+- API: http://localhost:3000
 
-- `/loja/` aponta para `frontend-loja/src/`
-- `/admin/` aponta para `frontend-admin/src/`
-- `/assets/`, `/imagens/`, `Style.css`, `script.js`, `manifest.webmanifest`, `robots.txt` e `sitemap.xml` continuam disponiveis para manter as paginas originais funcionando.
+## Login local do admin
 
-Arquivos sensiveis e gerados localmente ficam fora do Git via `.gitignore`, incluindo `.env`, `node_modules/`, uploads e logs.
+Quando não houver variáveis customizadas no backend:
+
+- E-mail: `admin@bigsmoke.local`
+- Senha: `admin123`

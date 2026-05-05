@@ -1,9 +1,11 @@
 node_modules/
-.next/
 .env
+.env.local
+dist/
 *.log
-backend/uploads/
 backend/src/uploads/
+backend/src/data/orders.json
+backend/src/data/order_counter.json
 .idea/
 .DS_Store
 Thumbs.db
