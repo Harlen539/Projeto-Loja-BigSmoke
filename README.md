@@ -1,6 +1,6 @@
 # BigSmoke Organizado
 
-Projeto da loja BigSmoke reorganizado em quatro partes: painel administrativo, loja publica, backend Node.js e area de developers para testes.
+Projeto da loja BigSmoke reorganizado em tres partes: painel administrativo, loja publica e backend Node.js.
 
 ## Estrutura
 
@@ -14,11 +14,6 @@ bigsmoke-organizado/
 |       |-- scripts/
 |       |-- supabase/
 |       `-- server.js
-|-- developers/
-|   |-- README.md
-|   |-- api-tests.http
-|   |-- local.env.example
-|   `-- test-checklist.md
 |-- frontend-admin/
 |   |-- package.json
 |   `-- src/
@@ -55,7 +50,6 @@ O backend sobe em `http://localhost:3000` por padrao e tambem serve:
 
 - Loja: `http://localhost:3000/loja/index.html`
 - Admin: `http://localhost:3000/admin/index.html`
-- Developers: `http://localhost:3000/developers/`
 - Health check: `http://localhost:3000/healthz`
 
 Para abrir cada frontend separadamente com Vite:
@@ -71,15 +65,6 @@ cd frontend-admin
 npm install
 npm run dev
 ```
-
-## Area developers
-
-A pasta `developers/` tem arquivos para testar o projeto:
-
-- `developers/api-tests.http`: requests prontos para API.
-- `developers/local.env.example`: variaveis locais de exemplo.
-- `developers/index.html`: pagina local com atalhos de teste em `/developers/`.
-- `developers/test-checklist.md`: checklist manual de testes.
 
 ## Observacoes
 
