@@ -1,0 +1,9 @@
+node_modules/
+.next/
+.env
+*.log
+backend/uploads/
+backend/src/uploads/
+.idea/
+.DS_Store
+Thumbs.db

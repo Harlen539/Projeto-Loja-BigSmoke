@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Produto | BigSmoke</title>
+  <link rel="stylesheet" href="../Style.css">
+  <link rel="stylesheet" href="./produto.css">
+  <link rel="icon" href="../imagens/logo_sem_fundo.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@300;400;500;600;700&family=Oswald:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+
+<div class="top-ticker">
+  <div class="ticker-track">
+    <span>Frete para todo o Brasil</span>
+    <span>Cartão via Stripe</span>
+    <span>Streetwear autoral BigSmoke</span>
+    <span>Atendimento direto pelo WhatsApp</span>
+    <span>Frete para todo o Brasil</span>
+    <span>Cartão via Stripe</span>
+    <span>Streetwear autoral BigSmoke</span>
+    <span>Atendimento direto pelo WhatsApp</span>
+  </div>
+</div>
+
+<header class="navbar" id="top">
+  <a class="brand" href="/loja/" aria-label="Voltar à loja">
+    <img src="../imagens/logo_sem_fundo.png" class="logo-img" alt="Logo BigSmoke">
+  </a>
+  <nav class="nav-links">
+    <a href="/loja/#products">Drops</a>
+    <a href="/loja/#about">Marca</a>
+    <a href="/loja/pedidos.html">Meus pedidos</a>
+    <a href="/loja/#contact">Contato</a>
+  </nav>
+  <div class="header-actions">
+    <button class="cart-toggle" type="button" onclick="toggleCart()" aria-label="Abrir carrinho">
+      <svg viewBox="0 0 24 24" class="cart-icon">
+        <path d="M2.75 4.25h2.2c.48 0 .89.33 1 .8l.28 1.2m0 0 1.45 6.54a2 2 0 0 0 1.95 1.57h6.98a2 2 0 0 0 1.93-1.48l1.55-5.59H7.23Z"/>
+        <path d="M10 18.5a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3Zm7 0a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3Z"/>
+      </svg>
+      <span class="cart-label">Carrinho</span>
+      <span class="cart-count" id="cart-count">0</span>
+    </button>
+  </div>
+</header>
+
+<main class="produto-main">
+  <nav class="breadcrumb" aria-label="Navegação de caminho">
+    <a href="/loja/">Loja</a>
+    <span>›</span>
+    <span id="breadcrumb-category">Categoria</span>
+    <span>›</span>
+    <span id="breadcrumb-name">Produto</span>
+  </nav>
+
+  <div class="produto-grid">
+    <div class="produto-galeria">
+      <div class="galeria-principal">
+        <img id="foto-principal" src="" alt="Foto principal do produto">
+        <div class="galeria-zoom-hint">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35M11 8v6M8 11h6"/></svg>
+          Clique para ampliar
+        </div>
+      </div>
+      <div class="galeria-thumbs" id="galeria-thumbs"></div>
+    </div>
+
+    <div class="produto-detalhes">
+      <div class="produto-marca-tag">
+        <span class="smoke-tag" id="smoke-tag">BIGSMOKE</span>
+      </div>
+
+      <p class="eyebrow" id="produto-categoria">Categoria</p>
+      <h1 class="produto-nome" id="produto-nome">Nome do Produto</h1>
+      <p class="produto-preco" id="produto-preco">R$ 0,00</p>
+
+      <!-- Seletor de cores -->
+      <div class="color-picker-section" id="color-picker-wrapper" style="display:none">
+        <div class="color-picker-header">
+          <span class="color-picker-label">Cor</span>
+          <span class="color-selected-name" id="color-selected-name"></span>
+        </div>
+        <div class="color-chips" id="color-chips-produto"></div>
+        <div class="color-stock-badge" id="color-stock-info"></div>
+      </div>
+
+      <div class="size-picker" id="size-picker-wrapper">
+        <span class="size-picker-label">Tamanho</span>
+        <div class="size-chips" id="size-chips-produto"></div>
+      </div>
+
+      <div class="color-picker" id="legacy-color-picker-wrapper" style="display:none">
+        <div class="color-picker-head">
+          <span class="color-picker-label">Cor</span>
+          <strong id="legacy-color-selected-name">Selecionando cor...</strong>
+        </div>
+        <div class="color-chips" id="legacy-color-chips-produto" aria-label="Selecionar cor"></div>
+      </div>
+
+      <section class="produto-details-accordion" id="legacy-produto-accordion" aria-label="Detalhes adicionais do produto" style="display:none">
+        <article class="accordion-item" id="legacy-acc-fabric">
+          <button class="accordion-trigger" type="button" aria-expanded="false" data-accordion-target="acc-fabric">
+            <span>Material &amp; Detalhes da peça</span>
+            <svg class="accordion-chevron" viewBox="0 0 24 24" aria-hidden="true">
+              <path d="m6 9 6 6 6-6" />
+            </svg>
+          </button>
+          <div class="accordion-content">
+            <ul class="fabric-list" id="legacy-fabric-list"></ul>
+          </div>
+        </article>
+
+        <article class="accordion-item" id="legacy-acc-sizes">
+          <button class="accordion-trigger" type="button" aria-expanded="false" data-accordion-target="acc-sizes">
+            <span>Tabela de medidas</span>
+            <svg class="accordion-chevron" viewBox="0 0 24 24" aria-hidden="true">
+              <path d="m6 9 6 6 6-6" />
+            </svg>
+          </button>
+          <div class="accordion-content">
+            <div class="size-table-wrap" id="legacy-size-table-container"></div>
+          </div>
+        </article>
+
+        <article class="accordion-item" id="legacy-acc-care">
+          <button class="accordion-trigger" type="button" aria-expanded="false" data-accordion-target="acc-care">
+            <span>Cuidados com a peça</span>
+            <svg class="accordion-chevron" viewBox="0 0 24 24" aria-hidden="true">
+              <path d="m6 9 6 6 6-6" />
+            </svg>
+          </button>
+          <div class="accordion-content">
+            <div class="care-list">
+              <span class="care-tag">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2 3 7v6c0 5 3.5 9.6 9 11 5.5-1.4 9-6 9-11V7l-9-5zM10 16.5 6.5 13l1.4-1.4L10 13.7l6.1-6.1 1.4 1.4-7.5 7.5z"/></svg>
+                Lavar do avesso
+              </span>
+              <span class="care-tag">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16M7 6v12m10-12v12M5 18h14"/></svg>
+                Secar à sombra
+              </span>
+              <span class="care-tag">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 12a3 3 0 1 1 6 0v5H9v-5Zm-2 5h10M12 4v4m-4-2 4 2 4-2"/></svg>
+                Passar em baixa temperatura
+              </span>
+            </div>
+          </div>
+        </article>
+      </section>
+
+      <div class="produto-descricao" id="produto-descricao"></div>
+
+      <!-- Acordeão de detalhes -->
+      <div class="produto-details-accordion" id="produto-accordion">
+        <div class="accordion-item" id="acc-fabric">
+          <button class="accordion-trigger" onclick="toggleAccordion('acc-fabric')" type="button" aria-expanded="false">
+            <span>Material &amp; Detalhes da peça</span>
+            <svg class="acc-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="6 9 12 15 18 9"/></svg>
+          </button>
+          <div class="accordion-content">
+            <div class="fabric-list" id="fabric-list"></div>
+          </div>
+        </div>
+
+        <div class="accordion-item" id="acc-sizes">
+          <button class="accordion-trigger" onclick="toggleAccordion('acc-sizes')" type="button" aria-expanded="false">
+            <span>Tabela de medidas</span>
+            <svg class="acc-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="6 9 12 15 18 9"/></svg>
+          </button>
+          <div class="accordion-content">
+            <div id="size-table-container"></div>
+          </div>
+        </div>
+
+        <div class="accordion-item" id="acc-care">
+          <button class="accordion-trigger" onclick="toggleAccordion('acc-care')" type="button" aria-expanded="false">
+            <span>Cuidados com a peça</span>
+            <svg class="acc-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="6 9 12 15 18 9"/></svg>
+          </button>
+          <div class="accordion-content">
+            <div class="care-list">
+              <span class="care-tag">Lavar à mão ou máquina fria</span>
+              <span class="care-tag">Não usar alvejante</span>
+              <span class="care-tag">Não torcer</span>
+              <span class="care-tag">Secar à sombra</span>
+              <span class="care-tag">Passar em temperatura baixa</span>
+              <span class="care-tag">Estampa de alta durabilidade</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="produto-acoes">
+        <button class="btn btn-primary btn-add-produto" id="btn-add-produto" type="button">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M2.75 4.25h2.2c.48 0 .89.33 1 .8l.28 1.2m0 0 1.45 6.54a2 2 0 0 0 1.95 1.57h6.98a2 2 0 0 0 1.93-1.48l1.55-5.59H7.23Z"/>
+            <path d="M10 18.5a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3Zm7 0a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3Z"/>
+          </svg>
+          Adicionar ao carrinho
+        </button>
+        <a class="btn btn-outline" href="/loja/#products">← Ver catálogo</a>
+      </div>
+
+      <div class="produto-trust">
+        <div class="trust-item">
+          <div class="trust-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M12 2L4 6v6c0 5.25 3.5 10.15 8 11.35C16.5 22.15 20 17.25 20 12V6L12 2z"/>
+              <path d="M9 12l2 2 4-4"/>
+            </svg>
+          </div>
+          <div class="trust-text">
+            <strong>Checkout seguro</strong>
+            <span>Criptografia Stripe · dados protegidos</span>
+          </div>
+        </div>
+        <div class="trust-item">
+          <div class="trust-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <rect x="1" y="3" width="15" height="13" rx="2"/>
+              <path d="M16 8h4l3 5v3h-7V8z"/>
+              <circle cx="5.5" cy="18.5" r="2.5"/>
+              <circle cx="18.5" cy="18.5" r="2.5"/>
+            </svg>
+          </div>
+          <div class="trust-text">
+            <strong>Frete para todo o Brasil</strong>
+            <span>Calculado pelo CEP no checkout</span>
+          </div>
+        </div>
+        <div class="trust-item">
+          <div class="trust-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <polyline points="1 4 1 10 7 10"/>
+              <path d="M3.51 15a9 9 0 1 0 .49-3.75"/>
+            </svg>
+          </div>
+          <div class="trust-text">
+            <strong>Troca garantida</strong>
+            <span>Pela política oficial da loja</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="lightbox-overlay" id="lightbox" onclick="closeLightbox()">
+    <button class="lightbox-close" type="button" onclick="closeLightbox()" aria-label="Fechar imagem">×</button>
+    <button class="lightbox-prev" type="button" onclick="lightboxNav(-1, event)" aria-label="Foto anterior">‹</button>
+    <img class="lightbox-img" id="lightbox-img" src="" alt="">
+    <div style="position:absolute;bottom:1.2rem;left:50%;transform:translateX(-50%);padding:0.55rem 0.95rem;border-radius:999px;background:rgba(10,10,10,0.72);border:1px solid rgba(245,240,232,0.12);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);color:#a0998f;font-size:0.72rem;letter-spacing:0.04em;pointer-events:none;white-space:nowrap;">Scroll ou pinch para zoom · Clique para aproximar</div>
+    <button class="lightbox-next" type="button" onclick="lightboxNav(1, event)" aria-label="Próxima foto">›</button>
+  </div>
+</main>
+
+<div class="cart-overlay" id="cart-overlay" onclick="toggleCart(false)"></div>
+
+<aside id="cart" class="cart" aria-label="Carrinho lateral">
+  <div class="cart-header">
+    <div>
+      <p class="section-kicker">Pedido</p>
+      <h2>Carrinho BigSmoke</h2>
+    </div>
+    <button type="button" class="cart-close" onclick="toggleCart(false)" aria-label="Fechar carrinho">&times;</button>
+  </div>
+  <ul id="cart-items"></ul>
+  <div class="empty-cart" id="empty-cart">Nenhuma peça adicionada ainda.</div>
+  <div class="total-section">
+    <span>Total</span>
+    <span>R$ <span id="total">0,00</span></span>
+  </div>
+  <button id="checkout-button" type="button" class="btn btn-primary full-width">Finalizar compra</button>
+  <a id="whatsapp" target="_blank" rel="noopener" class="btn btn-outline full-width cart-secondary-link">Atendimento no WhatsApp</a>
+</aside>
+
+<div class="checkout-overlay" id="checkout-overlay" onclick="closeCheckout()"></div>
+
+<section class="checkout-modal" id="checkout-modal" aria-label="Finalizar compra">
+  <div class="checkout-header">
+    <div>
+      <p class="section-kicker">Checkout</p>
+      <h2>Finalizar compra</h2>
+    </div>
+    <button type="button" class="cart-close" onclick="closeCheckout()" aria-label="Fechar checkout">&times;</button>
+  </div>
+
+  <div class="checkout-grid">
+    <div class="checkout-form-column">
+      <div class="checkout-panel">
+        <h3>Entrega</h3>
+        <div class="delivery-methods">
+          <label class="option-card">
+            <input type="radio" name="delivery-method" value="retirada" checked>
+            <span>Retirada</span>
+            <small>Sem frete</small>
+          </label>
+          <label class="option-card">
+            <input type="radio" name="delivery-method" value="entrega">
+            <span>Entrega local</span>
+            <small>Estimativa por CEP</small>
+          </label>
+          <label class="option-card">
+            <input type="radio" name="delivery-method" value="correios">
+            <span>Envio nacional</span>
+            <small>Estimativa por região</small>
+          </label>
+        </div>
+
+        <div class="checkout-form-grid">
+          <input id="customer-name" type="text" placeholder="Nome completo">
+          <input id="customer-email" type="email" placeholder="E-mail">
+          <input id="customer-phone" type="tel" placeholder="WhatsApp">
+          <input id="customer-cep" type="text" inputmode="numeric" placeholder="CEP">
+          <input id="customer-street" type="text" placeholder="Rua / Avenida">
+          <input id="customer-number" type="text" placeholder="Número">
+          <input id="customer-neighborhood" type="text" placeholder="Bairro">
+          <input id="customer-city" type="text" placeholder="Cidade">
+          <input id="customer-state" type="text" placeholder="UF">
+          <input id="customer-complement" type="text" placeholder="Complemento">
+        </div>
+
+        <div class="checkout-inline-actions">
+          <button type="button" class="btn btn-outline compact-btn" id="lookup-cep">Buscar CEP</button>
+          <button type="button" class="btn btn-outline compact-btn" id="use-location">Usar minha localização</button>
+        </div>
+
+        <div class="info-banner" id="location-status">Informe um CEP para calcular a entrega.</div>
+      </div>
+    </div>
+
+    <aside class="checkout-summary">
+      <div class="checkout-panel">
+        <h3>Resumo do pedido</h3>
+        <hr style="border:none;border-top:1px solid rgba(245,240,232,0.08);margin-bottom:0.9rem">
+        <ul id="checkout-items" class="checkout-items"></ul>
+        <div class="summary-line">
+          <span>Subtotal</span>
+          <strong id="checkout-subtotal">R$ 0,00</strong>
+        </div>
+        <div class="summary-line">
+          <span>Frete</span>
+          <strong id="checkout-shipping">R$ 0,00</strong>
+        </div>
+        <div class="summary-line total-line">
+          <span>Total final</span>
+          <strong id="checkout-total">R$ 0,00</strong>
+        </div>
+        <button type="button" class="btn btn-primary full-width" id="confirm-checkout">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="margin-right:0.4rem;vertical-align:-1px" aria-hidden="true">
+            <rect x="3" y="11" width="18" height="11" rx="2"/>
+            <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+          </svg>
+          PAGAMENTO
+        </button>
+        <p class="checkout-note" id="checkout-note" style="margin-top:0.6rem;font-size:0.78rem;text-align:center;color:var(--text-muted)">
+          Redirecionamento seguro via Stripe &nbsp;·&nbsp; Dados criptografados
+        </p>
+      </div>
+    </aside>
+  </div>
+</section>
+
+<a href="https://wa.me/5583986494691?text=Olá%20BigSmoke%2C%20vim%20pelo%20site" class="whatsapp-float" aria-label="WhatsApp" target="_blank" rel="noopener">
+  <svg viewBox="0 0 32 32" aria-hidden="true">
+    <path d="M16 3C8.8 3 3 8.8 3 16c0 2.5.7 4.8 2 6.8L3 29l6.4-1.9c1.9 1.1 4.1 1.8 6.6 1.8 7.2 0 13-5.8 13-13S23.2 3 16 3zm7.6 18.5c-.3.8-1.6 1.5-2.2 1.6-.6.1-1.4.2-2.3-.1-.5-.2-1.2-.4-2-.8-3.6-1.6-5.9-5.3-6.1-5.5-.2-.3-1.4-1.9-1.4-3.6 0-1.8.9-2.7 1.2-3.1.3-.3.7-.4.9-.4h.7c.2 0 .5 0 .7.5.3.8 1 2.7 1.1 2.9.1.2.1.4 0 .6-.1.2-.2.4-.4.6-.2.2-.3.4-.5.6-.2.2-.3.5-.1.8.2.3.9 1.6 2 2.6 1.4 1.3 2.5 1.7 2.9 1.9.4.2.6.2.9-.1.3-.3 1.1-1.2 1.4-1.6.2-.3.5-.3.8-.2.3.1 2.2 1 2.6 1.2.4.2.7.3.8.5.1.2.1 1-.2 1.8z"></path>
+  </svg>
+</a>
+
+<script src="../script.js"></script>
+<script src="./produto.js"></script>
+</body>
+</html>

@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BigSmoke Admin</title>
+  <meta name="description" content="Painel administrativo da BigSmoke.">
+  <link rel="icon" type="image/png" sizes="any" href="/assets/logo_sem_fundo-D-elwNRO.png">
+  <link rel="shortcut icon" href="/assets/logo_sem_fundo-D-elwNRO.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Oswald:wght@400;500;600;700&family=Bebas+Neue&display=swap" rel="stylesheet">
+  <link rel="stylesheet" crossorigin href="/assets/index-Ccj79LRL.css">
+</head>
+<body>
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-logo" aria-label="BigSmoke">
+      <img src="/assets/logo-ClupDeus.png" alt="BigSmoke" class="sidebar-logo-img">
+    </div>
+    <nav class="sidebar-nav">
+      <button class="sidebar-btn active" data-section="overview" title="Dashboard">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>
+        <span>Dashboard</span>
+      </button>
+      <button class="sidebar-btn" data-section="catalog" title="Produtos">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M20 7H4a1 1 0 00-1 1v11a1 1 0 001 1h16a1 1 0 001-1V8a1 1 0 00-1-1z"/><path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2"/></svg>
+        <span>Produtos</span>
+      </button>
+      <button class="sidebar-btn" data-section="orders" title="Pedidos">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><path d="M9 12h6M9 16h4"/></svg>
+        <span>Pedidos</span>
+      </button>
+      <button class="sidebar-btn" data-section="charts" title="Gráficos">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M18 20V10M12 20V4M6 20v-6"/></svg>
+        <span>Gráficos</span>
+      </button>
+    </nav>
+    <div class="sidebar-bottom">
+      <button class="sidebar-btn" id="logout-button" title="Sair">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
+        <span>Sair</span>
+      </button>
+    </div>
+  </aside>
+
+  <!-- MAIN AREA -->
+  <div class="main-area">
+
+    <!-- TOPBAR -->
+    <header class="topbar" id="topbar">
+      <div class="topbar-brand">
+        <div class="topbar-brand-copy">
+          <p class="eyebrow">Painel privado</p>
+          <h1>BigSmoke Admin</h1>
+        </div>
+      </div>
+      <div class="topbar-search">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+        <input type="search" id="global-search" placeholder="Buscar produtos, pedidos...">
+      </div>
+      <div class="topbar-actions">
+        <div class="notification-center" id="notification-center">
+          <button class="topbar-icon-btn" id="notif-btn" title="Notificações" aria-label="Abrir notificações" aria-haspopup="true" aria-expanded="false">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>
+            <span class="notif-dot hidden" id="notif-dot"></span>
+          </button>
+          <div class="notification-popover" id="notification-popover" hidden>
+            <div class="notification-head">
+              <div>
+                <strong>Notificações</strong>
+                <span id="notification-summary">Aguardando pedidos</span>
+              </div>
+              <button type="button" id="notification-mark-read">Marcar lidas</button>
+            </div>
+            <div class="notification-list" id="notification-list"></div>
+            <div class="notification-actions">
+              <button type="button" id="notification-open-orders">Ver pedidos</button>
+              <button type="button" id="notification-enable-browser">Avisos do navegador</button>
+            </div>
+          </div>
+        </div>
+        <a id="open-store-link" class="topbar-cta" href="../loja/index.html">Abrir loja</a>
+        <button class="topbar-cta cta-gold" id="new-product-btn">+ Novo produto</button>
+      </div>
+    </header>
+
+    <!-- ALERTS -->
+    <div class="alerts-area" id="alerts-area"></div>
+
+    <!-- LOGIN -->
+    <section id="login-view" class="login-wrap hidden">
+      <div class="panel login-panel">
+        <div class="panel-header">
+          <div>
+            <p class="section-kicker">Acesso restrito</p>
+            <h2>Entrar no painel</h2>
+          </div>
+        </div>
+        <form id="login-form" class="form-grid">
+          <input id="login-email" type="email" placeholder="E-mail" autocomplete="username" required>
+          <input id="login-password" type="password" placeholder="Senha" autocomplete="current-password" required>
+          <button type="submit" class="primary-button">Entrar</button>
+        </form>
+        <p id="login-message" class="helper-text">Use as credenciais definidas no backend.</p>
+      </div>
+    </section>
+
+    <!-- DASHBOARD -->
+    <section id="dashboard-view" class="dashboard hidden">
+
+      <!-- OVERVIEW -->
+      <div class="dash-section" id="section-overview">
+        <div class="stats-grid">
+          <article class="stat-card">
+            <div class="stat-card-inner">
+              <span>Produtos</span>
+              <strong id="stat-products">0</strong>
+            </div>
+            <div class="stat-bar" style="--bar-color: var(--gold)"></div>
+          </article>
+          <article class="stat-card">
+            <div class="stat-card-inner">
+              <span>Ativos</span>
+              <strong id="stat-active">0</strong>
+            </div>
+            <div class="stat-bar" style="--bar-color: var(--success)"></div>
+          </article>
+          <article class="stat-card">
+            <div class="stat-card-inner">
+              <span>Em destaque</span>
+              <strong id="stat-featured">0</strong>
+            </div>
+            <div class="stat-bar" style="--bar-color: var(--gold)"></div>
+          </article>
+          <article class="stat-card">
+            <div class="stat-card-inner">
+              <span>Status upload</span>
+              <strong id="stat-upload">local</strong>
+            </div>
+            <div class="stat-bar" style="--bar-color: var(--muted)"></div>
+          </article>
+        </div>
+
+        <div class="metrics-grid">
+          <article class="metric-card">
+            <span>Receita bruta</span>
+            <strong id="metric-revenue">R$ 0,00</strong>
+            <p class="metric-delta">— aguardando Stripe live</p>
+          </article>
+          <article class="metric-card">
+            <span>Lucro estimado</span>
+            <strong id="metric-profit">R$ 0,00</strong>
+            <p class="metric-delta">— sem dados</p>
+          </article>
+          <article class="metric-card">
+            <span>Margem estimada</span>
+            <strong id="metric-margin">0%</strong>
+            <p class="metric-delta">— meta: 45%</p>
+          </article>
+          <article class="metric-card">
+            <span>Ticket médio</span>
+            <strong id="metric-ticket">R$ 0,00</strong>
+            <p class="metric-delta">— sem alteração</p>
+          </article>
+          <article class="metric-card">
+            <span>Conversão</span>
+            <strong id="metric-conversion">0%</strong>
+            <p class="metric-delta delta-positive">▲ boa taxa</p>
+          </article>
+          <article class="metric-card">
+            <span>Pedidos pagos</span>
+            <strong id="metric-paid-orders">0</strong>
+            <p class="metric-delta">— aguardando Stripe live</p>
+          </article>
+          <article class="metric-card">
+            <span>Estoque total</span>
+            <strong id="metric-stock-total">0</strong>
+            <p class="metric-delta delta-positive">▲ atualizado</p>
+          </article>
+          <article class="metric-card" id="metric-low-card">
+            <span>Baixo estoque</span>
+            <strong id="metric-stock-low">0</strong>
+            <p class="metric-delta">— sem alteração</p>
+          </article>
+          <article class="metric-card" id="metric-out-card">
+            <span>Sem estoque</span>
+            <strong id="metric-stock-out">0</strong>
+            <p class="metric-delta">— sem alteração</p>
+          </article>
+        </div>
+        <p id="dashboard-status-message" class="dashboard-status-message">Aguardando pagamentos reais confirmados pela Stripe.</p>
+      </div>
+
+      <!-- CATALOG -->
+      <div class="dash-section hidden" id="section-catalog">
+        <section class="panel catalog-panel">
+          <div class="panel-header">
+            <div>
+              <p class="section-kicker">Catálogo</p>
+              <h2>Produtos cadastrados</h2>
+            </div>
+            <button class="icon-btn-round" id="toggle-grid-btn" title="Alternar grade/lista">
+              <svg id="view-list-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg>
+              <svg id="view-grid-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="display:none"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+            </button>
+          </div>
+          <div class="list-toolbar">
+            <input id="product-search" type="search" placeholder="Buscar produto">
+            <select id="product-status-filter">
+              <option value="all">Todos</option>
+              <option value="active">Ativos</option>
+              <option value="inactive">Inativos</option>
+            </select>
+            <select id="product-category-filter">
+              <option value="all">Todas as categorias</option>
+            </select>
+            <select id="product-featured-filter">
+              <option value="all">Todos os destaques</option>
+              <option value="featured">Em destaque</option>
+              <option value="normal">Normais</option>
+            </select>
+          </div>
+          <div id="product-list" class="product-list"></div>
+          <div id="product-pagination" class="pagination"></div>
+        </section>
+      </div>
+
+      <!-- ORDERS -->
+      <div class="dash-section hidden" id="section-orders">
+        <section class="panel orders-panel">
+          <div class="panel-header">
+            <div>
+              <p class="section-kicker">Pedidos</p>
+              <h2>Pedidos e status</h2>
+            </div>
+            <button id="refresh-orders" type="button" class="ghost-button">Atualizar</button>
+          </div>
+          <div class="chip-filters" id="order-chips">
+            <button class="chip active" data-status-chip="all">Todos</button>
+            <button class="chip" data-status-chip="pending">Pendente</button>
+            <button class="chip" data-status-chip="paid">Pago</button>
+            <button class="chip" data-status-chip="processing">Em separação</button>
+            <button class="chip" data-status-chip="shipped">Enviado</button>
+            <button class="chip" data-status-chip="delivered">Entregue</button>
+            <button class="chip chip-danger" data-status-chip="canceled">Cancelado</button>
+          </div>
+          <select id="order-status-filter" class="hidden" aria-hidden="true" tabindex="-1">
+            <option value="all">Todos</option>
+            <option value="pending">Pendente</option>
+            <option value="paid">Pago</option>
+            <option value="processing">Em separação</option>
+            <option value="shipped">Enviado</option>
+            <option value="delivered">Entregue</option>
+            <option value="canceled">Cancelado</option>
+          </select>
+          <div class="list-toolbar orders-toolbar">
+            <input id="order-search" type="search" placeholder="Buscar por nome, e-mail ou pedido">
+            <label class="toggle" for="order-show-hidden">
+              <input id="order-show-hidden" type="checkbox">
+              <span>Mostrar ocultos</span>
+            </label>
+          </div>
+          <div id="order-list" class="order-list"></div>
+          <div id="order-pagination" class="pagination"></div>
+        </section>
+      </div>
+
+      <!-- CHARTS -->
+      <div class="dash-section hidden" id="section-charts">
+        <section class="panel dashboard-panel">
+          <div class="panel-header">
+            <div>
+              <p class="section-kicker">Gráficos</p>
+              <h2>Vendas por produto e catálogo por categoria</h2>
+            </div>
+            <button id="refresh-dashboard" type="button" class="ghost-button">Atualizar</button>
+          </div>
+          <div class="chart-grid">
+            <article class="chart-card">
+              <div class="chart-head"><h3>Vendas por produto</h3><span>Receita dos itens pagos</span></div>
+              <div class="chart-stage"><canvas id="sales-by-product-chart"></canvas></div>
+            </article>
+            <article class="chart-card">
+              <div class="chart-head"><h3>Produtos por categoria</h3><span>Distribuição do catálogo</span></div>
+              <div class="chart-stage"><canvas id="category-pie-chart"></canvas></div>
+            </article>
+            <article class="chart-card">
+              <div class="chart-head"><h3>Receita mensal</h3><span>Evolução dos pagamentos</span></div>
+              <div class="chart-stage"><canvas id="monthly-revenue-chart"></canvas></div>
+            </article>
+            <article class="chart-card">
+              <div class="chart-head"><h3>Status dos pedidos</h3><span>Fluxo operacional</span></div>
+              <div class="chart-stage"><canvas id="order-status-chart"></canvas></div>
+            </article>
+            <article class="chart-card">
+              <div class="chart-head"><h3>Estoque crítico</h3><span>Produtos que pedem reposição</span></div>
+              <div class="chart-stage"><canvas id="low-stock-chart"></canvas></div>
+            </article>
+          </div>
+        </section>
+      </div>
+
+    </section><!-- /dashboard-view -->
+  </div><!-- /main-area -->
+
+  <!-- DRAWER: PRODUTO -->
+  <div class="drawer-overlay" id="drawer-overlay"></div>
+  <aside class="drawer" id="product-drawer">
+    <div class="drawer-header">
+      <div>
+        <p class="section-kicker">Cadastro</p>
+        <h2 id="form-title">Novo produto</h2>
+      </div>
+      <div class="drawer-header-actions">
+        <button id="reset-form" type="button" class="ghost-button">Limpar</button>
+        <button id="close-drawer-btn" type="button" class="icon-btn-round" title="Fechar">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+        </button>
+      </div>
+    </div>
+    <form id="product-form" class="product-form">
+      <input id="product-name" type="text" placeholder="Nome do produto" required>
+      <input id="product-category" type="text" placeholder="Categoria" required>
+      <input id="product-price" type="number" min="0" step="0.01" placeholder="Preço" required>
+      <input id="product-badge" type="text" placeholder="Badge">
+      <input id="product-stock" type="number" min="0" step="1" placeholder="Estoque" required>
+      <input id="product-sizes" type="text" placeholder="Tamanhos">
+      <div id="upload-zone-wrapper" class="full-col">
+        <div id="upload-zone" class="upload-zone">
+          <div id="upload-zone-droparea" class="upload-zone-droparea" role="button" tabindex="0">
+            <div class="upload-zone-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7">
+                <rect x="3" y="5" width="18" height="14" rx="2"></rect>
+                <circle cx="9" cy="10" r="1.5"></circle>
+                <polyline points="7 17 11 13 14 16 17 12"></polyline>
+              </svg>
+            </div>
+            <div class="upload-zone-copy">
+              <div class="upload-zone-title">Fotos do produto</div>
+              <div class="upload-zone-sub"><span id="upload-zone-click" class="upload-zone-link">clique para selecionar</span></div>
+              <div class="upload-zone-meta">JPG, PNG, WEBP · até 8 MB cada · múltiplas de uma vez</div>
+            </div>
+          </div>
+          <div id="upload-thumbstrip" class="upload-thumbstrip" style="display:none">
+            <div id="upload-thumbstrip-inner" class="upload-thumbstrip-inner"></div>
+            <label class="upload-thumbstrip-add" for="product-extra-files" aria-label="Adicionar foto">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M12 5v14M5 12h14"></path>
+              </svg>
+            </label>
+          </div>
+        </div>
+      </div>
+      <span class="upload-zone-hint full-col">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+          <circle cx="12" cy="12" r="9"></circle>
+          <path d="M12 8h.01M11 11h1v5h1"></path>
+        </svg>
+        <span>1ª foto = capa do produto · Arraste para reordenar · Clique na estrela para definir como principal</span>
+      </span>
+      <input id="product-image" type="url" placeholder="URL da imagem principal (opcional)" class="full-col" style="display:none">
+      <input id="product-file" type="file" accept="image/*" style="display:none">
+      <input id="product-extra-files" type="file" accept="image/*" multiple style="display:none">
+      <div id="extra-images-preview" class="extra-images-grid full-col" style="display:none"></div>
+      <input type="hidden" id="product-extra-urls">
+      <div id="main-image-color-card" class="main-image-color-card full-col">
+        <div class="main-image-color-head">
+          <div>
+            <label for="main-image-color-name">Cor da foto principal</label>
+            <p>Escolha a cor que vai usar a capa do produto como foto principal.</p>
+          </div>
+          <span id="main-image-color-status">Sem foto principal</span>
+        </div>
+        <div class="main-image-color-grid">
+          <div class="main-image-color-preview">
+            <span id="main-image-color-swatch" aria-hidden="true"></span>
+            <img id="main-image-color-preview" src="https://placehold.co/120x120/111111/F5F0E8?text=Foto" alt="">
+          </div>
+          <div class="main-image-color-fields">
+            <select id="main-image-color-select" aria-label="Escolher uma cor existente">
+              <option value="">Escolher cor existente...</option>
+            </select>
+            <div class="main-image-color-inputs">
+              <input id="main-image-color-name" type="text" placeholder="Nome da cor. Ex: Cinza Estonado">
+              <input id="main-image-color-hex" type="color" value="#888888" aria-label="Cor visual">
+            </div>
+          </div>
+        </div>
+        <div id="main-image-color-presets" class="main-image-color-presets" aria-label="Cores rápidas"></div>
+      </div>
+      <div class="full-col textarea-wrap">
+        <textarea id="product-description" rows="4" placeholder="Descrição"></textarea>
+        <span class="char-counter" id="desc-char-counter">0 / 500</span>
+      </div>
+      <!-- ─── VARIAÇÕES DE COR ─── -->
+      <div class="full-col" id="colors-section">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0.75rem;">
+          <label style="font-size:0.8rem;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:#b7b0a5;">Variações de Cor</label>
+          <button type="button" id="add-color-btn" onclick="addColorVariant()"
+            style="padding:0.4rem 0.85rem;border-radius:8px;border:1px solid rgba(245,240,232,0.18);background:rgba(245,240,232,0.05);color:#f5f0e8;font-size:0.78rem;cursor:pointer;">
+            + Adicionar Cor
+          </button>
+        </div>
+        <div id="colors-list" style="display:flex;flex-direction:column;gap:0.75rem;"></div>
+        <p style="font-size:0.72rem;color:#8d877d;margin-top:0.5rem;">
+          Cada cor pode ter suas próprias fotos e estoque. O cliente verá as fotos ao selecionar a cor.
+        </p>
+      </div>
+      <label class="toggle">
+        <input id="product-active" type="checkbox" checked>
+        <span>Produto ativo</span>
+      </label>
+      <label class="toggle">
+        <input id="product-featured" type="checkbox">
+        <span>Em destaque</span>
+      </label>
+      <div class="image-preview full-col" id="preview-gallery-wrapper">
+        <div class="preview-main-wrap">
+          <img id="product-image-preview" src="https://placehold.co/600x800/111111/F5F0E8?text=Preview" alt="Pré-visualização do produto">
+          <div class="preview-nav prev" id="preview-nav-prev" onclick="previewGalleryNav(-1)">‹</div>
+          <div class="preview-nav next" id="preview-nav-next" onclick="previewGalleryNav(1)">›</div>
+          <div class="preview-counter" id="preview-counter" style="display:none"></div>
+        </div>
+        <div class="preview-thumbs" id="preview-thumbs"></div>
+      </div>
+      <div class="form-actions full-col">
+        <button type="button" class="ghost-button" id="preview-product-btn">Pré-visualizar</button>
+        <button type="submit" class="primary-button">Salvar produto</button>
+      </div>
+    </form>
+  </aside>
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+  <script src="./script.js"></script>
+</body>
+</html>

@@ -1,0 +1,105 @@
+[
+  {
+    "id": "order_fa00b219-4cb5-4a94-a725-c9c5047270f1",
+    "orderNumber": 8,
+    "orderNumberFormatted": "#00008",
+    "orderAccessCode": "#b732d6d8",
+    "hiddenInAdmin": false,
+    "stripeSessionId": "cs_test_a14WZMytvX0FtVmABKMgvd9QaBxRFGoMRNV7ijigxwSxZ1ur52tqpZ9i0T",
+    "paymentIntentId": "pi_3TRYJ5DvzfFxlgor2IkciQBO",
+    "stripeEventId": "",
+    "status": "shipped",
+    "currency": "brl",
+    "amountSubtotal": 129.9,
+    "shippingAmount": 0,
+    "amountTotal": 129.9,
+    "paymentConfirmed": false,
+    "inventoryDebitedAt": "",
+    "customer": {
+      "name": "harlen Galdino",
+      "email": "harlenhenrick14@gmail.com",
+      "phone": "+5583996253060"
+    },
+    "address": {
+      "cep": "58310000",
+      "street": "R. Carmelita Morais de Medeiros",
+      "number": "164",
+      "neighborhood": "",
+      "city": "Cabedelo",
+      "state": "PB",
+      "complement": ""
+    },
+    "deliveryMethod": "entrega",
+    "shippingLabel": "Frete grátis para Cabedelo",
+    "trackingCode": "#88720869",
+    "trackingUrl": "http://localhost:3000/loja/pedidos.html?tracking=%23b732d6d8",
+    "items": [
+      {
+        "id": "camiseta-oversized",
+        "name": "Camiseta Oversized BS",
+        "quantity": 1,
+        "price": 129.9,
+        "category": "Camisetas",
+        "image": "/uploads/1777442950243-oversised.webp",
+        "size": "P"
+      }
+    ],
+    "events": [
+      {
+        "type": "stripe.checkout.sessions.sync",
+        "id": "cs_test_a14WZMytvX0FtVmABKMgvd9QaBxRFGoMRNV7ijigxwSxZ1ur52tqpZ9i0T",
+        "created": "2026-04-29T13:37:45.000Z"
+      },
+      {
+        "type": "stripe.checkout.sessions.sync",
+        "id": "cs_test_a14WZMytvX0FtVmABKMgvd9QaBxRFGoMRNV7ijigxwSxZ1ur52tqpZ9i0T",
+        "created": "2026-04-29T13:37:45.000Z"
+      },
+      {
+        "type": "admin.order.updated",
+        "id": "2e6e93f0-6645-4bb4-95b3-83465e0c5a68",
+        "created": "2026-04-29T13:40:41.657Z",
+        "status": "paid",
+        "trackingCode": "#88720869",
+        "trackingUrl": "http://localhost:3000/loja/?tracking=%23b732d6d8#meus-pedidos"
+      },
+      {
+        "type": "admin.order.updated",
+        "id": "83d531de-6149-4e7d-bd50-19432f0edd02",
+        "created": "2026-05-01T07:37:57.975Z",
+        "status": "paid",
+        "trackingCode": "#88720869",
+        "trackingUrl": "http://localhost:3000/loja/pedidos.html?tracking=%23b732d6d8"
+      },
+      {
+        "type": "admin.order.updated",
+        "id": "9993204d-e1a2-49ba-827a-7761cedcb329",
+        "created": "2026-05-01T07:37:59.829Z",
+        "status": "paid",
+        "trackingCode": "#88720869",
+        "trackingUrl": "http://localhost:3000/loja/pedidos.html?tracking=%23b732d6d8"
+      },
+      {
+        "type": "admin.order.updated",
+        "id": "ef5be82c-9bf1-4a01-b7f5-595de7c5cc4a",
+        "created": "2026-05-04T13:41:58.335Z",
+        "status": "processing",
+        "trackingCode": "#88720869",
+        "trackingUrl": "http://localhost:3000/loja/pedidos.html?tracking=%23b732d6d8"
+      },
+      {
+        "type": "admin.order.updated",
+        "id": "828dd71d-dfa6-41e1-9477-9f31801cbc77",
+        "created": "2026-05-04T13:50:31.746Z",
+        "status": "shipped",
+        "trackingCode": "#88720869",
+        "trackingUrl": "http://localhost:3000/loja/pedidos.html?tracking=%23b732d6d8"
+      }
+    ],
+    "sessionUrl": "https://checkout.stripe.com/c/pay/cs_test_a14WZMytvX0FtVmABKMgvd9QaBxRFGoMRNV7ijigxwSxZ1ur52tqpZ9i0T#fidnandhYHdWcXxpYCc%2FJ2FgY2RwaXEnKSdpamZkaWAnPyd1cShHVycpJ2JwZGZkaGppYFNkd2xka3EnPydmamtxd2ppJyknZHVsTmB8Jz8ndW5acWB2cVowNFFUZnVCQXN%2FY0N9aWJqd3ZpfGlfMVBCclVfSF1ja1F%2FbktoYjxNUkJrQFZLNTB9dHNqUzJraH1rfGFLZmFMR012QDwxbTYydF1ybDV%2FNlxJcWZMNDY8MDU1PEFASzF9UW4nKSdjd2poVmB3c2B3Jz9xd3BgKSdnZGZuYndqcGthRmppancnPycmY2NjY2NjJyknaWR8anBxUXx1YCc%2FJ3Zsa2JpYFpscWBoJyknYGtkZ2lgVWlkZmBtamlhYHd2Jz9xd3BgeCUl",
+    "paidAt": "2026-04-29T13:37:45.490Z",
+    "canceledAt": "",
+    "createdAt": "2026-04-29T13:36:46.211Z",
+    "updatedAt": "2026-05-04T13:50:31.746Z"
+  }
+]

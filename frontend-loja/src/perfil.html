@@ -1,0 +1,1458 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Meu Perfil | BigSmoke</title>
+  <meta name="description" content="Seu perfil BigSmoke — pedidos, histórico e configurações.">
+  <link rel="stylesheet" href="../Style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@300;400;500;600;700&family=Oswald:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      color-scheme: dark;
+    }
+
+    /* ── PAGE BODY ───────────────────────────────── */
+    body {
+      background:
+        radial-gradient(circle at top left, rgba(245, 240, 232, 0.09), transparent 24%),
+        radial-gradient(circle at 85% 10%, rgba(245, 240, 232, 0.04), transparent 18%),
+        linear-gradient(180deg, #050505 0%, #0a0a0a 40%, #0e0e0e 100%);
+    }
+
+    .profile-page {
+      width: 100%;
+      max-width: 1180px;
+      margin: 0 auto;
+      padding: calc(var(--nav-height) + 66px) 4.5% 4rem;
+      display: grid;
+      gap: 2rem;
+    }
+
+    /* ── PROFILE HERO CARD ──────────────────────── */
+    .profile-hero {
+      display: grid;
+      grid-template-columns: auto 1fr auto;
+      gap: 1.5rem;
+      align-items: center;
+      padding: 1.5rem 1.75rem;
+      border-radius: 28px;
+      border: 1px solid rgba(245, 240, 232, 0.10);
+      background:
+        linear-gradient(135deg, rgba(245, 240, 232, 0.06), rgba(14, 14, 14, 0.96)),
+        linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.01));
+      box-shadow: var(--shadow-strong);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .profile-hero::before {
+      content: '';
+      position: absolute;
+      inset: -50% auto auto -30%;
+      width: 22rem;
+      height: 22rem;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(245, 240, 232, 0.06), transparent 65%);
+      pointer-events: none;
+    }
+
+    .profile-avatar-wrap {
+      position: relative;
+      z-index: 1;
+    }
+
+    .profile-avatar {
+      width: 92px;
+      height: 92px;
+      border-radius: 50%;
+      border: 2px solid rgba(245, 240, 232, 0.18);
+      object-fit: cover;
+      display: block;
+      background: #111;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.45);
+    }
+
+    .avatar-status {
+      position: absolute;
+      bottom: 4px;
+      right: 4px;
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      background: #4ade80;
+      border: 2.5px solid #0a0a0a;
+      box-shadow: 0 0 0 3px rgba(74,222,128,0.15);
+      animation: statusPulse 2s ease-in-out infinite;
+    }
+
+    .profile-info {
+      display: grid;
+      gap: 0.3rem;
+      min-width: 0;
+      position: relative;
+      z-index: 1;
+    }
+
+    .profile-name {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: clamp(1.8rem, 4vw, 2.8rem);
+      letter-spacing: 0.07em;
+      line-height: 0.95;
+      text-transform: uppercase;
+      color: var(--text-primary);
+    }
+
+    .profile-email {
+      color: var(--text-muted);
+      font-size: 0.85rem;
+    }
+
+    .profile-badges {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.45rem;
+      margin-top: 0.4rem;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.3rem;
+      padding: 0.3rem 0.7rem;
+      border-radius: 999px;
+      border: 1px solid rgba(245, 240, 232, 0.14);
+      background: rgba(255, 255, 255, 0.04);
+      font-family: 'Oswald', sans-serif;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      font-size: 0.72rem;
+      color: var(--text-secondary);
+    }
+
+    .badge-gold {
+      border-color: rgba(244, 197, 42, 0.32);
+      background: rgba(244, 197, 42, 0.08);
+      color: #f4c52a;
+    }
+
+    .profile-actions {
+      display: flex;
+      flex-direction: column;
+      gap: 0.65rem;
+      align-items: flex-end;
+      position: relative;
+      z-index: 1;
+    }
+
+    /* ── STATS BAR ──────────────────────────────── */
+    .stats-bar {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1rem;
+    }
+
+    .stat-card {
+      padding: 1.1rem 1.25rem;
+      border-radius: 20px;
+      border: 1px solid rgba(245, 240, 232, 0.09);
+      background: rgba(255,255,255,0.025);
+      display: grid;
+      gap: 0.3rem;
+    }
+
+    .stat-label {
+      font-family: 'Oswald', sans-serif;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      font-size: 0.74rem;
+      color: var(--text-muted);
+    }
+
+    .stat-value {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 2rem;
+      letter-spacing: 0.05em;
+      line-height: 1;
+      color: var(--text-primary);
+    }
+
+    .stat-sub {
+      font-size: 0.78rem;
+      color: var(--text-secondary);
+    }
+
+    /* ── SECTION TITLES ─────────────────────────── */
+    .section-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      margin-bottom: 0.1rem;
+    }
+
+    .section-title {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: clamp(1.6rem, 3.5vw, 2.4rem);
+      letter-spacing: 0.07em;
+      text-transform: uppercase;
+      color: var(--text-primary);
+    }
+
+    .section-kicker {
+      font-family: 'Oswald', sans-serif;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      font-size: 0.74rem;
+      color: var(--text-muted);
+      margin-bottom: 0.2rem;
+    }
+
+    /* ── TABS ───────────────────────────────────── */
+    .tabs {
+      display: flex;
+      gap: 0.35rem;
+      border-bottom: 1px solid rgba(245, 240, 232, 0.09);
+      padding-bottom: 0;
+      overflow-x: auto;
+      scrollbar-width: none;
+    }
+
+    .tabs::-webkit-scrollbar { display: none; }
+
+    .tab-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.45rem;
+      padding: 0.65rem 1rem;
+      border-radius: 10px 10px 0 0;
+      border: 1px solid transparent;
+      border-bottom: none;
+      background: transparent;
+      font-family: 'Oswald', sans-serif;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      font-size: 0.82rem;
+      color: var(--text-muted);
+      cursor: pointer;
+      transition: color 180ms ease, background 180ms ease, border-color 180ms ease;
+      white-space: nowrap;
+    }
+
+    .tab-btn:hover {
+      color: var(--text-primary);
+      background: rgba(255,255,255,0.03);
+    }
+
+    .tab-btn.active {
+      color: var(--text-primary);
+      background: rgba(245, 240, 232, 0.06);
+      border-color: rgba(245, 240, 232, 0.11);
+    }
+
+    .tab-count {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 1.4rem;
+      height: 1.4rem;
+      padding: 0 0.3rem;
+      border-radius: 999px;
+      background: rgba(245, 240, 232, 0.1);
+      font-size: 0.7rem;
+      font-family: 'Inter', sans-serif;
+      font-weight: 600;
+    }
+
+    .tab-btn.active .tab-count {
+      background: rgba(245, 240, 232, 0.18);
+    }
+
+    .tab-panel {
+      display: none;
+      animation: fadeIn 200ms ease;
+    }
+
+    .tab-panel.active {
+      display: grid;
+      gap: 1rem;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ── ORDER CARDS ────────────────────────────── */
+    .order-card {
+      display: grid;
+      gap: 1rem;
+      padding: 1.15rem 1.25rem;
+      border-radius: 24px;
+      border: 1px solid rgba(245, 240, 232, 0.09);
+      background:
+        linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.015)),
+        linear-gradient(180deg, #0e0e0e, #111);
+      box-shadow: var(--shadow-soft);
+      transition: border-color 220ms ease;
+    }
+
+    .order-card:hover {
+      border-color: rgba(245, 240, 232, 0.17);
+    }
+
+    .order-card-head {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 1rem;
+    }
+
+    .order-card-left {
+      display: grid;
+      gap: 0.3rem;
+      min-width: 0;
+    }
+
+    .order-number {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: clamp(1.6rem, 4vw, 2.6rem);
+      letter-spacing: 0.07em;
+      line-height: 0.95;
+      text-transform: uppercase;
+    }
+
+    .order-meta {
+      font-family: 'Oswald', sans-serif;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      font-size: 0.76rem;
+      color: var(--text-muted);
+    }
+
+    .order-card-right {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 0.6rem;
+      flex-shrink: 0;
+    }
+
+    /* Status pills */
+    .status-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.45rem;
+      padding: 0.4rem 0.78rem;
+      border-radius: 999px;
+      border: 1px solid currentColor;
+      font-size: 0.73rem;
+      font-weight: 700;
+      letter-spacing: 0.09em;
+      text-transform: uppercase;
+      background: rgba(255,255,255,0.03);
+      white-space: nowrap;
+    }
+
+    .status-pill::before {
+      content: '';
+      width: 0.42rem;
+      height: 0.42rem;
+      border-radius: 50%;
+      background: currentColor;
+    }
+
+    .status-pill.pulse::before {
+      animation: statusPulse 1.5s ease-in-out infinite;
+    }
+
+    .status-pending    { color: #fbbf24; }
+    .status-paid       { color: #4ade80; }
+    .status-processing { color: #60a5fa; }
+    .status-shipped    { color: #a78bfa; }
+    .status-delivered  { color: #34d399; }
+    .status-canceled   { color: #f87171; }
+
+    /* Progress tracker */
+    .order-progress {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 0.4rem;
+      position: relative;
+    }
+
+    .order-progress::before {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 8%;
+      right: 8%;
+      height: 2px;
+      background: rgba(245, 240, 232, 0.08);
+      transform: translateY(-50%);
+      z-index: 0;
+    }
+
+    .progress-step {
+      display: grid;
+      gap: 0.45rem;
+      justify-items: center;
+      text-align: center;
+      padding: 0.75rem 0.5rem;
+      border-radius: 14px;
+      border: 1px solid rgba(245, 240, 232, 0.07);
+      background: rgba(255,255,255,0.015);
+      color: var(--text-muted);
+      position: relative;
+      z-index: 1;
+      transition: border-color 220ms, background 220ms, color 220ms;
+    }
+
+    .progress-step::before {
+      content: '';
+      width: 0.75rem;
+      height: 0.75rem;
+      border-radius: 50%;
+      background: rgba(245, 240, 232, 0.14);
+    }
+
+    .progress-step.done {
+      color: var(--text-secondary);
+      border-color: rgba(245, 240, 232, 0.12);
+      background: rgba(245, 240, 232, 0.04);
+    }
+
+    .progress-step.done::before {
+      background: var(--accent-color);
+      opacity: 0.6;
+    }
+
+    .progress-step.active {
+      color: var(--text-primary);
+      border-color: rgba(245, 240, 232, 0.24);
+      background: rgba(245, 240, 232, 0.07);
+    }
+
+    .progress-step.active::before {
+      background: var(--accent-color);
+      animation: statusPulse 1.4s ease-in-out infinite;
+    }
+
+    .progress-step span {
+      font-family: 'Oswald', sans-serif;
+      letter-spacing: 0.07em;
+      text-transform: uppercase;
+      font-size: 0.69rem;
+      line-height: 1.2;
+    }
+
+    /* Collapsible body */
+    .order-card-body {
+      display: grid;
+      gap: 1rem;
+      overflow: hidden;
+      transition: max-height 300ms ease, opacity 240ms ease;
+    }
+
+    .order-card.collapsed .order-card-body {
+      max-height: 0;
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .order-card.expanded .order-card-body {
+      max-height: 5000px;
+      opacity: 1;
+    }
+
+    .toggle-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      padding: 0.45rem 0.75rem;
+      border-radius: 999px;
+      border: 1px solid rgba(245, 240, 232, 0.12);
+      background: rgba(255,255,255,0.03);
+      color: var(--text-secondary);
+      cursor: pointer;
+      font-family: 'Oswald', sans-serif;
+      letter-spacing: 0.07em;
+      text-transform: uppercase;
+      font-size: 0.73rem;
+      transition: border-color 180ms, background 180ms, color 180ms;
+    }
+
+    .toggle-btn:hover {
+      border-color: rgba(245, 240, 232, 0.26);
+      background: rgba(255,255,255,0.06);
+      color: var(--text-primary);
+    }
+
+    .toggle-btn svg {
+      width: 15px;
+      height: 15px;
+      transition: transform 240ms ease;
+    }
+
+    .order-card.collapsed .toggle-btn svg {
+      transform: rotate(-90deg);
+    }
+
+    /* Content grid */
+    .content-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr);
+      gap: 1rem;
+    }
+
+    .panel {
+      padding: 1rem 1.1rem;
+      border-radius: 16px;
+      border: 1px solid rgba(245, 240, 232, 0.08);
+      background: rgba(255,255,255,0.02);
+      display: grid;
+      gap: 0.8rem;
+    }
+
+    .panel h3 {
+      font-family: 'Oswald', sans-serif;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      font-size: 0.85rem;
+      color: var(--text-primary);
+      border-bottom: 1px solid rgba(245, 240, 232, 0.07);
+      padding-bottom: 0.55rem;
+    }
+
+    /* Items list */
+    .item-list { display: grid; gap: 0.7rem; }
+
+    .item-row {
+      display: grid;
+      grid-template-columns: 64px minmax(0,1fr) auto;
+      gap: 0.7rem;
+      align-items: center;
+      padding-bottom: 0.7rem;
+      border-bottom: 1px solid rgba(245,240,232,0.07);
+    }
+
+    .item-row:last-child { padding-bottom: 0; border-bottom: none; }
+
+    .item-thumb {
+      width: 64px;
+      aspect-ratio: 1 / 1.15;
+      border-radius: 10px;
+      overflow: hidden;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(245,240,232,0.08);
+    }
+
+    .item-thumb img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+
+    .item-meta { display: grid; gap: 0.15rem; min-width: 0; }
+    .item-meta strong { font-size: 0.9rem; line-height: 1.3; }
+    .item-meta small { color: var(--text-secondary); font-size: 0.79rem; }
+
+    .item-price {
+      font-family: 'Oswald', sans-serif;
+      letter-spacing: 0.07em;
+      text-transform: uppercase;
+      color: var(--accent-color);
+      font-size: 0.84rem;
+      white-space: nowrap;
+    }
+
+    /* Info rows */
+    .detail-grid { display: grid; gap: 0.55rem; }
+
+    .info-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      gap: 0.75rem;
+      padding-bottom: 0.55rem;
+      border-bottom: 1px solid rgba(245,240,232,0.06);
+    }
+
+    .info-row:last-child { padding-bottom: 0; border-bottom: none; }
+
+    .info-row .lbl {
+      color: var(--text-muted);
+      font-size: 0.79rem;
+      font-family: 'Oswald', sans-serif;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      flex-shrink: 0;
+    }
+
+    .info-row .val {
+      text-align: right;
+      color: var(--text-primary);
+      font-size: 0.88rem;
+      max-width: 20ch;
+      word-break: break-all;
+    }
+
+    .val-green { color: #4ade80; }
+
+    /* Timeline */
+    .timeline { display: grid; gap: 0.75rem; }
+
+    .tl-item {
+      display: grid;
+      grid-template-columns: 16px 1fr;
+      gap: 0.7rem;
+      align-items: start;
+    }
+
+    .tl-dot {
+      display: grid;
+      place-items: center;
+      padding-top: 0.18rem;
+    }
+
+    .tl-dot::before {
+      content: '';
+      width: 11px;
+      height: 11px;
+      border-radius: 50%;
+      background: var(--accent-color);
+      box-shadow: 0 0 0 5px rgba(245,240,232,0.06);
+    }
+
+    .tl-item:not(:last-child) .tl-dot { position: relative; }
+
+    .tl-item:not(:last-child) .tl-dot::after {
+      content: '';
+      position: absolute;
+      top: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 2px;
+      height: calc(100% + 12px);
+      background: rgba(245,240,232,0.09);
+    }
+
+    .tl-content {
+      display: grid;
+      gap: 0.15rem;
+      padding-bottom: 0.75rem;
+      border-bottom: 1px solid rgba(245,240,232,0.06);
+    }
+
+    .tl-item:last-child .tl-content { padding-bottom: 0; border-bottom: none; }
+
+    .tl-content strong { font-size: 0.88rem; }
+    .tl-content span { color: var(--text-secondary); font-size: 0.8rem; }
+
+    /* Order actions */
+    .order-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.65rem;
+      align-items: center;
+      padding-top: 0.25rem;
+    }
+
+    .order-actions .btn {
+      flex: 1 1 160px;
+      justify-content: center;
+      font-size: 0.84rem;
+      padding: 0.7rem 1.1rem;
+    }
+
+    /* Delivery banner */
+    .delivery-banner {
+      display: flex;
+      gap: 0.75rem;
+      align-items: flex-start;
+      padding: 0.9rem 1rem;
+      border-radius: 14px;
+      border: 1px solid rgba(96,165,250,0.22);
+      background: linear-gradient(180deg, rgba(96,165,250,0.14), rgba(96,165,250,0.06));
+      color: #dce9ff;
+    }
+
+    .delivery-banner svg {
+      width: 17px;
+      height: 17px;
+      flex-shrink: 0;
+      margin-top: 0.1rem;
+      color: #93c5fd;
+    }
+
+    .delivery-banner strong {
+      display: block;
+      font-family: 'Oswald', sans-serif;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      font-size: 0.79rem;
+      margin-bottom: 0.1rem;
+    }
+
+    .delivery-banner span { font-size: 0.85rem; }
+
+    /* ── HISTORY CARD (delivered) ───────────────── */
+    .history-card {
+      display: grid;
+      grid-template-columns: 64px 1fr auto;
+      gap: 1rem;
+      align-items: center;
+      padding: 1rem 1.2rem;
+      border-radius: 20px;
+      border: 1px solid rgba(245, 240, 232, 0.07);
+      background: rgba(255,255,255,0.018);
+      transition: border-color 200ms, background 200ms;
+    }
+
+    .history-card:hover {
+      border-color: rgba(245, 240, 232, 0.15);
+      background: rgba(255,255,255,0.035);
+    }
+
+    .history-thumb {
+      width: 64px;
+      height: 64px;
+      border-radius: 12px;
+      overflow: hidden;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(245,240,232,0.08);
+    }
+
+    .history-thumb img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+
+    .history-info { display: grid; gap: 0.25rem; min-width: 0; }
+
+    .history-name {
+      font-size: 0.92rem;
+      font-weight: 600;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .history-meta {
+      font-family: 'Oswald', sans-serif;
+      letter-spacing: 0.07em;
+      text-transform: uppercase;
+      font-size: 0.73rem;
+      color: var(--text-muted);
+    }
+
+    .history-actions {
+      display: flex;
+      flex-direction: column;
+      gap: 0.45rem;
+      align-items: flex-end;
+    }
+
+    .history-price {
+      font-family: 'Oswald', sans-serif;
+      letter-spacing: 0.07em;
+      font-size: 0.88rem;
+      color: var(--accent-color);
+    }
+
+    /* ── EMPTY STATE ────────────────────────────── */
+    .empty-state {
+      padding: 2.5rem 1.5rem;
+      text-align: center;
+      border-radius: 20px;
+      border: 1px dashed rgba(245, 240, 232, 0.12);
+      background: rgba(255,255,255,0.015);
+      display: grid;
+      gap: 0.75rem;
+      place-items: center;
+    }
+
+    .empty-state svg {
+      width: 42px;
+      height: 42px;
+      color: rgba(245, 240, 232, 0.22);
+    }
+
+    .empty-state p {
+      color: var(--text-muted);
+      font-size: 0.9rem;
+      max-width: 38ch;
+    }
+
+    /* ── LOADING SKELETON ───────────────────────── */
+    .skeleton { position: relative; overflow: hidden; background: rgba(245,240,232,0.05); border-radius: 10px; }
+    .skeleton::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      transform: translateX(-100%);
+      background: linear-gradient(90deg, transparent, rgba(245,240,232,0.12), transparent);
+      animation: shimmer 1.3s infinite;
+    }
+
+    @keyframes shimmer { 100% { transform: translateX(100%); } }
+    @keyframes statusPulse {
+      0%   { transform: scale(1);    box-shadow: 0 0 0 0   rgba(245,240,232,0.14); }
+      50%  { transform: scale(1.22); box-shadow: 0 0 0 5px rgba(245,240,232,0.03); }
+      100% { transform: scale(1);    box-shadow: 0 0 0 0   rgba(245,240,232,0.12); }
+    }
+
+    /* ── FOOTER ─────────────────────────────────── */
+    .site-footer {
+      width: 100%;
+      max-width: 1180px;
+      margin: 0 auto;
+      padding: 0 4.5% 2.5rem;
+      display: flex;
+      justify-content: space-between;
+      gap: 1rem;
+      color: var(--text-secondary);
+    }
+
+    .site-footer strong, .site-footer a { color: var(--text-primary); }
+    .site-footer-col { display: grid; gap: 0.35rem; }
+
+    /* ── RESPONSIVE ─────────────────────────────── */
+    @media (max-width: 960px) {
+      .content-grid { grid-template-columns: 1fr; }
+    }
+
+    @media (max-width: 768px) {
+      .profile-page { padding-top: calc(var(--nav-height) + 52px); }
+      .profile-hero { grid-template-columns: auto 1fr; }
+      .profile-actions { display: none; }
+      .stats-bar { grid-template-columns: repeat(3, 1fr); gap: 0.65rem; }
+      .stat-value { font-size: 1.6rem; }
+      .stat-sub { display: none; }
+      .order-progress { grid-template-columns: repeat(5, 1fr); }
+      .progress-step span { display: none; }
+      .history-card { grid-template-columns: 56px 1fr auto; }
+    }
+
+    @media (max-width: 600px) {
+      .profile-page { padding-inline: 1rem; }
+      .profile-hero { padding: 1.1rem; border-radius: 20px; gap: 1rem; }
+      .profile-avatar { width: 70px; height: 70px; }
+      .stats-bar { grid-template-columns: 1fr 1fr; }
+      .stat-card:last-child { grid-column: 1 / -1; }
+      .order-card-head { flex-direction: column; align-items: stretch; }
+      .order-card-right { flex-direction: row; align-items: center; justify-content: space-between; }
+      .history-actions { flex-direction: row; align-items: center; gap: 0.75rem; }
+      .site-footer { flex-direction: column; padding-inline: 1rem; }
+    }
+
+    @media (max-width: 420px) {
+      .profile-hero { grid-template-columns: 1fr; text-align: center; }
+      .profile-avatar-wrap { justify-self: center; }
+      .profile-badges { justify-content: center; }
+    }
+  </style>
+</head>
+
+<body>
+
+<!-- TICKER -->
+<div class="top-ticker" aria-label="Informações da loja">
+  <div class="ticker-track">
+    <span>Frete para todo o Brasil</span>
+    <span>Cartão via Stripe</span>
+    <span>Streetwear autoral BigSmoke</span>
+    <span>Atendimento direto pelo WhatsApp</span>
+    <span>Frete para todo o Brasil</span>
+    <span>Cartão via Stripe</span>
+    <span>Streetwear autoral BigSmoke</span>
+    <span>Atendimento direto pelo WhatsApp</span>
+  </div>
+</div>
+
+<!-- NAVBAR -->
+<header class="navbar" id="top">
+  <a class="brand" href="/loja/" aria-label="Voltar para a loja BigSmoke">
+    <img src="../imagens/logo_sem_fundo.png" class="logo-img" alt="Logo BigSmoke">
+  </a>
+  <nav class="nav-links" aria-label="Navegação principal">
+    <a href="/loja/">Loja</a>
+    <a href="/loja/pedidos.html">Rastrear</a>
+  </nav>
+  <div class="header-actions">
+    <a class="profile-icon-link is-active" href="/loja/perfil.html" aria-label="Meu Perfil" aria-current="page" title="Meu Perfil">
+      <img src="../imagens/icone_bigsmoke_conta.png" alt="" aria-hidden="true">
+      <span class="sr-only">Meu Perfil</span>
+    </a>
+    <button class="cart-toggle" type="button" onclick="toggleCart()" aria-label="Abrir carrinho">
+      <svg viewBox="0 0 24 24" class="cart-icon" aria-hidden="true">
+        <path d="M2.75 4.25h2.2c.48 0 .89.33 1 .8l.28 1.2m0 0 1.45 6.54a2 2 0 0 0 1.95 1.57h6.98a2 2 0 0 0 1.93-1.48l1.55-5.59H7.23Z"></path>
+        <path d="M10 18.5a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3Zm7 0a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3Z"></path>
+      </svg>
+      <span class="cart-label">Carrinho</span>
+      <span class="cart-count" id="cart-count">0</span>
+    </button>
+  </div>
+</header>
+
+<!-- MAIN -->
+<main class="profile-page">
+
+  <!-- PROFILE HERO -->
+  <section class="profile-hero" aria-label="Perfil do usuário">
+    <div class="profile-avatar-wrap">
+      <!-- BigSmoke icon SVG inline (user icon with BigSmoke brand) -->
+      <svg class="profile-avatar" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" aria-label="Avatar BigSmoke" style="background:#0a0a0a;border-radius:50%;">
+        <circle cx="50" cy="50" r="49" stroke="rgba(245,240,232,0.18)" stroke-width="1.5"/>
+        <circle cx="50" cy="36" r="13" stroke="rgba(245,240,232,0.85)" stroke-width="3"/>
+        <path d="M18 82c0-17.673 14.327-32 32-32s32 14.327 32 32" stroke="rgba(245,240,232,0.85)" stroke-width="3" stroke-linecap="round"/>
+        <!-- B logo simplified -->
+        <text x="50" y="75" text-anchor="middle" font-family="Oswald, sans-serif" font-size="9" fill="rgba(245,240,232,0.55)" letter-spacing="2">BIGSMOKE</text>
+      </svg>
+      <span class="avatar-status" aria-label="Online"></span>
+    </div>
+
+    <div class="profile-info">
+      <h1 class="profile-name" id="profile-name">Carregando…</h1>
+      <p class="profile-email" id="profile-email">—</p>
+      <div class="profile-badges">
+        <span class="badge">
+          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 2 4 6v6c0 5 3.5 9.6 8 11 4.5-1.4 8-6 8-11V6l-8-4z"/></svg>
+          BigSmoke Member
+        </span>
+        <span class="badge badge-gold" id="gold-badge" style="display:none">
+          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+          Cliente Ouro
+        </span>
+      </div>
+    </div>
+
+    <div class="profile-actions">
+      <a href="https://wa.me/5583986494691" target="_blank" rel="noopener" class="btn btn-primary" style="font-size:0.84rem;padding:0.65rem 1.1rem;">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+        WhatsApp
+      </a>
+      <a href="/loja/" class="btn btn-outline" style="font-size:0.84rem;padding:0.65rem 1.1rem;">Ver catálogo</a>
+    </div>
+  </section>
+
+  <!-- STATS -->
+  <div class="stats-bar" id="stats-bar">
+    <div class="stat-card">
+      <p class="stat-label">Pedidos</p>
+      <p class="stat-value" id="stat-orders">—</p>
+      <p class="stat-sub">no total</p>
+    </div>
+    <div class="stat-card">
+      <p class="stat-label">Entregues</p>
+      <p class="stat-value" id="stat-delivered">—</p>
+      <p class="stat-sub">com sucesso</p>
+    </div>
+    <div class="stat-card">
+      <p class="stat-label">Total gasto</p>
+      <p class="stat-value" id="stat-spent">—</p>
+      <p class="stat-sub">em compras</p>
+    </div>
+  </div>
+
+  <!-- TABS + CONTENT -->
+  <div>
+    <p class="section-kicker">Painel de compras</p>
+    <div class="section-head">
+      <h2 class="section-title">Meus Pedidos</h2>
+    </div>
+
+    <div class="tabs" role="tablist" aria-label="Pedidos e histórico" style="margin: 0.85rem 0 0;">
+      <button class="tab-btn active" role="tab" aria-selected="true" aria-controls="tab-active" id="tab-active-btn">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>
+        Em andamento
+        <span class="tab-count" id="tab-active-count">0</span>
+      </button>
+      <button class="tab-btn" role="tab" aria-selected="false" aria-controls="tab-history" id="tab-history-btn">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        Histórico
+        <span class="tab-count" id="tab-history-count">0</span>
+      </button>
+    </div>
+
+    <!-- ACTIVE ORDERS -->
+    <div id="tab-active" class="tab-panel active" role="tabpanel" aria-labelledby="tab-active-btn">
+      <div id="active-orders-container">
+        <!-- skeleton -->
+        <div style="display:grid;gap:1rem;padding-top:1rem;">
+          <div class="skeleton" style="height:160px;border-radius:20px;"></div>
+          <div class="skeleton" style="height:120px;border-radius:20px;"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- HISTORY -->
+    <div id="tab-history" class="tab-panel" role="tabpanel" aria-labelledby="tab-history-btn">
+      <div id="history-orders-container">
+        <div style="display:grid;gap:0.7rem;padding-top:1rem;">
+          <div class="skeleton" style="height:90px;border-radius:20px;"></div>
+          <div class="skeleton" style="height:90px;border-radius:20px;"></div>
+          <div class="skeleton" style="height:90px;border-radius:20px;"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</main>
+
+<footer class="site-footer" aria-label="Rodapé">
+  <div class="site-footer-col">
+    <strong>BIGSMOKE</strong>
+    <span>Streetwear autêntico com estrutura pronta para crescer.</span>
+  </div>
+  <div class="site-footer-col">
+    <strong>Atalhos</strong>
+    <a href="/loja/">Loja</a>
+    <a href="/loja/perfil.html">Meu Perfil</a>
+    <a href="https://wa.me/5583986494691" target="_blank" rel="noopener">WhatsApp</a>
+  </div>
+</footer>
+
+<script>
+(() => {
+  const API_BASE = window.location.protocol === 'file:' ? 'http://localhost:3000' : window.location.origin;
+
+  /* ── helpers ─────────────────────────────────── */
+  function esc(v) {
+    return String(v ?? '')
+      .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+      .replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+  }
+
+  function fmt(v) {
+    return new Intl.NumberFormat('pt-BR', { style:'currency', currency:'BRL' }).format(Number(v)||0);
+  }
+
+  function fmtDate(v) {
+    if (!v) return 'Sem data';
+    const d = new Date(v);
+    if (isNaN(d)) return String(v);
+    return new Intl.DateTimeFormat('pt-BR', { dateStyle:'short', timeStyle:'short' }).format(d);
+  }
+
+  function fmtDateShort(v) {
+    if (!v) return '—';
+    const d = new Date(v);
+    if (isNaN(d)) return String(v);
+    return new Intl.DateTimeFormat('pt-BR', { dateStyle:'short' }).format(d);
+  }
+
+  /* ── status helpers ──────────────────────────── */
+  const FLOW = ['pending','paid','processing','shipped','delivered'];
+  const STATUS_META = {
+    pending:    { label:'Pendente',      cls:'status-pending',    pulse:false },
+    paid:       { label:'Pago',          cls:'status-paid',       pulse:true  },
+    processing: { label:'Em separação',  cls:'status-processing', pulse:true  },
+    shipped:    { label:'Enviado',       cls:'status-shipped',    pulse:true  },
+    delivered:  { label:'Entregue',      cls:'status-delivered',  pulse:false },
+    canceled:   { label:'Cancelado',     cls:'status-canceled',   pulse:false },
+  };
+  const STATUS_PT = { pending:'Pendente', paid:'Pago', processing:'Em separação', shipped:'Enviado', delivered:'Entregue', canceled:'Cancelado' };
+  const ACTIVE_STATUSES = ['pending','paid','processing','shipped'];
+
+  function statusMeta(s) { return STATUS_META[String(s||'pending').toLowerCase()] || STATUS_META.pending; }
+
+  function isActive(order) {
+    const s = String(order.status||'pending').toLowerCase();
+    return ACTIVE_STATUSES.includes(s);
+  }
+
+  /* ── timeline events ─────────────────────────── */
+  function getEvents(order) {
+    const evs = Array.isArray(order?.events) ? order.events.slice() : [];
+    const seeded = [];
+    if (order?.createdAt) seeded.push({ type:'order.created', created: order.createdAt, title:'Pedido criado' });
+    if (order?.paidAt)    seeded.push({ type:'payment.paid',  created: order.paidAt,    title:'Pagamento confirmado' });
+    const s = String(order?.status||'').toLowerCase();
+    if (s === 'shipped')   seeded.push({ type:'order.shipped',   created: order.updatedAt||order.paidAt||order.createdAt, title:'Pedido enviado' });
+    if (s === 'delivered') seeded.push({ type:'order.delivered', created: order.updatedAt||order.paidAt||order.createdAt, title:'Pedido entregue' });
+
+    return [...evs, ...seeded]
+      .filter(Boolean)
+      .map((e,i) => ({
+        id: e.id||`${e.type||'ev'}-${i}`,
+        title: e.title||e.status||e.type||'Evento',
+        created: e.created||e.createdAt||e.timestamp||order?.updatedAt||order?.createdAt,
+        details: [
+          e.status ? `Status: ${STATUS_PT[e.status]||e.status}` : '',
+          e.trackingCode ? `Rastreio: ${e.trackingCode}` : '',
+        ].filter(Boolean).join(' · ')
+      }))
+      .sort((a,b) => new Date(a.created||0) - new Date(b.created||0));
+  }
+
+  /* ── render progress bar ─────────────────────── */
+  function renderProgress(status) {
+    const s = String(status||'pending').toLowerCase();
+    const ci = s === 'canceled' ? -1 : FLOW.indexOf(s);
+    const steps = FLOW.map((step, i) => {
+      let cls = '';
+      if (ci === -1) cls = '';
+      else if (i < ci) cls = 'done';
+      else if (i === ci) cls = 'active';
+      return `<div class="progress-step ${cls}" aria-label="${STATUS_PT[step]||step}">
+        <span>${STATUS_PT[step]||step}</span>
+      </div>`;
+    });
+    return `<div class="order-progress" aria-label="Progresso do pedido">${steps.join('')}</div>`;
+  }
+
+  /* ── render items ────────────────────────────── */
+  function renderItems(items) {
+    const list = Array.isArray(items) ? items : [];
+    if (!list.length) return `<p style="color:var(--text-muted);font-size:0.84rem;">Nenhum item registrado.</p>`;
+    return `<div class="item-list">${list.map(item => {
+      const img = item?.image || item?.image_url || '../imagens/logo_sem_fundo.png';
+      const qty = Math.max(1, Number(item?.quantity)||1);
+      const price = Number(item?.price)||0;
+      return `<div class="item-row">
+        <div class="item-thumb"><img src="${esc(img)}" alt="${esc(item?.name||'Item')}" loading="lazy" onerror="this.src='../imagens/logo_sem_fundo.png'"></div>
+        <div class="item-meta">
+          <strong>${esc(item?.name||'Item do pedido')}</strong>
+          <small>Tam: ${esc(item?.size||'Único')} · Qtd: ${qty}</small>
+        </div>
+        <div class="item-price">${fmt(price*qty)}</div>
+      </div>`;
+    }).join('')}</div>`;
+  }
+
+  /* ── render timeline ─────────────────────────── */
+  function renderTimeline(order) {
+    const evs = getEvents(order);
+    if (!evs.length) return `<p style="color:var(--text-muted);font-size:0.84rem;">Sem eventos registrados ainda.</p>`;
+    return `<div class="timeline">${evs.map(e => `
+      <div class="tl-item">
+        <div class="tl-dot" aria-hidden="true"></div>
+        <div class="tl-content">
+          <strong>${esc(e.title)}</strong>
+          <span>${esc(fmtDate(e.created))}${e.details ? ' · '+esc(e.details) : ''}</span>
+        </div>
+      </div>`).join('')}</div>`;
+  }
+
+  /* ── render address + payment panel ─────────── */
+  function renderDetails(order) {
+    const addr = order?.address || {};
+    const subtotal = Number(order?.amountSubtotal)||0;
+    const ship = Number(order?.shippingAmount)||0;
+    const discount = Number(order?.discountAmount||order?.couponDiscount||order?.discount||0)||0;
+    const total = Number(order?.amountTotal)||(subtotal+ship);
+    const shipLabel = ship <= 0
+      ? `<span class="val val-green">Frete grátis</span>`
+      : `<span class="val">${fmt(ship)}</span>`;
+
+    return `
+      <div class="detail-grid">
+        <div class="info-row"><span class="lbl">Nome</span><span class="val">${esc(order?.customer?.name||'—')}</span></div>
+        <div class="info-row"><span class="lbl">Rua</span><span class="val">${esc(addr.street||'—')}, ${esc(addr.number||'—')}</span></div>
+        <div class="info-row"><span class="lbl">Cidade</span><span class="val">${esc(addr.city||'—')} – ${esc(addr.state||'—')}</span></div>
+        <div class="info-row"><span class="lbl">CEP</span><span class="val">${esc(addr.cep||'—')}</span></div>
+      </div>
+      <div class="detail-grid" style="margin-top:0.75rem">
+        <div class="info-row"><span class="lbl">Método</span><span class="val">${esc(order?.paymentMethod||'Stripe')}</span></div>
+        <div class="info-row"><span class="lbl">Subtotal</span><span class="val">${fmt(subtotal)}</span></div>
+        <div class="info-row"><span class="lbl">Frete</span>${shipLabel}</div>
+        ${discount > 0 ? `<div class="info-row"><span class="lbl">Desconto</span><span class="val">-${fmt(discount)}</span></div>` : ''}
+        <div class="info-row"><span class="lbl">Total</span><span class="val">${fmt(total - discount)}</span></div>
+      </div>`;
+  }
+
+  /* ── render carrier ──────────────────────────── */
+  function renderCarrier(order) {
+    const trackUrl = order?.trackingUrl || order?.trackingLink || '';
+    const trackCode = order?.trackingCode || order?.orderAccessCode || order?.orderNumberFormatted || '';
+    const ext = /^https?:\/\//i.test(trackUrl);
+    const linkEl = trackUrl
+      ? `<a class="val" href="${esc(trackUrl)}"${ext?' target="_blank" rel="noopener"':''} style="color:var(--accent-color);text-decoration:underline;text-underline-offset:0.15em;">Ver rastreio</a>`
+      : `<span class="val" style="color:var(--text-muted);">Aguardando código</span>`;
+    return `<div class="detail-grid">
+      <div class="info-row"><span class="lbl">Transportadora</span><span class="val">${esc(order?.carrier||order?.shippingLabel||'A definir')}</span></div>
+      <div class="info-row"><span class="lbl">Código</span><span class="val">${esc(trackCode||'—')}</span></div>
+      <div class="info-row"><span class="lbl">Link</span>${linkEl}</div>
+    </div>`;
+  }
+
+  /* ── render one active order card ────────────── */
+  function renderActiveOrder(order) {
+    const code  = order?.orderAccessCode || order?.orderNumberFormatted || order?.id || '';
+    const num   = order?.orderNumberFormatted || order?.orderNumber || code;
+    const s     = String(order?.status||'pending').toLowerCase();
+    const meta  = statusMeta(s);
+    const date  = fmtDateShort(order?.createdAt || order?.paidAt);
+    const del   = order?.deliveryEstimate?.text || order?.deliveryEstimate?.label || order?.deliveryEstimate || '';
+    const wurl  = `https://wa.me/5583986494691?text=${encodeURIComponent(`Olá BigSmoke, quero acompanhar meu pedido ${code}.`)}`;
+    const trackUrl = order?.trackingUrl || order?.trackingLink || '';
+    const cardId   = `order-card-${esc(order.id||code)}`;
+
+    return `
+      <article class="order-card expanded" id="${cardId}" aria-label="Pedido ${esc(num)}">
+        <div class="order-card-head">
+          <div class="order-card-left">
+            <p class="order-meta">Pedido · ${esc(date)}</p>
+            <h2 class="order-number">${esc(num)}</h2>
+          </div>
+          <div class="order-card-right">
+            <span class="status-pill ${meta.cls}${meta.pulse?' pulse':''}">${esc(meta.label)}</span>
+            <button class="toggle-btn" type="button" onclick="toggleCard('${cardId}')" aria-expanded="true">
+              <span>Recolher</span>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+            </button>
+          </div>
+        </div>
+
+        <div class="order-card-body">
+          ${del ? `<div class="delivery-banner">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h18"/><path d="m14 5 7 7-7 7"/></svg>
+            <div><strong>Previsão de entrega</strong><span>${esc(String(del))}</span></div>
+          </div>` : ''}
+
+          ${renderProgress(s)}
+
+          <div class="content-grid">
+            <section class="panel" aria-labelledby="items-h-${cardId}">
+              <h3 id="items-h-${cardId}">Itens do pedido</h3>
+              ${renderItems(order?.items)}
+            </section>
+            <section class="panel" aria-labelledby="details-h-${cardId}">
+              <h3 id="details-h-${cardId}">Entrega &amp; Pagamento</h3>
+              ${renderDetails(order)}
+            </section>
+          </div>
+
+          <div class="content-grid">
+            <section class="panel" aria-labelledby="carrier-h-${cardId}">
+              <h3 id="carrier-h-${cardId}">Transportadora</h3>
+              ${renderCarrier(order)}
+            </section>
+            <section class="panel" aria-labelledby="timeline-h-${cardId}">
+              <h3 id="timeline-h-${cardId}">Timeline</h3>
+              ${renderTimeline(order)}
+            </section>
+          </div>
+
+          <div class="order-actions">
+            ${trackUrl
+              ? `<a class="btn btn-outline" href="${esc(trackUrl)}"${/^https?:\/\//i.test(trackUrl)?' target="_blank" rel="noopener"':''}>Rastrear envio</a>`
+              : `<button class="btn btn-outline" disabled aria-disabled="true">Rastrear envio</button>`
+            }
+            <a class="btn btn-primary" href="${esc(wurl)}" target="_blank" rel="noopener">WhatsApp</a>
+            <a class="btn btn-outline" href="/loja/">Ver catálogo</a>
+          </div>
+        </div>
+      </article>`;
+  }
+
+  /* ── render history row ──────────────────────── */
+  function renderHistoryRow(order) {
+    const code  = order?.orderAccessCode || order?.orderNumberFormatted || order?.id || '';
+    const num   = order?.orderNumberFormatted || order?.orderNumber || code;
+    const s     = String(order?.status||'delivered').toLowerCase();
+    const meta  = statusMeta(s);
+    const date  = fmtDateShort(order?.createdAt || order?.paidAt);
+    const item  = Array.isArray(order?.items) && order.items[0];
+    const img   = item?.image || item?.image_url || '../imagens/logo_sem_fundo.png';
+    const total = Number(order?.amountTotal)||Number(order?.amountSubtotal)||0;
+    const wurl  = `https://wa.me/5583986494691?text=${encodeURIComponent(`Olá BigSmoke, quero suporte para o pedido ${code}.`)}`;
+
+    return `
+      <div class="history-card" aria-label="Histórico: pedido ${esc(num)}">
+        <div class="history-thumb">
+          <img src="${esc(img)}" alt="${esc(item?.name||'Produto')}" loading="lazy" onerror="this.src='../imagens/logo_sem_fundo.png'">
+        </div>
+        <div class="history-info">
+          <p class="history-name">${esc(num)}</p>
+          <p class="history-meta">${esc(date)} · ${Array.isArray(order?.items) ? order.items.length : 0} item(s)</p>
+          <span class="status-pill ${meta.cls}" style="margin-top:0.35rem;font-size:0.68rem;padding:0.28rem 0.6rem;">${esc(meta.label)}</span>
+        </div>
+        <div class="history-actions">
+          <p class="history-price">${fmt(total)}</p>
+          <a class="btn btn-outline" style="font-size:0.76rem;padding:0.5rem 0.85rem;white-space:nowrap;" href="${esc(wurl)}" target="_blank" rel="noopener">Suporte</a>
+        </div>
+      </div>`;
+  }
+
+  /* ── toggle card ─────────────────────────────── */
+  window.toggleCard = function(id) {
+    const card = document.getElementById(id);
+    if (!card) return;
+    const collapsed = card.classList.toggle('collapsed');
+    card.classList.toggle('expanded', !collapsed);
+    const btn = card.querySelector('.toggle-btn');
+    if (btn) {
+      btn.setAttribute('aria-expanded', String(!collapsed));
+      btn.querySelector('span').textContent = collapsed ? 'Expandir' : 'Recolher';
+    }
+  };
+
+  /* ── tabs ────────────────────────────────────── */
+  document.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.tab-btn').forEach(b => {
+        b.classList.remove('active');
+        b.setAttribute('aria-selected','false');
+      });
+      document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+      btn.classList.add('active');
+      btn.setAttribute('aria-selected','true');
+      const panelId = btn.getAttribute('aria-controls');
+      document.getElementById(panelId)?.classList.add('active');
+    });
+  });
+
+  /* ── load data ───────────────────────────────── */
+  async function loadProfile() {
+    let orders = [];
+    try {
+      const res = await fetch(`${API_BASE}/api/orders`);
+      if (res.ok) {
+        const data = await res.json();
+        orders = Array.isArray(data) ? data : Array.isArray(data.orders) ? data.orders : [];
+      }
+    } catch (error) {
+      console.error('Erro ao carregar pedidos do perfil:', error);
+    }
+
+    const active  = orders.filter(isActive);
+    const history = orders.filter(o => !isActive(o));
+
+    // Stats
+    const totalSpent = orders.reduce((s, o) => s + (Number(o.amountTotal)||Number(o.amountSubtotal)||0), 0);
+    const delivered  = orders.filter(o => String(o.status||'').toLowerCase() === 'delivered').length;
+
+    document.getElementById('stat-orders').textContent    = orders.length;
+    document.getElementById('stat-delivered').textContent = delivered;
+    document.getElementById('stat-spent').textContent     = fmt(totalSpent).replace('R$\u00A0','R$');
+
+    // Profile info — brand identity, not customer data
+    document.getElementById('profile-name').textContent  = 'BigSmoke Store';
+    document.getElementById('profile-email').textContent = 'contato@bigsmoke.com.br';
+    if (delivered >= 3) document.getElementById('gold-badge').style.display = 'inline-flex';
+
+    // Tab counts
+    document.getElementById('tab-active-count').textContent  = active.length;
+    document.getElementById('tab-history-count').textContent = history.length;
+
+    // Active orders
+    const activeContainer = document.getElementById('active-orders-container');
+    if (active.length) {
+      activeContainer.innerHTML = `<div style="display:grid;gap:1rem;padding-top:1rem;">${active.map(renderActiveOrder).join('')}</div>`;
+    } else {
+      activeContainer.innerHTML = `<div class="empty-state" style="margin-top:1rem;">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>
+        <p>Nenhum pedido em andamento no momento.</p>
+        <a href="/loja/" class="btn btn-primary" style="margin-top:0.5rem;font-size:0.85rem;">Ver catálogo</a>
+      </div>`;
+    }
+
+    // History
+    const histContainer = document.getElementById('history-orders-container');
+    if (history.length) {
+      histContainer.innerHTML = `<div style="display:grid;gap:0.65rem;padding-top:1rem;">${history.map(renderHistoryRow).join('')}</div>`;
+    } else {
+      histContainer.innerHTML = `<div class="empty-state" style="margin-top:1rem;">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        <p>Nenhum pedido entregue ainda. Faça sua primeira compra!</p>
+        <a href="/loja/" class="btn btn-primary" style="margin-top:0.5rem;font-size:0.85rem;">Comprar agora</a>
+      </div>`;
+    }
+  }
+
+  /* ── demo orders (shown when no API is available) ── */
+  function getDemoOrders() {
+    return [
+      {
+        id: 'demo-001',
+        orderNumber: 1,
+        orderNumberFormatted: '#00001',
+        orderAccessCode: '#befbf8e6',
+        status: 'shipped',
+        amountSubtotal: 129.90,
+        amountTotal: 129.90,
+        shippingAmount: 0,
+        paymentMethod: 'PIX',
+        createdAt: '2026-04-30T10:25:00Z',
+        paidAt: '2026-04-30T10:29:00Z',
+        updatedAt: '2026-05-02T10:29:00Z',
+        deliveryEstimate: { text: '04/05/2026' },
+        carrier: 'T.ETRANSP',
+        trackingCode: '#88720869',
+        trackingUrl: '',
+        customer: { name: 'BigSmoke Store', email: 'contato@bigsmoke.com.br' },
+        events: [
+          { type: 'order.created',   created: '2026-04-30T10:25:00Z', title: 'Pedido recebido' },
+          { type: 'payment.paid',    created: '2026-04-30T10:29:00Z', title: 'Pagamento aprovado' },
+          { type: 'order.separated', created: '2026-04-30T10:30:00Z', title: 'Em separação' },
+          { type: 'invoice.issued',  created: '2026-05-01T02:22:00Z', title: 'Nota fiscal emitida' },
+          { type: 'order.shipped',   created: '2026-05-02T10:29:00Z', title: 'Pedido saiu para entrega!' },
+        ]
+      },
+      {
+        id: 'demo-002',
+        orderNumber: 2,
+        orderNumberFormatted: '#00002',
+        orderAccessCode: '#a1b2c3d4',
+        status: 'delivered',
+        amountSubtotal: 89.90,
+        amountTotal: 89.90,
+        shippingAmount: 0,
+        paymentMethod: 'Cartão de Crédito',
+        createdAt: '2026-03-16T09:00:00Z',
+        paidAt: '2026-03-16T09:05:00Z',
+        updatedAt: '2026-03-20T14:00:00Z',
+        carrier: 'Correios',
+        trackingCode: 'BR123456789',
+        customer: { name: 'BigSmoke Store', email: 'contato@bigsmoke.com.br' },
+        address: { street: 'Rua das Flores', number: '701', city: 'João Pessoa', state: 'PB', cep: '58046780' },
+        items: [
+          { id: 'cap', name: 'Cap BigSmoke Streetwear', quantity: 1, price: 89.90, size: 'Único', image: '../imagens/logo_sem_fundo.png' }
+        ],
+        events: [
+          { type: 'order.created',   created: '2026-03-16T09:00:00Z', title: 'Pedido recebido' },
+          { type: 'payment.paid',    created: '2026-03-16T09:05:00Z', title: 'Pagamento aprovado' },
+          { type: 'order.shipped',   created: '2026-03-18T08:00:00Z', title: 'Pedido enviado' },
+          { type: 'order.delivered', created: '2026-03-20T14:00:00Z', title: 'Pedido entregue ✓' },
+        ]
+      },
+      {
+        id: 'demo-003',
+        orderNumber: 3,
+        orderNumberFormatted: '#00003',
+        orderAccessCode: '#x9y8z7w6',
+        status: 'delivered',
+        amountSubtotal: 159.90,
+        amountTotal: 159.90,
+        shippingAmount: 0,
+        paymentMethod: 'PIX',
+        createdAt: '2026-02-10T11:00:00Z',
+        paidAt: '2026-02-10T11:10:00Z',
+        updatedAt: '2026-02-15T10:00:00Z',
+        carrier: 'Jadlog',
+        trackingCode: 'JD9876543',
+        customer: { name: 'BigSmoke Store', email: 'contato@bigsmoke.com.br' },
+        events: [
+          { type: 'order.created',   created: '2026-02-10T11:00:00Z', title: 'Pedido recebido' },
+          { type: 'payment.paid',    created: '2026-02-10T11:10:00Z', title: 'Pagamento aprovado' },
+          { type: 'order.shipped',   created: '2026-02-12T09:00:00Z', title: 'Pedido enviado' },
+          { type: 'order.delivered', created: '2026-02-15T10:00:00Z', title: 'Pedido entregue ✓' },
+        ]
+      }
+    ];
+  }
+
+  loadProfile();
+})();
+</script>
+
+</body>
+</html>

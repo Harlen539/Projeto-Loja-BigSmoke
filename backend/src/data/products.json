@@ -1,0 +1,129 @@
+[
+  {
+    "id": "preview-1777902029458",
+    "name": "Camiseta BigSmoke Smoke Identity",
+    "category": "Camisetas",
+    "description": "Camiseta oversized com design minimalista na frente e estampa marcante nas costas, trazendo o nome BigSmoke em múltiplas tipografias envoltas em efeito smoke.",
+    "price": 84.9,
+    "stock": 25,
+    "image": "/uploads/1777901887119-cinza_1.webp",
+    "image_url": "/uploads/1777901887119-cinza_1.webp",
+    "images": [
+      "/uploads/1777901887119-cinza_1.webp",
+      "/uploads/1777901903045-cinza_2.webp"
+    ],
+    "sizes": "P, M, G, GG,XG",
+    "badge": "Drop atual",
+    "active": true,
+    "featured": false,
+    "colors": [
+      {
+        "name": "Cinza",
+        "hex": "#6e6e6e",
+        "images": [
+          "/uploads/1777901887119-cinza_1.webp",
+          "/uploads/1777901923474-cinza_2.webp"
+        ]
+      },
+      {
+        "name": "Branca",
+        "hex": "#f5f0e8",
+        "images": [
+          "/uploads/1777901954466-branca_1.webp",
+          "/uploads/1777901961086-branca_2.webp"
+        ],
+        "stock": 10
+      },
+      {
+        "name": "Preta",
+        "hex": "#1a1a1a",
+        "images": [
+          "/uploads/1777901992672-preta_1.webp",
+          "/uploads/1777901998845-preta_2.webp"
+        ]
+      }
+    ],
+    "createdAt": "2026-05-04T13:40:29.469Z",
+    "updatedAt": "2026-05-04T13:40:29.469Z"
+  },
+  {
+    "id": "preview-1777652199049",
+    "name": "Moletom Classic BigSmoke",
+    "category": "Moletons",
+    "description": "Peça premium para dias frios, pronta para campanha e venda assistida.",
+    "price": 259.9,
+    "stock": 0,
+    "image": "/uploads/1777652191957-moletom_frente.webp",
+    "image_url": "/uploads/1777652191957-moletom_frente.webp",
+    "images": [
+      "/uploads/1777652191957-moletom_frente.webp",
+      "/uploads/1777652197288-moletom_costas.webp"
+    ],
+    "sizes": "M, G, GG",
+    "badge": "Mais pedido",
+    "active": true,
+    "featured": false,
+    "createdAt": "2026-05-01T16:16:39.058Z",
+    "updatedAt": "2026-05-01T16:16:39.059Z"
+  },
+  {
+    "id": "preview-1777620434620",
+    "name": "Camiseta Oversized BS",
+    "category": "Camisetas",
+    "description": "Camiseta oversized com arte smoke de alto impacto e identidade urbana. Minimalista, intensa e feita para presença.",
+    "price": 99.9,
+    "stock": 20,
+    "image": "/uploads/1777620420235-camiseta_final_frente.webp",
+    "image_url": "/uploads/1777620420235-camiseta_final_frente.webp",
+    "images": [
+      "/uploads/1777620420235-camiseta_final_frente.webp",
+      "/uploads/1777620426145-camiseta_final_costas.webp"
+    ],
+    "sizes": "P, M, G, GG",
+    "badge": "Novo",
+    "active": true,
+    "featured": true,
+    "createdAt": "2026-05-01T07:27:14.622Z",
+    "updatedAt": "2026-05-01T07:27:14.622Z"
+  },
+  {
+    "id": "preview-1777619952386",
+    "name": "Boné BigSmoke Signatur",
+    "category": "Acessórios",
+    "description": "Boné premium com bordado frontal geométrico exclusivo e acabamento de alta qualidade. Design minimalista com identidade forte, feito para compor outfits streetwear de alto padrão. Ajuste confortável com regulagem traseira e detalhes sutis que elevam a peça.",
+    "price": 69.9,
+    "stock": 10,
+    "image": "/uploads/1777619923736-bone_frente.webp",
+    "image_url": "/uploads/1777619923736-bone_frente.webp",
+    "images": [
+      "/uploads/1777619923736-bone_frente.webp",
+      "/uploads/1777619950648-bone_costas.webp"
+    ],
+    "sizes": "Único",
+    "badge": "DROP LIMITADO",
+    "active": true,
+    "featured": false,
+    "createdAt": "2026-05-01T07:19:12.388Z",
+    "updatedAt": "2026-05-01T07:19:12.388Z"
+  },
+  {
+    "id": "moletom-classic",
+    "name": "Moletom Classic BigSmoke",
+    "category": "Moletons",
+    "description": "Peça premium para dias frios, pronta para campanha e venda assistida.",
+    "price": 249.9,
+    "stock": 18,
+    "image": "https://placehold.co/900x1200/141414/F5F0E8?text=Moletom+Classic",
+    "image_url": "https://placehold.co/900x1200/141414/F5F0E8?text=Moletom+Classic",
+    "images": [
+      "https://placehold.co/900x1200/141414/F5F0E8?text=Moletom+Classic"
+    ],
+    "sizes": "M, G, GG",
+    "badge": "Mais pedido",
+    "active": true,
+    "featured": true,
+    "colors": [],
+    "createdAt": "2026-04-27T00:00:00.000Z",
+    "updatedAt": "2026-05-05T01:28:54.262Z"
+  }
+]
