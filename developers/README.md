@@ -16,6 +16,7 @@ Depois acesse:
 
 - Loja: http://localhost:3000/loja/index.html
 - Admin: http://localhost:3000/admin/index.html
+- Developers: http://localhost:3000/developers/
 - Health check: http://localhost:3000/healthz
 
 ## Login admin local
@@ -34,6 +35,7 @@ JWT_SECRET=bigsmoke-local-secret-12345678901234567890
 ## Arquivos de teste
 
 - `api-tests.http`: requests prontos para testar a API no VS Code com a extensao REST Client.
+- `index.html`: pagina com atalhos para testar rotas no navegador.
 - `test-checklist.md`: checklist manual de loja, admin e API.
 - `local.env.example`: exemplo de variaveis locais para desenvolvimento.
 

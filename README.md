@@ -55,6 +55,7 @@ O backend sobe em `http://localhost:3000` por padrao e tambem serve:
 
 - Loja: `http://localhost:3000/loja/index.html`
 - Admin: `http://localhost:3000/admin/index.html`
+- Developers: `http://localhost:3000/developers/`
 - Health check: `http://localhost:3000/healthz`
 
 Para abrir cada frontend separadamente com Vite:
@@ -77,6 +78,7 @@ A pasta `developers/` tem arquivos para testar o projeto:
 
 - `developers/api-tests.http`: requests prontos para API.
 - `developers/local.env.example`: variaveis locais de exemplo.
+- `developers/index.html`: pagina local com atalhos de teste em `/developers/`.
 - `developers/test-checklist.md`: checklist manual de testes.
 
 ## Observacoes

@@ -17,6 +17,7 @@ require("dotenv").config();
 const repoRoot = path.resolve(__dirname, "..", "..");
 const frontendLojaDir = path.join(repoRoot, "frontend-loja", "src");
 const frontendAdminDir = path.join(repoRoot, "frontend-admin", "src");
+const developersDir = path.join(repoRoot, "developers");
 const dataDir = path.resolve(process.env.BIGSMOKE_DATA_DIR || path.join(__dirname, "data"));
 const uploadsDir = path.resolve(process.env.BIGSMOKE_UPLOADS_DIR || path.join(__dirname, "uploads"));
 const productsFile = path.join(dataDir, "products.json");
@@ -1702,6 +1703,7 @@ app.use("/assets", express.static(path.join(frontendLojaDir, "assets")));
 app.use("/admin/assets", express.static(path.join(frontendAdminDir, "assets")));
 app.use("/admin", express.static(frontendAdminDir));
 app.use("/loja", express.static(frontendLojaDir));
+app.use("/developers", express.static(developersDir));
 app.use("/imagens", express.static(path.join(frontendLojaDir, "imagens")));
 
 app.get("/Style.css", (_req, res) => res.sendFile(path.join(frontendLojaDir, "Style.css")));
@@ -1720,6 +1722,34 @@ app.get("/admin", (_req, res) => {
 
 app.get("/loja", (_req, res) => {
   res.redirect("/loja/");
+});
+
+app.get("/developers", (_req, res) => {
+  res.redirect("/developers/");
+});
+
+app.get("/loja/index", (_req, res) => {
+  res.redirect("/loja/");
+});
+
+app.get("/loja/produto", (_req, res) => {
+  res.sendFile(path.join(frontendLojaDir, "produto.html"));
+});
+
+app.get("/loja/pedidos", (_req, res) => {
+  res.sendFile(path.join(frontendLojaDir, "pedidos.html"));
+});
+
+app.get("/loja/perfil", (_req, res) => {
+  res.sendFile(path.join(frontendLojaDir, "perfil.html"));
+});
+
+app.get("/loja/politica", (_req, res) => {
+  res.sendFile(path.join(frontendLojaDir, "politica.html"));
+});
+
+app.get("/admin/index", (_req, res) => {
+  res.redirect("/admin/");
 });
 
 app.get("/api/config", (_req, res) => {

@@ -6,9 +6,9 @@ const test = require("node:test");
 
 process.env.BIGSMOKE_DATA_DIR = path.join(os.tmpdir(), `bigsmoke-data-${process.pid}`);
 process.env.BIGSMOKE_UPLOADS_DIR = path.join(os.tmpdir(), `bigsmoke-uploads-${process.pid}`);
-process.env.JWT_SECRET = "test-secret";
+process.env.JWT_SECRET = "test-secret-with-at-least-32-characters";
 process.env.ADMIN_EMAIL = "admin@bigsmoke.local";
-process.env.ADMIN_PASSWORD = "admin123";
+process.env.ADMIN_PASSWORD = "admin123456789";
 process.env.STRIPE_SECRET_KEY = "sk_test_dummy";
 process.env.STRIPE_WEBHOOK_SECRET = "whsec_test_dummy";
 process.env.STRIPE_MOCK = "true";
@@ -40,7 +40,7 @@ test("login returns a token", async () => {
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
       email: "admin@bigsmoke.local",
-      password: "admin123"
+      password: "admin123456789"
     })
   });
 
