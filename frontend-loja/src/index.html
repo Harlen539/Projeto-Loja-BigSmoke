@@ -3,17 +3,375 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BigSmoke | Streetwear Autêntico</title>
+  <meta name="description" content="BigSmoke Store com catálogo atualizado via API, carrinho persistente e checkout seguro via Stripe.">
+  <link rel="canonical" href="/loja/">
+  <link rel="manifest" href="/manifest.webmanifest">
+  <meta name="theme-color" content="#090909">
   <link rel="icon" type="image/png" sizes="any" href="/imagens/logo_sem_fundo.png">
   <link rel="shortcut icon" href="/imagens/logo_sem_fundo.png">
-  <meta http-equiv="refresh" content="0; url=/loja/">
-  <title>BigSmoke</title>
+  <meta property="og:title" content="BigSmoke | Streetwear Autêntico">
+  <meta property="og:description" content="Loja online BigSmoke com visual streetwear, catálogo dinâmico e checkout Stripe.">
+  <link rel="stylesheet" href="../Style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@300;400;500;600;700&family=Oswald:wght@400;500;600;700&display=swap" rel="stylesheet">
 </head>
 <body>
-  <script>
-    window.location.replace("/loja/");
-  </script>
-  <noscript>
-    <p>Acesse a loja em <a href="/loja/">/loja/</a>.</p>
-  </noscript>
+<div class="top-ticker" aria-label="Informações da loja">
+  <div class="ticker-track">
+    <span>Frete para todo o Brasil</span>
+    <span>Cartão via Stripe</span>
+    <span>Streetwear autoral BigSmoke</span>
+    <span>Atendimento direto pelo WhatsApp</span>
+    <span>Frete para todo o Brasil</span>
+    <span>Cartão via Stripe</span>
+    <span>Streetwear autoral BigSmoke</span>
+    <span>Atendimento direto pelo WhatsApp</span>
+  </div>
+</div>
+
+<header class="navbar" id="top">
+  <a class="brand" href="#hero" aria-label="Página inicial BigSmoke">
+    <img src="../imagens/logo_sem_fundo.png" class="logo-img" alt="Logo BigSmoke">
+  </a>
+
+  <nav class="nav-links" aria-label="Navegação principal">
+    <a href="#products">Drops</a>
+    <a href="#about">Marca</a>
+    <a href="/loja/pedidos.html">Meus pedidos</a>
+    <a href="#contact">Contato</a>
+    <a href="/loja/politica.html">Política de Privacidade &amp; Trocas</a>
+  </nav>
+
+  <div class="header-actions">
+    <div class="language-switcher" data-language-switcher>
+      <button type="button" class="language-toggle" id="language-toggle" aria-label="Abrir seletor de idioma" aria-haspopup="menu" aria-expanded="false">
+        <img id="language-current-flag" src="/imagens/bandeira_BRA.jpg" alt="" aria-hidden="true">
+        <span class="sr-only">Idioma atual</span>
+      </button>
+      <div class="language-menu" id="language-menu" role="menu" aria-label="Selecionar idioma" hidden>
+        <button type="button" class="language-option" data-locale-option="pt" aria-label="Português" role="menuitem">
+          <img alt="" aria-hidden="true" src="/imagens/bandeira_BRA.jpg">
+          <span class="sr-only">Português</span>
+        </button>
+        <button type="button" class="language-option" data-locale-option="en" aria-label="English" role="menuitem">
+          <img alt="" aria-hidden="true" src="/imagens/bandeira_EUA.jpg">
+          <span class="sr-only">English</span>
+        </button>
+        <button type="button" class="language-option" data-locale-option="es" aria-label="Español" role="menuitem">
+          <img alt="" aria-hidden="true" src="/imagens/bandeira_ESP.png">
+          <span class="sr-only">Español</span>
+        </button>
+      </div>
+    </div>
+    <a class="profile-icon-link" href="/loja/perfil.html" aria-label="Meu Perfil" title="Meu Perfil">
+      <img src="../imagens/icone_bigsmoke_conta.png" alt="" aria-hidden="true">
+      <span class="sr-only">Meu Perfil</span>
+    </a>
+    <button class="cart-toggle" type="button" onclick="toggleCart()" aria-label="Abrir carrinho">
+      <svg viewBox="0 0 24 24" class="cart-icon" aria-hidden="true">
+        <path d="M2.75 4.25h2.2c.48 0 .89.33 1 .8l.28 1.2m0 0 1.45 6.54a2 2 0 0 0 1.95 1.57h6.98a2 2 0 0 0 1.93-1.48l1.55-5.59H7.23Z"></path>
+        <path d="M10 18.5a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3Zm7 0a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3Z"></path>
+      </svg>
+      <span class="cart-label">Carrinho</span>
+      <span class="cart-count" id="cart-count">0</span>
+    </button>
+  </div>
+</header>
+
+<main>
+  <section class="hero" id="hero">
+    <canvas id="smoke"></canvas>
+    <div class="hero-grid">
+      <div class="hero-copy">
+        <p class="eyebrow">BigSmoke Streetwear</p>
+        <h1>Streetwear com presença, contraste e assinatura própria.</h1>
+        <p class="hero-subtitle">BigSmoke não é só roupa. É presença, movimento e identidade pra quem vive a rua e transforma atitude em assinatura.</p>
+        <div class="hero-actions">
+          <button class="btn btn-primary" type="button" onclick="scrollToProducts()">Ver catálogo</button>
+          <a class="btn btn-outline" href="#contact">Falar com a marca</a>
+        </div>
+      </div>
+
+      <div class="hero-brand-panel">
+        <img src="../imagens/logo_sem_fundo.png" class="hero-logo" alt="Logo principal BigSmoke">
+        <div class="hero-stats">
+          <article>
+            <strong>Brasil</strong>
+            <span>Atendimento online</span>
+          </article>
+          <article>
+            <strong>Stripe</strong>
+            <span>Checkout seguro e profissional</span>
+          </article>
+          <article>
+            <strong>Assinatura própria</strong>
+            <span>Visual pensado para carregar a identidade BigSmoke</span>
+          </article>
+        </div>
+      </div>
+    </div>
+  </section>
+
+    <section class="trust-bar" aria-label="Destaques da loja">
+    <article>
+      <strong>Rua e cultura</strong>
+      <span>Peças que carregam atitude e presença</span>
+    </article>
+    <article>
+      <strong>Comunidade</strong>
+      <span>Quem veste BigSmoke representa um movimento</span>
+    </article>
+    <article>
+      <strong>Drop constante</strong>
+      <span>Novas peças, novas histórias, mesma identidade</span>
+    </article>
+  </section>
+
+  <section class="shop-nav section-shell" aria-label="Navegação de compra">
+    <div class="shop-nav-card">
+      <div class="shop-nav-copy">
+        <p class="section-kicker">Comprar rápido</p>
+        <h2>Navegue por categoria, busque uma peça e feche o pedido sem perder tempo.</h2>
+      </div>
+      <div class="shop-nav-actions">
+        <a href="#products" class="nav-chip">Ver todos os produtos</a>
+        <button type="button" class="nav-chip" onclick="focusSearch()">Buscar produto</button>
+        <button type="button" class="nav-chip" onclick="toggleCart(true)">Abrir carrinho</button>
+      </div>
+    </div>
+  </section>
+
+  <section id="products" class="products section-shell">
+    <div class="section-heading">
+      <p class="section-kicker">Drops em destaque</p>
+      <h2>Catálogo inicial da BigSmoke</h2>
+    </div>
+    <div class="catalog-toolbar">
+      <label class="search-box" for="product-search">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <circle cx="11" cy="11" r="6.5"></circle>
+          <path d="m16 16 4.5 4.5"></path>
+        </svg>
+        <input id="product-search" type="search" placeholder="Buscar por nome, categoria ou descrição">
+      </label>
+      <div class="filter-chips" id="category-filters" aria-label="Filtrar categorias"></div>
+    </div>
+    <div class="grid" id="products-grid"></div>
+  </section>
+
+    <section id="about" class="about section-shell">
+    <div class="section-heading split-heading">
+      <div>
+        <p class="section-kicker">Manifesto</p>
+        <h2>BigSmoke é mais que uma marca. É uma comunidade.</h2>
+      </div>
+      <p>De quem vive a rua, respira música e transforma presença em identidade. De quem não espera oportunidade, cria.</p>
+    </div>
+    <div class="about-panels">
+      <article class="info-panel">
+        <span class="panel-label">Rua</span>
+        <h3>Presença acima de tudo</h3>
+        <p>Peças pensadas para entrar na cena com força, personalidade e leitura imediata.</p>
+      </article>
+      <article class="info-panel">
+        <span class="panel-label">Música</span>
+        <h3>Ritmo que veste</h3>
+        <p>A energia da rua e da música aparece no corte, no peso visual e na atitude da coleção.</p>
+      </article>
+      <article class="info-panel">
+        <span class="panel-label">Movimento</span>
+        <h3>Quem veste, representa</h3>
+        <p>Se você veste BigSmoke, você não está seguindo. Você está representando.</p>
+      </article>
+    </div>
+  </section>
+
+    <section id="contact" class="contact section-shell">
+    <div class="contact-card">
+      <div class="contact-copy">
+        <p class="section-kicker">Contato oficial</p>
+        <h2>Bem-vindo ao movimento.</h2>
+        <p class="contact-text">Atendimento, lista VIP, novidades e próximos drops da BigSmoke passam por aqui.</p>
+      </div>
+      <div class="contact-actions">
+        <a href="https://wa.me/5583986494691?text=Olá%20BigSmoke%2C%20quero%20saber%20mais%20sobre%20o%20drop" target="_blank" rel="noopener" class="btn btn-primary">Chamar no WhatsApp</a>
+        <a href="mailto:contato@bigsmoke.com.br" class="contact-link">contato@bigsmoke.com.br</a>
+        <a href="https://www.instagram.com/bigsmokestyle" target="_blank" rel="noopener noreferrer" class="contact-link">Instagram: @bigsmokestyle</a>
+      </div>
+    </div>
+  </section>
+  <section id="faq" class="faq section-shell">
+    <div class="section-heading split-heading">
+      <div>
+        <p class="section-kicker">Perguntas frequentes</p>
+        <h2>Dúvidas que aparecem antes de fechar o drop.</h2>
+      </div>
+      <p>Respostas rápidas para compra, troca, entrega e contato com a marca.</p>
+    </div>
+    <div class="faq-list">
+      <details class="faq-item" open>
+        <summary>Como faço meu pedido?</summary>
+        <p>Escolha as peças, adicione ao carrinho e finalize no checkout seguro da BigSmoke.</p>
+      </details>
+      <details class="faq-item">
+        <summary>Posso falar com vocês antes de comprar?</summary>
+        <p>Sim. O Instagram e o WhatsApp da loja ficam disponíveis no rodapé e no contato oficial.</p>
+      </details>
+      <details class="faq-item">
+        <summary>Vocês enviam para todo o Brasil?</summary>
+        <p>Sim. O site calcula frete e entrega com base no CEP informado durante o checkout.</p>
+      </details>
+      <details class="faq-item">
+        <summary>Tem troca ou ajuste de tamanho?</summary>
+        <p>Sim, a troca segue a política da loja e pode ser alinhada pelos canais oficiais de atendimento.</p>
+      </details>
+    </div>
+  </section>
+
+</main>
+
+<footer class="site-footer">
+  <div class="site-footer-brand">
+    <strong>BIGSMOKE</strong>
+    <span>Streetwear autêntico com estrutura pronta para crescer.</span>
+  </div>
+  <div class="site-footer-column">
+    <strong>Quem somos?</strong>
+    <a href="#about">Manifesto da marca</a>
+    <a href="#contact">Fale com a BigSmoke</a>
+    <a href="/loja/pedidos.html">Meus pedidos</a>
+  </div>
+  <div class="site-footer-column">
+    <strong>Redes sociais</strong>
+    <div class="social-links" aria-label="Redes sociais da loja">
+      <a class="social-icon-link" href="https://www.instagram.com/bigsmokestyle?igsh=eTljZHI2YnpqYXJ2" target="_blank" rel="noopener noreferrer" aria-label="Abrir Instagram da BigSmoke" title="Instagram">
+        <img src="../imagens/instagram_logo.png" alt="" aria-hidden="true">
+        <span class="sr-only">Instagram da loja</span>
+      </a>
+      <a class="social-icon-link" href="https://wa.me/5583986494691?text=Ol%C3%A1%20BigSmoke%2C%20vim%20pelo%20site" target="_blank" rel="noopener noreferrer" aria-label="Abrir WhatsApp da BigSmoke" title="WhatsApp">
+        <img src="../imagens/Whatsapp_logo.png" alt="" aria-hidden="true">
+        <span class="sr-only">WhatsApp da loja</span>
+      </a>
+    </div>
+    <a href="mailto:contato@bigsmoke.com.br" class="footer-email">contato@bigsmoke.com.br</a>
+  </div>
+</footer>
+
+<div class="cart-overlay" id="cart-overlay" onclick="toggleCart(false)"></div>
+
+<aside id="cart" class="cart" aria-label="Carrinho lateral">
+  <div class="cart-header">
+    <div>
+      <p class="section-kicker">Pedido</p>
+      <h2>Carrinho BigSmoke</h2>
+    </div>
+    <button type="button" class="cart-close" onclick="toggleCart(false)" aria-label="Fechar carrinho">&times;</button>
+  </div>
+  <ul id="cart-items"></ul>
+  <div class="empty-cart" id="empty-cart">Nenhuma peça adicionada ainda.</div>
+  <div class="total-section">
+    <span>Total</span>
+    <span>R$ <span id="total">0,00</span></span>
+  </div>
+  <button id="checkout-button" type="button" class="btn btn-primary full-width">Finalizar compra</button>
+  <a id="whatsapp" target="_blank" rel="noopener" class="btn btn-outline full-width cart-secondary-link">Atendimento no WhatsApp</a>
+</aside>
+
+<div class="checkout-overlay" id="checkout-overlay" onclick="closeCheckout()"></div>
+
+<section class="checkout-modal" id="checkout-modal" aria-label="Finalizar compra">
+  <div class="checkout-header">
+    <div>
+      <p class="section-kicker">Checkout</p>
+      <h2>Finalizar compra</h2>
+    </div>
+    <button type="button" class="cart-close" onclick="closeCheckout()" aria-label="Fechar checkout">&times;</button>
+  </div>
+
+  <div class="checkout-grid">
+    <div class="checkout-form-column">
+      <div class="checkout-panel">
+        <h3>Entrega</h3>
+        <div class="delivery-methods">
+          <label class="option-card">
+            <input type="radio" name="delivery-method" value="retirada" checked>
+            <span>Retirada</span>
+            <small>Sem frete</small>
+          </label>
+          <label class="option-card">
+            <input type="radio" name="delivery-method" value="entrega">
+            <span>Entrega local</span>
+            <small>Estimativa por CEP</small>
+          </label>
+          <label class="option-card">
+            <input type="radio" name="delivery-method" value="correios">
+            <span>Envio nacional</span>
+            <small>Estimativa por região</small>
+          </label>
+        </div>
+
+        <div class="checkout-form-grid">
+          <input id="customer-name" type="text" placeholder="Nome completo">
+          <input id="customer-email" type="email" placeholder="E-mail">
+          <input id="customer-phone" type="tel" placeholder="WhatsApp">
+          <input id="customer-cep" type="text" inputmode="numeric" placeholder="CEP">
+          <input id="customer-street" type="text" placeholder="Rua / Avenida">
+          <input id="customer-number" type="text" placeholder="Número">
+          <input id="customer-neighborhood" type="text" placeholder="Bairro">
+          <input id="customer-city" type="text" placeholder="Cidade">
+          <input id="customer-state" type="text" placeholder="UF">
+          <input id="customer-complement" type="text" placeholder="Complemento">
+        </div>
+
+        <div class="checkout-inline-actions">
+          <button type="button" class="btn btn-outline compact-btn" id="lookup-cep">Buscar CEP</button>
+          <button type="button" class="btn btn-outline compact-btn" id="use-location">Usar minha localização</button>
+        </div>
+
+        <div class="info-banner" id="location-status">Informe um CEP para calcular a entrega.</div>
+      </div>
+    </div>
+
+    <aside class="checkout-summary">
+      <div class="checkout-panel">
+        <h3>Resumo do pedido</h3>
+        <hr style="border:none;border-top:1px solid rgba(245,240,232,0.08);margin-bottom:0.9rem">
+        <ul id="checkout-items" class="checkout-items"></ul>
+        <div class="summary-line">
+          <span>Subtotal</span>
+          <strong id="checkout-subtotal">R$ 0,00</strong>
+        </div>
+        <div class="summary-line">
+          <span>Frete</span>
+          <strong id="checkout-shipping">R$ 0,00</strong>
+        </div>
+        <div class="summary-line total-line">
+          <span>Total final</span>
+          <strong id="checkout-total">R$ 0,00</strong>
+        </div>
+        <button type="button" class="btn btn-primary full-width" id="confirm-checkout">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="margin-right:0.4rem;vertical-align:-1px" aria-hidden="true">
+            <rect x="3" y="11" width="18" height="11" rx="2"/>
+            <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+          </svg>
+          PAGAMENTO
+        </button>
+        <p class="checkout-note" id="checkout-note" style="margin-top:0.6rem;font-size:0.78rem;text-align:center;color:var(--text-muted)">
+          Redirecionamento seguro via Stripe &nbsp;·&nbsp; Dados criptografados
+        </p>
+      </div>
+    </aside>
+  </div>
+</section>
+
+<a href="https://wa.me/5583986494691?text=Olá%20BigSmoke%2C%20vim%20pelo%20site" class="whatsapp-float" aria-label="WhatsApp" target="_blank" rel="noopener">
+  <svg viewBox="0 0 32 32" aria-hidden="true">
+    <path d="M16 3C8.8 3 3 8.8 3 16c0 2.5.7 4.8 2 6.8L3 29l6.4-1.9c1.9 1.1 4.1 1.8 6.6 1.8 7.2 0 13-5.8 13-13S23.2 3 16 3zm7.6 18.5c-.3.8-1.6 1.5-2.2 1.6-.6.1-1.4.2-2.3-.1-.5-.2-1.2-.4-2-.8-3.6-1.6-5.9-5.3-6.1-5.5-.2-.3-1.4-1.9-1.4-3.6 0-1.8.9-2.7 1.2-3.1.3-.3.7-.4.9-.4h.7c.2 0 .5 0 .7.5.3.8 1 2.7 1.1 2.9.1.2.1.4 0 .6-.1.2-.2.4-.4.6-.2.2-.3.4-.5.6-.2.2-.3.5-.1.8.2.3.9 1.6 2 2.6 1.4 1.3 2.5 1.7 2.9 1.9.4.2.6.2.9-.1.3-.3 1.1-1.2 1.4-1.6.2-.3.5-.3.8-.2.3.1 2.2 1 2.6 1.2.4.2.7.3.8.5.1.2.1 1-.2 1.8z"></path>
+  </svg>
+</a>
+
+<script src="../script.js"></script>
 </body>
 </html>
