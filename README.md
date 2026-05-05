@@ -1,51 +1,49 @@
 # BigSmoke Organizado
 
-Este diretório reorganiza o projeto original em três partes: painel administrativo, loja pública e backend Node.js.
+Projeto da loja BigSmoke reorganizado em quatro partes: painel administrativo, loja publica, backend Node.js e area de developers para testes.
 
 ## Estrutura
 
 ```text
 bigsmoke-organizado/
-├── frontend-admin/
-│   ├── package.json
-│   └── src/
-│       ├── pages/
-│       ├── components/
-│       ├── assets/
-│       ├── imagens/
-│       ├── index.html
-│       ├── script.js
-│       └── style.css
-├── frontend-loja/
-│   ├── package.json
-│   └── src/
-│       ├── pages/
-│       ├── components/
-│       ├── assets/
-│       ├── imagens/
-│       ├── loja/
-│       ├── index.html
-│       ├── script.js
-│       ├── Style.css
-│       ├── manifest.webmanifest
-│       ├── robots.txt
-│       └── sitemap.xml
-├── backend/
-│   ├── package.json
-│   ├── test/
-│   └── src/
-│       ├── data/
-│       ├── scripts/
-│       ├── supabase/
-│       └── server.js
-└── README.md
+|-- backend/
+|   |-- package.json
+|   |-- test/
+|   `-- src/
+|       |-- data/
+|       |-- scripts/
+|       |-- supabase/
+|       `-- server.js
+|-- developers/
+|   |-- README.md
+|   |-- api-tests.http
+|   |-- local.env.example
+|   `-- test-checklist.md
+|-- frontend-admin/
+|   |-- package.json
+|   `-- src/
+|       |-- assets/
+|       |-- imagens/
+|       |-- index.html
+|       |-- script.js
+|       `-- style.css
+|-- frontend-loja/
+|   |-- package.json
+|   `-- src/
+|       |-- assets/
+|       |-- imagens/
+|       |-- index.html
+|       |-- script.js
+|       |-- Style.css
+|       |-- manifest.webmanifest
+|       |-- robots.txt
+|       `-- sitemap.xml
+`-- README.md
 ```
-
-Arquivos `.bak`, `*.err.log` e `*.out.log` foram ignorados. Os arquivos `.env.example` e `.env.local.example` foram copiados para `backend/`, `frontend-admin/` e `frontend-loja/`.
 
 ## Como rodar
 
-Instale as dependências em cada parte:
+Instale as dependencias e suba o backend:
 
 ```bash
 cd backend
@@ -53,7 +51,11 @@ npm install
 npm run dev
 ```
 
-O backend sobe em `http://localhost:3000` por padrão e também serve a loja em `/loja/`, o admin em `/admin/`, os assets e as rotas de API.
+O backend sobe em `http://localhost:3000` por padrao e tambem serve:
+
+- Loja: `http://localhost:3000/loja/index.html`
+- Admin: `http://localhost:3000/admin/index.html`
+- Health check: `http://localhost:3000/healthz`
 
 Para abrir cada frontend separadamente com Vite:
 
@@ -69,12 +71,20 @@ npm install
 npm run dev
 ```
 
-## Observações
+## Area developers
 
-O backend foi ajustado para servir os arquivos estáticos a partir da nova estrutura:
+A pasta `developers/` tem arquivos para testar o projeto:
+
+- `developers/api-tests.http`: requests prontos para API.
+- `developers/local.env.example`: variaveis locais de exemplo.
+- `developers/test-checklist.md`: checklist manual de testes.
+
+## Observacoes
+
+O backend serve os arquivos estaticos a partir da estrutura organizada:
 
 - `/loja/` aponta para `frontend-loja/src/`
 - `/admin/` aponta para `frontend-admin/src/`
-- `/assets/`, `/imagens/`, `Style.css`, `script.js`, `manifest.webmanifest`, `robots.txt` e `sitemap.xml` continuam disponíveis para manter as páginas originais funcionando.
+- `/assets/`, `/imagens/`, `Style.css`, `script.js`, `manifest.webmanifest`, `robots.txt` e `sitemap.xml` continuam disponiveis para manter as paginas originais funcionando.
 
-Os diretórios `pages/` e `components/` foram criados para futuras migrações React sem alterar a funcionalidade atual.
+Arquivos sensiveis e gerados localmente ficam fora do Git via `.gitignore`, incluindo `.env`, `node_modules/`, uploads e logs.
