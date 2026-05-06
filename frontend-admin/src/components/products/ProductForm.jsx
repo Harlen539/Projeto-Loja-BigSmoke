@@ -11,6 +11,7 @@ const empty = {
   stockType: "limited",
   image: "",
   images: [],
+  colors: [],
   description: "",
   sizes: "",
   badge: "",
@@ -88,6 +89,27 @@ function Section({ icon: IconComp, title, children, defaultOpen = true }) {
   );
 }
 
+function normalizeColorVariants(value) {
+  const list = Array.isArray(value) ? value : [];
+  return list.map((color, index) => ({
+    name: String(color?.name || color?.label || color?.color || "").trim(),
+    hex: /^#[0-9a-f]{6}$/i.test(String(color?.hex || "").trim()) ? String(color.hex).trim() : "#888888",
+    stock: color?.stock ?? "",
+    images: Array.isArray(color?.images) ? [...new Set(color.images.map((url) => String(url || "").trim()).filter(Boolean))] : [],
+    localId: color?.localId || `color-${Date.now()}-${index}`,
+  }));
+}
+
+function createColorVariant() {
+  return {
+    name: "",
+    hex: "#f5f0e8",
+    stock: "",
+    images: [],
+    localId: `color-${Date.now()}-${Math.random().toString(16).slice(2)}`,
+  };
+}
+
 export function ProductForm({ product, onCancel, onSubmit }) {
   const { token } = useAuth();
   const [form, setForm] = useState(empty);
@@ -102,6 +124,7 @@ export function ProductForm({ product, onCancel, onSubmit }) {
         ...product,
         sizes: Array.isArray(product.sizes) ? product.sizes.join(", ") : product.sizes || "",
         images: Array.isArray(product.images) ? product.images : [],
+        colors: normalizeColorVariants(product.colors),
         stockType: product.stock === -1 || product.stockType === "infinite" ? "infinite" : "limited",
         tags: Array.isArray(product.tags) ? product.tags.join(", ") : product.tags || "",
       });
@@ -114,32 +137,37 @@ export function ProductForm({ product, onCancel, onSubmit }) {
     setForm((c) => ({ ...c, [field]: value }));
   }
 
+  async function uploadFiles(files) {
+    const uploaded = [];
+    for (const file of files) {
+      const fd = new FormData();
+      fd.append("image", file);
+      const res = await fetch("/api/admin/uploads", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}` },
+        body: fd,
+      });
+      const data = await res.json();
+      if (data.imageUrl) uploaded.push(data.imageUrl);
+    }
+    return uploaded;
+  }
+
   async function handleFileUpload(e) {
     const files = Array.from(e.target.files || []);
     if (!files.length) return;
     setUploading(true);
     try {
-      for (const file of files) {
-        const fd = new FormData();
-        fd.append("image", file);
-        const res = await fetch("/api/admin/uploads", {
-          method: "POST",
-          headers: { Authorization: `Bearer ${token}` },
-          body: fd,
-        });
-        const data = await res.json();
-        if (data.imageUrl) {
-          setForm((cur) => {
-            const imgs = [...(cur.images || [])];
-            if (!imgs.includes(data.imageUrl)) imgs.push(data.imageUrl);
-            return { ...cur, image: cur.image || data.imageUrl, images: imgs };
-          });
-        }
-      }
+      const uploaded = await uploadFiles(files);
+      setForm((cur) => {
+        const imgs = [...new Set([...(cur.images || []), ...uploaded])];
+        return { ...cur, image: cur.image || imgs[0] || "", images: imgs };
+      });
     } catch (err) {
       console.error(err);
     } finally {
       setUploading(false);
+      e.target.value = "";
     }
   }
 
@@ -150,11 +178,69 @@ export function ProductForm({ product, onCancel, onSubmit }) {
     });
   }
 
+  function updateColorVariant(index, field, value) {
+    setForm((cur) => ({
+      ...cur,
+      colors: (cur.colors || []).map((color, i) => (i === index ? { ...color, [field]: value } : color)),
+    }));
+  }
+
+  function addColorVariant() {
+    setForm((cur) => ({ ...cur, colors: [...(cur.colors || []), createColorVariant()] }));
+  }
+
+  function removeColorVariant(index) {
+    setForm((cur) => ({ ...cur, colors: (cur.colors || []).filter((_, i) => i !== index) }));
+  }
+
+  async function handleColorImageUpload(index, e) {
+    const files = Array.from(e.target.files || []);
+    if (!files.length) return;
+    setUploading(true);
+    try {
+      const uploaded = await uploadFiles(files);
+      setForm((cur) => {
+        const colors = (cur.colors || []).map((color, i) => {
+          if (i !== index) return color;
+          return { ...color, images: [...new Set([...(color.images || []), ...uploaded])] };
+        });
+        const imgs = [...new Set([...(cur.images || []), ...uploaded])];
+        return { ...cur, image: cur.image || imgs[0] || "", images: imgs, colors };
+      });
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setUploading(false);
+      e.target.value = "";
+    }
+  }
+
+  function removeColorImage(index, url) {
+    setForm((cur) => ({
+      ...cur,
+      colors: (cur.colors || []).map((color, i) => (
+        i === index ? { ...color, images: (color.images || []).filter((img) => img !== url) } : color
+      )),
+    }));
+  }
+
   function submit(e) {
     e.preventDefault();
     const tags = form.tags ? form.tags.split(",").map((t) => t.trim()).filter(Boolean) : [];
+    const colors = normalizeColorVariants(form.colors)
+      .map(({ localId, ...color }) => ({
+        ...color,
+        stock: color.stock === "" || color.stock === null || color.stock === undefined ? undefined : Number(color.stock),
+      }))
+      .filter((color) => color.name);
+    const variantImages = colors.flatMap((color) => color.images || []);
+    const images = [...new Set([...(form.images || []), ...variantImages].filter(Boolean))];
+    const image = form.image || images[0] || "";
     onSubmit({
       ...form,
+      image,
+      image_url: image,
+      images,
       price: Number(form.price || 0),
       promotionalPrice: form.promotionalPrice ? Number(form.promotionalPrice) : null,
       cost: form.cost ? Number(form.cost) : null,
@@ -167,6 +253,7 @@ export function ProductForm({ product, onCancel, onSubmit }) {
       width: form.width ? Number(form.width) : null,
       height: form.height ? Number(form.height) : null,
       tags,
+      colors,
     });
   }
 
@@ -302,6 +389,70 @@ export function ProductForm({ product, onCancel, onSubmit }) {
               <label className="pf-label">Badge / variação</label>
               <input className="pf-input" value={form.badge} onChange={(e) => update("badge", e.target.value)} placeholder="Mais pedido, Novo, BigSmoke" />
               <small className="pf-hint">Combina diferentes propriedades: cor + tamanho.</small>
+            </div>
+            <div className="pf-variation-block">
+              <div className="pf-variation-head">
+                <div>
+                  <strong>Variacoes de cor</strong>
+                  <small>Crie uma cor para a mesma roupa e envie as fotos dessa cor.</small>
+                </div>
+                <button type="button" className="pf-mini-btn" onClick={addColorVariant}>+ Cor</button>
+              </div>
+
+              {(form.colors || []).length > 0 ? (
+                <div className="pf-variation-list">
+                  {form.colors.map((color, index) => (
+                    <div className="pf-variation-card" key={color.localId || index}>
+                      <div className="pf-variation-card-head">
+                        <span className="pf-color-preview" style={{ background: /^#[0-9a-f]{6}$/i.test(String(color.hex || "")) ? color.hex : "#888888" }} />
+                        <strong>{color.name || `Cor ${index + 1}`}</strong>
+                        <button type="button" className="pf-text-btn danger" onClick={() => removeColorVariant(index)}>Remover</button>
+                      </div>
+
+                      <div className="pf-row-2">
+                        <div className="pf-field">
+                          <label className="pf-label">Nome da cor</label>
+                          <input className="pf-input" value={color.name || ""} onChange={(e) => updateColorVariant(index, "name", e.target.value)} placeholder="Preta, Branca, Cinza..." />
+                        </div>
+                        <div className="pf-field">
+                          <label className="pf-label">Cor visual</label>
+                          <div className="pf-color-input">
+                            <input type="color" value={/^#[0-9a-f]{6}$/i.test(String(color.hex || "")) ? color.hex : "#888888"} onChange={(e) => updateColorVariant(index, "hex", e.target.value)} />
+                            <input className="pf-input" value={color.hex || ""} onChange={(e) => updateColorVariant(index, "hex", e.target.value)} placeholder="#f5f0e8" />
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="pf-field">
+                        <label className="pf-label">Estoque desta cor <small className="pf-label-hint">(opcional)</small></label>
+                        <input className="pf-input" value={color.stock ?? ""} onChange={(e) => updateColorVariant(index, "stock", e.target.value)} placeholder="Ex: 10" type="number" min="0" />
+                      </div>
+
+                      <label className="pf-variant-upload">
+                        <input type="file" accept="image/*" multiple onChange={(e) => handleColorImageUpload(index, e)} />
+                        <Icon.Upload />
+                        <span>{uploading ? "Enviando..." : "Adicionar fotos desta cor"}</span>
+                      </label>
+
+                      {(color.images || []).length > 0 && (
+                        <div className="pf-image-grid pf-variant-images">
+                          {color.images.map((img) => (
+                            <div key={img} className={"pf-img-thumb" + (form.image === img ? " pf-img-main" : "")}>
+                              <img src={img} alt="" onClick={() => update("image", img)} />
+                              {form.image === img && <span className="pf-img-main-badge">Principal</span>}
+                              <button type="button" className="pf-img-remove" onClick={() => removeColorImage(index, img)}><Icon.Close /></button>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <button type="button" className="pf-add-variation-empty" onClick={addColorVariant}>
+                  + Criar primeira variacao de cor
+                </button>
+              )}
             </div>
           </Section>
 

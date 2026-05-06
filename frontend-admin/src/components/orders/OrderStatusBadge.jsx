@@ -2,7 +2,7 @@ export const ORDER_STATUS = {
   pending: { label: "Pendente", tone: "warning" },
   pending_payment: { label: "Aguardando pagamento", tone: "warning" },
   paid: { label: "Pago", tone: "success" },
-  processing: { label: "Em separacao", tone: "info" },
+  processing: { label: "Embalado", tone: "info" },
   shipped: { label: "Enviado", tone: "success" },
   fulfilled: { label: "Enviado", tone: "success" },
   delivered: { label: "Entregue", tone: "success" },

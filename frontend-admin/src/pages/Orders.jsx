@@ -6,8 +6,6 @@ import { useAuth } from "../hooks/useAuth.js";
 import { useOrders } from "../hooks/useOrders.js";
 import { apiFetch } from "../services/api.js";
 
-const flow = ["pending", "paid", "processing", "shipped", "delivered"];
-
 const STATUS_FILTERS = [
   { key: "all", label: "Todos" },
   { key: "pending", label: "Por cobrar" },
@@ -24,9 +22,7 @@ export function Orders() {
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [showManual, setShowManual] = useState(false);
 
-  async function advance(order) {
-    const index = flow.indexOf(order.status);
-    const status = flow[Math.min(index + 1, flow.length - 1)] || "processing";
+  async function updateStatus(order, status) {
     await apiFetch(`/api/admin/orders/${order.id}`, {
       method: "PUT",
       headers: { Authorization: `Bearer ${token}` },
@@ -106,8 +102,8 @@ export function Orders() {
 
       <OrderTable
         orders={filtered}
-        onAdvance={advance}
         onSelect={setSelectedOrder}
+        onUpdateStatus={updateStatus}
       />
 
       {selectedOrder && (

@@ -60,10 +60,6 @@ export function Dashboard() {
   return (
     <main className="page soc-dashboard">
       <section className="soc-hero">
-        <div>
-          <h1>Boa noite, BigSmoke</h1>
-          <p>Aqui esta o resumo da operacao da loja hoje.</p>
-        </div>
         <label className="soc-date-pill">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
             <rect x="3" y="4" width="18" height="18" rx="2" />

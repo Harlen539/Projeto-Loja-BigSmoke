@@ -1,11 +1,9 @@
+import { useEffect, useMemo, useState } from "react";
 import { NavLink } from "react-router-dom";
 
-import brFlag from "../../assets/bandeira_BRA.jpg";
-import usFlag from "../../assets/bandeira_EUA.jpg";
 import accountIcon from "../../assets/icone_bigsmoke_conta.png";
-import instagramIcon from "../../assets/instagram_logo.png";
 import logo from "../../assets/logo.png";
-import whatsappIcon from "../../assets/Whatsapp_logo.png";
+import { useAuth } from "../../hooks/useAuth.js";
 
 const items = [
   {
@@ -53,12 +51,30 @@ const items = [
 ];
 
 export function Sidebar() {
+  const { user } = useAuth();
+  const email = user?.email || "admin";
+  const avatarKey = useMemo(() => `bigsmoke-admin-avatar:${email}`, [email]);
+  const [avatar, setAvatar] = useState(() => localStorage.getItem(avatarKey) || "");
+
+  useEffect(() => {
+    function refreshAvatar() {
+      setAvatar(localStorage.getItem(avatarKey) || "");
+    }
+    refreshAvatar();
+    window.addEventListener("storage", refreshAvatar);
+    window.addEventListener("bigsmoke-admin-avatar-updated", refreshAvatar);
+    return () => {
+      window.removeEventListener("storage", refreshAvatar);
+      window.removeEventListener("bigsmoke-admin-avatar-updated", refreshAvatar);
+    };
+  }, [avatarKey]);
+
   return (
     <aside className="sidebar soc-sidebar">
-      <div className="soc-sidebar-logo">
+      <NavLink className="soc-sidebar-logo" to="/">
         <img src={logo} alt="BigSmoke" />
         <span>Admin</span>
-      </div>
+      </NavLink>
 
       <nav className="soc-sidebar-nav">
         {items.map((item) => (
@@ -87,17 +103,11 @@ export function Sidebar() {
       </nav>
 
       <div className="soc-sidebar-footer">
-        <div className="soc-socials" aria-label="Canais BigSmoke">
-          <img src={instagramIcon} alt="Instagram" />
-          <img src={whatsappIcon} alt="WhatsApp" />
-          <img src={brFlag} alt="Portugues" />
-          <img src={usFlag} alt="English" />
-        </div>
         <div className="soc-profile">
-          <img src={accountIcon} alt="" />
+          <img src={avatar || accountIcon} alt="" onError={(event) => { event.currentTarget.src = accountIcon; }} />
           <div>
-            <strong>BigSmoke Admin</strong>
-            <small>Administrador</small>
+            <strong>Admin</strong>
+            <small>{email}</small>
           </div>
         </div>
       </div>
