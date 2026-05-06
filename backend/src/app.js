@@ -1929,6 +1929,82 @@ app.get("/api/admin/orders", authMiddleware, async (req, res) => {
   }
 });
 
+app.post("/api/admin/orders", authMiddleware, async (req, res) => {
+  try {
+    const body = req.body || {};
+    const items = Array.isArray(body.items) ? body.items : [];
+    if (!items.length) {
+      return res.status(400).json({ error: "Pedido sem itens." });
+    }
+    const orderNumber = await getNextOrderNumber();
+    const orderAccessCode = await getNextOrderAccessCode();
+    const trackingCode = await getNextTrackingCode();
+    const subtotal = normalizeNumber(body.amountSubtotal, items.reduce((s, i) => s + normalizeNumber(i.price, 0) * Math.max(1, normalizeNumber(i.quantity, 1)), 0));
+    const shippingAmount = normalizeNumber(body.shippingAmount, 0);
+    const total = normalizeNumber(body.amountTotal, subtotal + shippingAmount);
+    const order = normalizeOrder({
+      orderNumber,
+      orderNumberFormatted: formatOrderNumber(orderNumber),
+      orderAccessCode,
+      trackingCode,
+      trackingUrl: buildInternalTrackingUrl({ orderAccessCode, trackingCode, orderNumberFormatted: formatOrderNumber(orderNumber) }),
+      status: normalizeOrderStatus(body.status || "pending", "pending"),
+      currency: "brl",
+      amountSubtotal: subtotal,
+      shippingAmount,
+      amountTotal: total,
+      customer: {
+        name: normalizeText(body.customer?.name),
+        email: normalizeText(body.customer?.email),
+        phone: normalizeText(body.customer?.phone),
+      },
+      address: body.address || {},
+      deliveryMethod: normalizeText(body.deliveryMethod) || "retirada",
+      shippingLabel: normalizeText(body.shippingLabel) || "Pedido manual",
+      items,
+      origin: normalizeText(body.origin),
+      notes: normalizeText(body.notes),
+      events: [{ type: "admin.order.created", id: crypto.randomUUID(), created: nowIso() }],
+    });
+    await upsertOrder(order);
+    res.status(201).json(decorateOrderForResponse(order, makeBaseUrl(req)));
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Alias for manual order
+app.post("/api/admin/orders/manual", authMiddleware, async (req, res) => {
+  req.url = "/api/admin/orders";
+  // Re-use same handler by calling next route - just forward
+  try {
+    const body = req.body || {};
+    const items = Array.isArray(body.items) ? body.items : [];
+    if (!items.length) return res.status(400).json({ error: "Pedido sem itens." });
+    const orderNumber = await getNextOrderNumber();
+    const orderAccessCode = await getNextOrderAccessCode();
+    const trackingCode = await getNextTrackingCode();
+    const subtotal = normalizeNumber(body.amountSubtotal, items.reduce((s, i) => s + normalizeNumber(i.price, 0) * Math.max(1, normalizeNumber(i.quantity, 1)), 0));
+    const shippingAmount = normalizeNumber(body.shippingAmount, 0);
+    const total = normalizeNumber(body.amountTotal, subtotal + shippingAmount);
+    const order = normalizeOrder({
+      orderNumber, orderNumberFormatted: formatOrderNumber(orderNumber), orderAccessCode, trackingCode,
+      trackingUrl: buildInternalTrackingUrl({ orderAccessCode, trackingCode, orderNumberFormatted: formatOrderNumber(orderNumber) }),
+      status: normalizeOrderStatus(body.status || "pending", "pending"),
+      currency: "brl", amountSubtotal: subtotal, shippingAmount, amountTotal: total,
+      customer: { name: normalizeText(body.customer?.name), email: normalizeText(body.customer?.email), phone: normalizeText(body.customer?.phone) },
+      address: body.address || {}, deliveryMethod: normalizeText(body.deliveryMethod) || "retirada",
+      shippingLabel: normalizeText(body.shippingLabel) || "Pedido manual",
+      items, origin: normalizeText(body.origin), notes: normalizeText(body.notes),
+      events: [{ type: "admin.order.created", id: crypto.randomUUID(), created: nowIso() }],
+    });
+    await upsertOrder(order);
+    res.status(201).json(decorateOrderForResponse(order, makeBaseUrl(req)));
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 app.get("/api/admin/orders/:id", authMiddleware, async (req, res) => {
   try {
     const order = await findOrderById(req.params.id);

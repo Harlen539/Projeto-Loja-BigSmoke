@@ -100,3 +100,24 @@ button { cursor: pointer; }
   .trust-bar, .form-grid { grid-template-columns: 1fr; }
   .tracking-search { grid-template-columns: 1fr; }
 }
+
+/* ===== PERFIL PAGE ===== */
+.perfil-hero { display: flex; align-items: center; gap: 1.25rem; margin-bottom: 2rem; }
+.perfil-avatar { width: 72px; height: 72px; border-radius: 50%; background: linear-gradient(135deg, var(--gold), #8b6914); display: flex; align-items: center; justify-content: center; font: 700 1.8rem "Bebas Neue", sans-serif; color: #111; flex-shrink: 0; }
+.perfil-name { margin: 0; font: 400 2.5rem "Bebas Neue", sans-serif; }
+.perfil-tabs { display: flex; gap: 0.35rem; border-bottom: 1px solid var(--line); margin-bottom: 2rem; flex-wrap: wrap; }
+.perfil-tab { background: transparent; border: 0; border-bottom: 2px solid transparent; color: var(--muted); padding: 0.75rem 1rem; font-weight: 700; cursor: pointer; font: 700 0.9rem Oswald, sans-serif; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: -1px; }
+.perfil-tab.active { color: var(--gold); border-bottom-color: var(--gold); }
+.perfil-section { max-width: 640px; }
+.perfil-form { display: grid; gap: 0; }
+.perfil-field { display: grid; gap: 0.35rem; }
+.perfil-field label { font-size: 0.82rem; color: var(--muted); font-weight: 500; }
+.perfil-field input { width: 100%; min-height: 46px; border: 1px solid var(--line); border-radius: 8px; background: #101010; color: var(--text); padding: 0 0.9rem; font: inherit; }
+.perfil-order-card { border: 1px solid var(--line); border-radius: 8px; background: var(--surface); padding: 1rem 1.2rem; display: grid; gap: 0.75rem; }
+.perfil-order-head { display: flex; justify-content: space-between; align-items: center; }
+.perfil-order-head strong { font-size: 1rem; }
+.perfil-order-status { font-size: 0.82rem; font-weight: 700; }
+.perfil-order-meta { display: flex; gap: 1rem; font-size: 0.85rem; color: var(--muted); }
+.perfil-order-items { display: flex; flex-wrap: wrap; gap: 0.35rem; }
+.perfil-order-item { background: rgba(255,255,255,.06); border-radius: 999px; padding: 0.2rem 0.65rem; font-size: 0.8rem; color: var(--muted); }
+.perfil-tracking { font-size: 0.85rem; color: var(--muted); padding-top: 0.5rem; border-top: 1px solid var(--line); }
