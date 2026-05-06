@@ -52,7 +52,7 @@
     "category": "Moletons",
     "description": "Peça premium para dias frios, pronta para campanha e venda assistida.",
     "price": 249.9,
-    "stock": 17,
+    "stock": 16,
     "image": "/uploads/1777991004394-moletom_frente.webp",
     "image_url": "/uploads/1777991004394-moletom_frente.webp",
     "images": [
@@ -73,6 +73,6 @@
       }
     ],
     "createdAt": "2026-04-27T00:00:00.000Z",
-    "updatedAt": "2026-05-06T22:52:26.490Z"
+    "updatedAt": "2026-05-06T23:28:10.755Z"
   }
 ]

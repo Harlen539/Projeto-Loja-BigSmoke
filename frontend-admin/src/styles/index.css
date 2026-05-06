@@ -251,7 +251,7 @@ body::before {
   position: sticky;
   top: 0;
   height: 100vh;
-  padding: 1.35rem 1rem;
+  padding: 1.2rem .85rem;
   border-right: 1px solid rgba(245,240,232,.14);
   background:
     linear-gradient(180deg, rgba(13,13,13,.98), rgba(3,3,3,.98)),
@@ -264,7 +264,8 @@ body::before {
   display: grid;
   place-items: center;
   gap: .15rem;
-  margin-bottom: 1.15rem;
+  margin: 0 auto 1.05rem;
+  width: min(100%, 172px);
   border: 0;
   border-radius: 0;
   background: transparent;
@@ -298,16 +299,18 @@ body::before {
 .soc-sidebar-nav {
   display: grid;
   gap: .55rem;
+  justify-items: center;
 }
 
 .soc-sidebar-nav a,
 .soc-sidebar-link {
-  width: 100%;
+  width: min(100%, 168px);
   min-height: 52px;
-  display: flex;
+  display: grid;
+  grid-template-columns: 26px minmax(0, 1fr);
   align-items: center;
-  gap: .9rem;
-  padding: 0 1rem;
+  gap: .72rem;
+  padding: 0 .9rem;
   border: 1px solid transparent;
   border-radius: 12px;
   background: transparent;
@@ -318,9 +321,18 @@ body::before {
 
 .soc-sidebar-nav svg,
 .soc-sidebar-link svg {
-  width: 23px;
-  height: 23px;
+  width: 22px;
+  height: 22px;
+  min-width: 22px;
   color: currentColor;
+  overflow: visible;
+  justify-self: center;
+  flex-shrink: 0;
+}
+
+.soc-sidebar-nav span,
+.soc-sidebar-link span {
+  min-width: 0;
 }
 
 .soc-sidebar-nav a:hover,
@@ -336,6 +348,7 @@ body::before {
   margin-top: auto;
   display: grid;
   gap: .75rem;
+  justify-items: center;
 }
 
 .soc-profile {
@@ -347,6 +360,7 @@ body::before {
   border: 1px solid rgba(245,240,232,.1);
   border-radius: 999px;
   background: linear-gradient(135deg, rgba(255,255,255,.055), rgba(255,255,255,.018));
+  width: min(100%, 168px);
 }
 
 .soc-profile img {
