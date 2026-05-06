@@ -1789,6 +1789,56 @@ async function handleCheckoutSubmit() {
   }
 }
 
+let stripeRedirectInProgress = false;
+
+async function redirectCartToStripe(button = null) {
+  if (stripeRedirectInProgress) return;
+
+  if (!cart.length) {
+    alert(currentLocale === "en" ? "Your cart is empty." : currentLocale === "es" ? "Tu carrito esta vacio." : "Seu carrinho esta vazio.");
+    return;
+  }
+
+  const payload = {
+    deliveryMethod: "stripe_checkout",
+    items: cart.map((item) => ({
+      id: item.productId || item.id,
+      quantity: item.quantity,
+      size: item.size || ""
+    }))
+  };
+
+  const originalText = button?.textContent || "";
+  stripeRedirectInProgress = true;
+  if (button) {
+    button.disabled = true;
+    button.textContent = currentLocale === "en" ? "Opening Stripe..." : currentLocale === "es" ? "Abriendo Stripe..." : "Abrindo Stripe...";
+  }
+
+  try {
+    const response = await fetch(buildApiUrl("/api/checkout/session"), {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload)
+    });
+    const result = await response.json();
+    if (!response.ok || !result.url) {
+      throw new Error(result.error || "Nao foi possivel iniciar o pagamento.");
+    }
+    if (result.id) {
+      localStorage.setItem("bigsmoke-last-order-session", result.id);
+    }
+    window.location.href = result.url;
+  } catch (error) {
+    stripeRedirectInProgress = false;
+    if (button) {
+      button.disabled = false;
+      button.textContent = originalText;
+    }
+    alert(error.message || "Nao foi possivel abrir o Stripe Checkout agora.");
+  }
+}
+
 async function loadRuntimeConfig() {
   try {
     const response = await fetch(buildApiUrl("/api/config"));
@@ -2153,7 +2203,7 @@ function setupPaymentSuccessStyles() {
 }
 
 function setupCheckout() {
-  document.getElementById("checkout-button")?.addEventListener("click", openCheckout);
+  document.getElementById("checkout-button")?.addEventListener("click", (event) => redirectCartToStripe(event.currentTarget));
   document.getElementById("confirm-checkout")?.addEventListener("click", handleCheckoutSubmit);
   document.getElementById("lookup-cep")?.addEventListener("click", lookupCep);
   document.getElementById("use-location")?.addEventListener("click", useCurrentLocation);
@@ -2338,6 +2388,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     persistCart();
     updateCartUI();
     toggleCart(true);
+    redirectCartToStripe();
   };
 })();
 

@@ -1,10 +1,24 @@
+import { useState } from "react";
+
 import { useCart } from "../../hooks/useCart.js";
-import { CheckoutForm } from "../checkout/CheckoutForm.jsx";
+import { startStripeCheckout } from "../../services/checkout.js";
 import { CartItem } from "./CartItem.jsx";
 import { CartSummary } from "./CartSummary.jsx";
 
 export function CartDrawer() {
   const cart = useCart();
+  const [loading, setLoading] = useState(false);
+
+  async function goToStripe() {
+    setLoading(true);
+    try {
+      await startStripeCheckout(cart.items);
+    } catch (error) {
+      alert(error.message || "Nao foi possivel abrir o Stripe Checkout.");
+      setLoading(false);
+    }
+  }
+
   return (
     <>
       <button className={`cart-overlay ${cart.open ? "open" : ""}`} onClick={() => cart.setOpen(false)} type="button" aria-label="Fechar carrinho" />
@@ -27,9 +41,11 @@ export function CartDrawer() {
               />
             ))}
           </ul>
-        ) : <p className="empty-cart">Seu carrinho está vazio.</p>}
+        ) : <p className="empty-cart">Seu carrinho esta vazio.</p>}
         <CartSummary total={cart.total} />
-        <CheckoutForm />
+        <button className="btn btn-primary full-width" disabled={!cart.items.length || loading} onClick={goToStripe} type="button">
+          {loading ? "Abrindo Stripe..." : "Ir direto para o Stripe"}
+        </button>
       </aside>
     </>
   );

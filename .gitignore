@@ -2,6 +2,7 @@ node_modules/
 .env
 .env.local
 dist/
+**/dist/
 *.log
 backend/src/uploads/
 backend/src/data/orders.json

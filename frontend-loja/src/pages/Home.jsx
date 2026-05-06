@@ -7,6 +7,38 @@ import { Button } from "../components/ui/Button.jsx";
 import { useLocale } from "../hooks/useLocale.js";
 import { useProducts } from "../hooks/useProducts.js";
 
+function ProductSkeleton() {
+  return (
+    <div
+      style={{
+        display: "grid",
+        gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))",
+        gap: "1.5rem",
+      }}
+      aria-label="Carregando produtos..."
+    >
+      {Array.from({ length: 4 }).map((_, i) => (
+        <div
+          key={i}
+          style={{
+            borderRadius: 12,
+            overflow: "hidden",
+            background: "var(--color-background-secondary)",
+            animation: "pulse 1.4s ease-in-out infinite",
+          }}
+        >
+          <div style={{ height: 280, background: "var(--color-background-tertiary, #e0e0e0)" }} />
+          <div style={{ padding: "1rem", display: "flex", flexDirection: "column", gap: 8 }}>
+            <div style={{ height: 14, borderRadius: 6, background: "var(--color-background-tertiary, #e0e0e0)", width: "70%" }} />
+            <div style={{ height: 12, borderRadius: 6, background: "var(--color-background-tertiary, #e0e0e0)", width: "40%" }} />
+          </div>
+        </div>
+      ))}
+      <style>{`@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.5} }`}</style>
+    </div>
+  );
+}
+
 export function Home() {
   const { copy } = useLocale();
   const { products, loading, error } = useProducts();
@@ -14,7 +46,11 @@ export function Home() {
   const filtered = useMemo(() => {
     const term = query.trim().toLowerCase();
     if (!term) return products;
-    return products.filter((product) => `${product.name} ${product.category} ${product.description}`.toLowerCase().includes(term));
+    return products.filter((product) =>
+      `${product.name} ${product.category} ${product.description}`
+        .toLowerCase()
+        .includes(term)
+    );
   }, [products, query]);
 
   return (
@@ -25,8 +61,12 @@ export function Home() {
           <h1>{copy.heroTitle}</h1>
           <p>{copy.heroText}</p>
           <div className="hero-actions">
-            <a className="btn btn-primary" href="#products">{copy.seeCatalog}</a>
-            <a className="btn btn-outline" href="#contact">{copy.talkToBrand}</a>
+            <a className="btn btn-primary" href="#products">
+              {copy.seeCatalog}
+            </a>
+            <a className="btn btn-outline" href="#contact">
+              {copy.talkToBrand}
+            </a>
           </div>
         </div>
         <div className="hero-brand-panel">
@@ -36,9 +76,18 @@ export function Home() {
       </section>
 
       <section className="trust-bar">
-        <article><strong>Rua e cultura</strong><span>Peças com atitude</span></article>
-        <article><strong>Checkout seguro</strong><span>Fluxo integrado à API</span></article>
-        <article><strong>Atendimento direto</strong><span>WhatsApp da marca</span></article>
+        <article>
+          <strong>Rua e cultura</strong>
+          <span>Peças com atitude</span>
+        </article>
+        <article>
+          <strong>Checkout seguro</strong>
+          <span>Fluxo integrado à API</span>
+        </article>
+        <article>
+          <strong>Atendimento direto</strong>
+          <span>WhatsApp da marca</span>
+        </article>
       </section>
 
       <section className="section-shell" id="products">
@@ -47,9 +96,15 @@ export function Home() {
           <h2>Drops BigSmoke</h2>
           <ProductSearch value={query} onChange={setQuery} />
         </div>
-        {loading ? <p>Carregando produtos...</p> : null}
-        {error ? <p className="form-status">{error}</p> : null}
-        <ProductGrid products={filtered} />
+
+        {loading && <ProductSkeleton />}
+        {error && <p className="form-status">{error}</p>}
+        {!loading && !error && <ProductGrid products={filtered} />}
+        {!loading && !error && filtered.length === 0 && query && (
+          <p style={{ textAlign: "center", color: "var(--color-text-secondary)", padding: "2rem" }}>
+            Nenhum produto encontrado para "{query}".
+          </p>
+        )}
       </section>
 
       <section className="split-section" id="about">
@@ -57,14 +112,42 @@ export function Home() {
           <p className="eyebrow">Marca</p>
           <h2>Visual escuro, presença forte, assinatura própria.</h2>
         </div>
-        <p>A BigSmoke mistura streetwear, cultura urbana e operação digital com catálogo dinâmico, carrinho persistente e checkout preparado para Stripe.</p>
+        <p>
+          A BigSmoke mistura streetwear, cultura urbana e operação digital com
+          catálogo dinâmico, carrinho persistente e checkout preparado para
+          Stripe.
+        </p>
       </section>
 
       <section className="section-shell" id="faq">
         <h2>Perguntas frequentes</h2>
-        <details><summary>Como acompanho meu pedido?</summary><p>Use a página Meus pedidos com código, número ou session id.</p></details>
-        <details><summary>O checkout é seguro?</summary><p>Sim. O pagamento é redirecionado para a Stripe quando configurado.</p></details>
-        <Button variant="outline" onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}>Voltar ao topo</Button>
+        <details>
+          <summary>Como acompanho meu pedido?</summary>
+          <p>
+            Use a página <a href="/pedidos">Meus pedidos</a> com código, número
+            ou session id.
+          </p>
+        </details>
+        <details>
+          <summary>O checkout é seguro?</summary>
+          <p>
+            Sim. O pagamento é processado diretamente pela Stripe, sem que seus
+            dados de cartão passem pelo nosso servidor.
+          </p>
+        </details>
+        <details>
+          <summary>Qual o prazo de entrega?</summary>
+          <p>
+            Para João Pessoa, Bayeux e Cabedelo o frete é grátis. Para o resto
+            do Brasil, o prazo varia conforme a região e os Correios.
+          </p>
+        </details>
+        <Button
+          variant="outline"
+          onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+        >
+          Voltar ao topo
+        </Button>
       </section>
     </main>
   );

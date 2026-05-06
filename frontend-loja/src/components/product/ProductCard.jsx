@@ -4,13 +4,31 @@ import { Link } from "react-router-dom";
 import logo from "../../assets/logo_sem_fundo.png";
 import { useCart } from "../../hooks/useCart.js";
 import { useLocale } from "../../hooks/useLocale.js";
+import { startStripeCheckout } from "../../services/checkout.js";
 import { Badge } from "../ui/Badge.jsx";
+
+function parseSizes(value) {
+  if (Array.isArray(value)) return value;
+  return String(value || "Unico").split(",").map((item) => item.trim()).filter(Boolean);
+}
 
 export function ProductCard({ product }) {
   const cart = useCart();
   const { copy } = useLocale();
-  const sizes = Array.isArray(product.sizes) ? product.sizes : String(product.sizes || "Único").split(",").map((item) => item.trim()).filter(Boolean);
-  const [size, setSize] = useState(sizes[0] || "Único");
+  const sizes = parseSizes(product.sizes);
+  const [size, setSize] = useState(sizes[0] || "Unico");
+  const [loading, setLoading] = useState(false);
+
+  async function buyNow() {
+    setLoading(true);
+    cart.add(product, size);
+    try {
+      await startStripeCheckout([{ id: product.id, quantity: 1, size }]);
+    } catch (error) {
+      alert(error.message || "Nao foi possivel abrir o Stripe Checkout.");
+      setLoading(false);
+    }
+  }
 
   return (
     <article className="product-card">
@@ -28,7 +46,9 @@ export function ProductCard({ product }) {
             <button className={option === size ? "active" : ""} key={option} onClick={() => setSize(option)} type="button">{option}</button>
           ))}
         </div>
-        <button className="btn btn-primary" onClick={() => cart.add(product, size)} type="button">{copy.addToCart}</button>
+        <button className="btn btn-primary" disabled={loading} onClick={buyNow} type="button">
+          {loading ? "Abrindo Stripe..." : copy.addToCart}
+        </button>
       </div>
     </article>
   );

@@ -6,6 +6,7 @@ const path = require("node:path");
 const bcrypt = require("bcryptjs");
 const cors = require("cors");
 const express = require("express");
+const helmet = require("helmet");
 const rateLimit = require("express-rate-limit");
 const jwt = require("jsonwebtoken");
 const multer = require("multer");
@@ -27,14 +28,14 @@ const ordersFile = path.join(dataDir, "orders.json");
 const orderCounterFile = path.join(dataDir, "order_counter.json");
 const PRODUCT_TABLE = process.env.SUPABASE_PRODUCTS_TABLE || "products";
 const ORDER_TABLE = process.env.SUPABASE_ORDERS_TABLE || "orders";
-const JWT_SECRET = process.env.JWT_SECRET || "bigsmoke-local-secret";
+const JWT_SECRET = process.env.JWT_SECRET || "";
 const STRIPE_SECRET_KEY = process.env.STRIPE_SECRET_KEY || "";
 const WEBHOOK_SECRET = process.env.STRIPE_WEBHOOK_SECRET || "";
 const MOCK_STRIPE = process.env.STRIPE_MOCK === "true";
 const STRIPE_LIVE_MODE = STRIPE_SECRET_KEY.startsWith("sk_live_") && !MOCK_STRIPE;
 
 const stripe = process.env.STRIPE_SECRET_KEY
-  ? new Stripe(STRIPE_SECRET_KEY, { apiVersion: "2026-02-25.clover" })
+  ? new Stripe(STRIPE_SECRET_KEY, { apiVersion: "2024-06-20" })
   : null;
 
 const supabase = process.env.SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY
@@ -47,12 +48,12 @@ const DEFAULT_STORE = {
   state: process.env.STORE_STATE || "CE",
   originCep: process.env.STORE_ORIGIN_CEP || "60000000"
 };
-const FREE_SHIPPING_CITIES = new Set(["joao pessoa", "joão pessoa", "bayeux", "cabedelo"]);
+const FREE_SHIPPING_CITIES = new Set(["joao pessoa", "joÃ£o pessoa", "bayeux", "cabedelo"]);
 const ORDER_STATUS_FLOW = ["pending", "paid", "processing", "shipped", "delivered"];
 const ORDER_STATUS_LABELS = {
   pending: "Pendente",
   paid: "Pago",
-  processing: "Em separação",
+  processing: "Em separaÃ§Ã£o",
   shipped: "Enviado",
   delivered: "Entregue",
   canceled: "Cancelado"
@@ -79,7 +80,7 @@ const upload = multer({
       callback(null, true);
       return;
     }
-    callback(new Error("Apenas imagens são aceitas."));
+    callback(new Error("Apenas imagens sÃ£o aceitas."));
   },
   limits: {
     fileSize: 8 * 1024 * 1024
@@ -88,9 +89,14 @@ const upload = multer({
 
 const app = express();
 app.set("trust proxy", 1);
+app.use(helmet({
+  crossOriginResourcePolicy: { policy: "cross-origin" },
+  contentSecurityPolicy: false // gerenciado separadamente se necessÃ¡rio
+}));
 
 function validateRuntimeConfig() {
   const issues = [];
+  const isProduction = process.env.NODE_ENV === "production";
 
   if (!process.env.JWT_SECRET || process.env.JWT_SECRET.length < 32) {
     issues.push("JWT_SECRET precisa ter pelo menos 32 caracteres.");
@@ -98,13 +104,24 @@ function validateRuntimeConfig() {
 
   const adminPassword = process.env.ADMIN_PASSWORD || "";
   const adminPasswordHash = process.env.ADMIN_PASSWORD_HASH || "";
-  if (!adminPasswordHash && adminPassword && adminPassword.length < 12) {
-    issues.push("ADMIN_PASSWORD deve ter pelo menos 12 caracteres quando ADMIN_PASSWORD_HASH não estiver definido.");
+
+  if (!adminPasswordHash && !adminPassword) {
+    issues.push("ADMIN_PASSWORD ou ADMIN_PASSWORD_HASH deve ser definido.");
+  } else if (!adminPasswordHash && adminPassword && adminPassword.length < 12) {
+    issues.push("ADMIN_PASSWORD deve ter pelo menos 12 caracteres quando ADMIN_PASSWORD_HASH nÃ£o estiver definido.");
   }
 
-  const isProduction = process.env.NODE_ENV === "production";
+  if (isProduction) {
+    if (!process.env.SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
+      issues.push("Em produÃ§Ã£o, SUPABASE_URL e SUPABASE_SERVICE_ROLE_KEY sÃ£o obrigatÃ³rios para persistÃªncia de dados.");
+    }
+    if (!process.env.ALLOWED_ORIGINS) {
+      issues.push("Em produÃ§Ã£o, ALLOWED_ORIGINS deve ser definido para restringir o CORS.");
+    }
+  }
+
   if (issues.length) {
-    const message = `Configuração inválida: ${issues.join(" ")}`;
+    const message = `ConfiguraÃ§Ã£o invÃ¡lida: ${issues.join(" ")}`;
     if (isProduction) {
       throw new Error(message);
     }
@@ -118,7 +135,7 @@ const generalLimiter = rateLimit({
   max: 200,
   standardHeaders: true,
   legacyHeaders: false,
-  message: { error: "Muitas requisições. Tente novamente em alguns minutos." }
+  message: { error: "Muitas requisiÃ§Ãµes. Tente novamente em alguns minutos." }
 });
 
 // Rate limiting para login
@@ -144,7 +161,7 @@ const seedProducts = [
     id: "moletom-classic",
     name: "Moletom Classic BigSmoke",
     category: "Moletons",
-    description: "Peça premium para dias frios, pronta para campanha e venda assistida.",
+    description: "PeÃ§a premium para dias frios, pronta para campanha e venda assistida.",
     price: 249.9,
     stock: 18,
     image: "https://placehold.co/900x1200/141414/F5F0E8?text=Moletom+Classic",
@@ -408,6 +425,10 @@ function maskPublicAddress(address = {}) {
 
 function makeBaseUrl(req) {
   return process.env.SITE_URL || `${req.protocol}://${req.get("host")}`;
+}
+
+function makeCheckoutBaseUrl(req) {
+  return (process.env.STORE_URL || process.env.SITE_URL || `${req.protocol}://${req.get("host")}`).replace(/\/$/, "");
 }
 
 function toAbsoluteHttpUrl(value, baseUrl) {
@@ -818,7 +839,7 @@ function authMiddleware(req, res, next) {
     req.admin = jwt.verify(token, JWT_SECRET);
     return next();
   } catch {
-    return res.status(401).json({ error: "Sessão expirada ou inválida." });
+    return res.status(401).json({ error: "SessÃ£o expirada ou invÃ¡lida." });
   }
 }
 
@@ -826,8 +847,12 @@ function verifyPassword(plainPassword) {
   if (process.env.ADMIN_PASSWORD_HASH) {
     return bcrypt.compare(plainPassword, process.env.ADMIN_PASSWORD_HASH);
   }
-  const fallbackPassword = process.env.ADMIN_PASSWORD || "admin123";
-  return Promise.resolve(plainPassword === fallbackPassword);
+  const plainEnvPassword = process.env.ADMIN_PASSWORD || "";
+  if (!plainEnvPassword) {
+    // Em produÃ§Ã£o, nenhuma senha configurada = login bloqueado por seguranÃ§a
+    return Promise.resolve(false);
+  }
+  return Promise.resolve(plainPassword === plainEnvPassword);
 }
 
 async function lookupCep(cep) {
@@ -854,7 +879,7 @@ function estimateShipping({ deliveryMethod, address = {}, store = DEFAULT_STORE,
   const normalizedTargetCity = normalizeCityName(address.city || cepData?.localidade || "");
 
   if (targetState === "PB" && FREE_SHIPPING_CITIES.has(normalizedTargetCity)) {
-    return { price: 0, label: `Frete grátis para ${cepData?.localidade || address.city || "a região"}` };
+    return { price: 0, label: `Frete grÃ¡tis para ${cepData?.localidade || address.city || "a regiÃ£o"}` };
   }
 
   if (!targetState) {
@@ -874,7 +899,7 @@ function estimateShipping({ deliveryMethod, address = {}, store = DEFAULT_STORE,
   }
 
   if (targetCity === storeCity && targetState === storeState) {
-    return { price: 16, label: `Envio rápido em ${cepData?.localidade || address.city || store.city}` };
+    return { price: 16, label: `Envio rÃ¡pido em ${cepData?.localidade || address.city || store.city}` };
   }
   if (targetState === storeState) {
     return { price: 24, label: "Envio no mesmo estado" };
@@ -888,16 +913,17 @@ function estimateShipping({ deliveryMethod, address = {}, store = DEFAULT_STORE,
 
 function createMockSession(payload) {
   const id = `cs_test_${crypto.randomUUID()}`;
+  const storeUrl = (process.env.STORE_URL || process.env.SITE_URL || "http://localhost:3000/loja").replace(/\/$/, "");
   return {
     id,
-    url: `${process.env.SITE_URL || "http://localhost:3000"}/loja/?mock_session=${id}`,
+    url: `${storeUrl}/?mock_session=${id}`,
     payload
   };
 }
 
 async function createImageUrl(file) {
   if (!file) {
-    throw new Error("Arquivo não enviado.");
+    throw new Error("Arquivo nÃ£o enviado.");
   }
 
   const originalBaseName = path.parse(file.originalname || "image").name || "image";
@@ -1173,7 +1199,7 @@ async function notifyOrderCreated(order) {
     await notifyTwilioCustomerConfirmation(order);
     return await notifyWhatsAppWebhook(order);
   } catch (error) {
-    console.warn("Falha ao enviar notificação do pedido:", error.message);
+    console.warn("Falha ao enviar notificaÃ§Ã£o do pedido:", error.message);
     return false;
   }
 }
@@ -1508,13 +1534,13 @@ async function buildOrderPayloadFromCheckout({ sessionId, items, customer, addre
 
 function validateProductPayload(payload) {
   if (!payload.name || !payload.category) {
-    return "Nome e categoria são obrigatórios.";
+    return "Nome e categoria sÃ£o obrigatÃ³rios.";
   }
   if (!Number.isFinite(payload.price) || payload.price < 0) {
-    return "Preço inválido.";
+    return "PreÃ§o invÃ¡lido.";
   }
   if (!Number.isInteger(payload.stock) || payload.stock < -1) {
-    return "Estoque inválido.";
+    return "Estoque invÃ¡lido.";
   }
   return "";
 }
@@ -1546,7 +1572,7 @@ async function applyStockDelta(items, direction) {
   for (const [id, quantity] of quantityMap.entries()) {
     const product = products.find((entry) => entry.id === id);
     if (!product) {
-      throw new Error(`Produto inválido: ${id}`);
+      throw new Error(`Produto invÃ¡lido: ${id}`);
     }
 
     const currentStock = normalizeStock(product.stock, 0);
@@ -1644,10 +1670,10 @@ app.use(cors(createCorsOptions()));
 
 app.post("/api/stripe/webhook", express.raw({ type: "application/json" }), async (req, res) => {
   if (!stripe) {
-    return res.status(400).json({ error: "Stripe não configurado." });
+    return res.status(400).json({ error: "Stripe nÃ£o configurado." });
   }
   if (!WEBHOOK_SECRET) {
-    return res.status(400).json({ error: "STRIPE_WEBHOOK_SECRET não configurado." });
+    return res.status(400).json({ error: "STRIPE_WEBHOOK_SECRET nÃ£o configurado." });
   }
 
   try {
@@ -1730,6 +1756,7 @@ function sendAdminApp(res, legacyFile = "index.html") {
 }
 
 app.use("/uploads", express.static(uploadsDir));
+app.use("/src", express.static(frontendLojaDir));
 app.use("/loja", express.static(frontendLojaDistDir));
 app.use("/admin", express.static(frontendAdminDistDir));
 app.use("/assets", express.static(path.join(frontendLojaDir, "assets")));
@@ -1815,10 +1842,10 @@ app.post("/api/auth/login", loginLimiter, async (req, res) => {
     return res.status(400).json({ error: "Informe e-mail e senha." });
   }
   if (email !== adminEmail) {
-    return res.status(401).json({ error: "Credenciais inválidas." });
+    return res.status(401).json({ error: "Credenciais invÃ¡lidas." });
   }
   if (!(await verifyPassword(password))) {
-    return res.status(401).json({ error: "Credenciais inválidas." });
+    return res.status(401).json({ error: "Credenciais invÃ¡lidas." });
   }
 
   const token = jwt.sign({ email: adminEmail, role: "admin" }, JWT_SECRET, { expiresIn: "12h" });
@@ -1847,7 +1874,7 @@ app.get("/api/products/:id", async (req, res) => {
     const products = await readProducts();
     const product = products.find((item) => String(item.id) === String(id));
     if (!product) {
-      return res.status(404).json({ error: "Produto não encontrado." });
+      return res.status(404).json({ error: "Produto nÃ£o encontrado." });
     }
     res.json(toPublicProduct(product));
   } catch (error) {
@@ -1878,7 +1905,7 @@ app.get("/api/orders/customer/:email", async (req, res) => {
   try {
     const email = normalizeText(req.params.email).toLowerCase();
     if (!email || !email.includes("@")) {
-      return res.status(400).json({ error: "E-mail inválido." });
+      return res.status(400).json({ error: "E-mail invÃ¡lido." });
     }
 
     const orders = (await readOrders())
@@ -1910,7 +1937,7 @@ app.get("/api/orders/public/:sessionId", async (req, res) => {
       || await findOrderBySessionId(sessionId)
       || (numericSession ? await findOrderByNumber(numericSession) : null);
     if (!order) {
-      return res.status(404).json({ error: "Pedido não encontrado." });
+      return res.status(404).json({ error: "Pedido nÃ£o encontrado." });
     }
     order = await syncOrderFromStripeSession(order);
     const responseOrder = decorateOrderForResponse(order, makeBaseUrl(req));
@@ -2065,7 +2092,7 @@ app.get("/api/admin/orders/:id", authMiddleware, async (req, res) => {
   try {
     const order = await findOrderById(req.params.id);
     if (!order) {
-      return res.status(404).json({ error: "Pedido não encontrado." });
+      return res.status(404).json({ error: "Pedido nÃ£o encontrado." });
     }
     res.json(decorateOrderForResponse(order, makeBaseUrl(req)));
   } catch (error) {
@@ -2093,7 +2120,7 @@ app.post("/api/admin/products", authMiddleware, async (req, res) => {
 
     const products = await readProducts();
     if (products.some((product) => product.id === incoming.id)) {
-      return res.status(409).json({ error: "Já existe um produto com esse id." });
+      return res.status(409).json({ error: "JÃ¡ existe um produto com esse id." });
     }
 
     await insertProduct(incoming);
@@ -2109,7 +2136,7 @@ app.put("/api/admin/products/:id", authMiddleware, async (req, res) => {
     const products = await readProducts();
     const current = products.find((product) => product.id === id);
     if (!current) {
-      return res.status(404).json({ error: "Produto não encontrado." });
+      return res.status(404).json({ error: "Produto nÃ£o encontrado." });
     }
 
     const updated = normalizeProduct({ ...current, ...req.body, id }, current);
@@ -2131,7 +2158,7 @@ app.put("/api/admin/products/:id/stock", authMiddleware, async (req, res) => {
     const nextStock = normalizeStock(req.body?.stock, 0);
     const updated = await updateProductStockById(id, nextStock);
     if (!updated) {
-      return res.status(404).json({ error: "Produto não encontrado." });
+      return res.status(404).json({ error: "Produto nÃ£o encontrado." });
     }
     res.json(updated);
   } catch (error) {
@@ -2143,7 +2170,7 @@ app.delete("/api/admin/products/:id", authMiddleware, async (req, res) => {
   try {
     const deleted = await deleteProductById(normalizeText(req.params.id));
     if (!deleted) {
-      return res.status(404).json({ error: "Produto não encontrado." });
+      return res.status(404).json({ error: "Produto nÃ£o encontrado." });
     }
     res.status(204).end();
   } catch (error) {
@@ -2156,7 +2183,7 @@ async function updateOrderStatusHandler(req, res) {
     const id = normalizeText(req.params.id);
     const current = await findOrderById(id);
     if (!current) {
-      return res.status(404).json({ error: "Pedido não encontrado." });
+      return res.status(404).json({ error: "Pedido nÃ£o encontrado." });
     }
     const nextStatus = normalizeOrderStatus(req.body?.status || current.status, current.status);
     const trackingCode = normalizeText(req.body?.trackingCode || req.body?.tracking_code || current.trackingCode);
@@ -2224,7 +2251,7 @@ app.post("/api/admin/orders/:id/reset", authMiddleware, async (req, res) => {
   try {
     const next = await resetOrderById(normalizeText(req.params.id));
     if (!next) {
-      return res.status(404).json({ error: "Pedido não encontrado." });
+      return res.status(404).json({ error: "Pedido nÃ£o encontrado." });
     }
     res.json(next);
   } catch (error) {
@@ -2236,7 +2263,7 @@ app.delete("/api/admin/orders/:id", authMiddleware, async (req, res) => {
   try {
     const deleted = await deleteOrderById(normalizeText(req.params.id));
     if (!deleted) {
-      return res.status(404).json({ error: "Pedido não encontrado." });
+      return res.status(404).json({ error: "Pedido nÃ£o encontrado." });
     }
     res.status(204).end();
   } catch (error) {
@@ -2257,7 +2284,7 @@ app.post("/api/admin/uploads", authMiddleware, upload.fields([{ name: "image", m
 app.post("/api/checkout/session", checkoutLimiter, async (req, res) => {
   if (!stripe && !MOCK_STRIPE) {
     return res.status(400).json({
-      error: "Stripe não configurado. Defina STRIPE_SECRET_KEY ou STRIPE_MOCK."
+      error: "Stripe nÃ£o configurado. Defina STRIPE_SECRET_KEY ou STRIPE_MOCK."
     });
   }
 
@@ -2272,15 +2299,38 @@ app.post("/api/checkout/session", checkoutLimiter, async (req, res) => {
 
     const customer = req.body?.customer || {};
     const address = req.body?.address || {};
-    const deliveryMethod = normalizeText(req.body?.deliveryMethod) || "retirada";
-    const baseUrl = makeBaseUrl(req);
+
+    // ValidaÃ§Ãµes obrigatÃ³rias do cliente
+    const customerEmail = normalizeText(customer.email).toLowerCase();
+    const customerName = normalizeText(customer.name) || "Cliente Stripe";
+    const customerPhone = normalizeText(customer.phone);
+    if (customerEmail && (!customerEmail.includes("@") || !customerEmail.includes("."))) {
+      return res.status(400).json({ error: "E-mail do cliente invalido." });
+    }
+
+    // ValidaÃ§Ã£o do endereÃ§o para entrega nacional
+    const deliveryMethodRaw = normalizeText(req.body?.deliveryMethod) || "stripe_checkout";
+    if (deliveryMethodRaw === "national" || deliveryMethodRaw === "entrega") {
+      const cep = normalizeText(address.cep).replace(/\D/g, "");
+      if (!cep || cep.length !== 8) {
+        return res.status(400).json({ error: "CEP invÃ¡lido. Informe 8 dÃ­gitos." });
+      }
+      if (!normalizeText(address.street)) {
+        return res.status(400).json({ error: "EndereÃ§o (rua) Ã© obrigatÃ³rio para entrega." });
+      }
+      if (!normalizeText(address.city)) {
+        return res.status(400).json({ error: "Cidade Ã© obrigatÃ³ria para entrega." });
+      }
+    }
+    const deliveryMethod = deliveryMethodRaw;
+    const baseUrl = makeCheckoutBaseUrl(req);
 
     const normalizedItems = items.map((item) => {
       const quantity = Math.max(1, normalizeNumber(item.quantity, 1));
       const resolvedId = resolveProductId(productMap, item.id);
       const product = productMap.get(resolvedId);
       if (!product || product.active === false) {
-        throw new Error(`Produto inválido: ${normalizeText(item.id)}`);
+        throw new Error(`Produto invÃ¡lido: ${normalizeText(item.id)}`);
       }
       const size = normalizeText(item.size || item.tamanho);
 
@@ -2319,9 +2369,9 @@ app.post("/api/checkout/session", checkoutLimiter, async (req, res) => {
       sessionId: "",
       items: normalizedItems,
       customer: {
-        name: normalizeText(customer.name),
+        name: customerName,
         email: normalizeText(customer.email),
-        phone: normalizeText(customer.phone)
+        phone: customerPhone
       },
       address,
       deliveryMethod,
@@ -2336,7 +2386,7 @@ app.post("/api/checkout/session", checkoutLimiter, async (req, res) => {
         currency: "brl",
         product_data: {
           name: item.size ? `${item.name} - ${item.size}` : item.name,
-          description: item.size ? `${item.category} • Tamanho ${item.size}` : item.category,
+          description: item.size ? `${item.category} â€¢ Tamanho ${item.size}` : item.category,
           images: (() => {
             const imageUrl = toAbsoluteHttpUrl(item.image, baseUrl);
             return imageUrl ? [imageUrl] : [];
@@ -2369,7 +2419,7 @@ app.post("/api/checkout/session", checkoutLimiter, async (req, res) => {
         mode: "payment",
         line_items: lineItems,
         customer_creation: "always",
-        customer_email: normalizeText(customer.email) || undefined,
+        customer_email: customerEmail || undefined,
         billing_address_collection: "required",
         phone_number_collection: { enabled: true },
         name_collection: {
@@ -2378,8 +2428,8 @@ app.post("/api/checkout/session", checkoutLimiter, async (req, res) => {
         shipping_address_collection: {
           allowed_countries: ["BR"]
         },
-        success_url: new URL("/loja/?checkout=success&session_id={CHECKOUT_SESSION_ID}", baseUrl).toString(),
-        cancel_url: new URL("/loja/?checkout=cancelled", baseUrl).toString(),
+        success_url: `${baseUrl}/?checkout=success&session_id={CHECKOUT_SESSION_ID}`,
+        cancel_url: `${baseUrl}/?checkout=cancelled`,
         locale: "pt-BR",
         metadata: buildMetadataForOrder(order)
       });
@@ -2426,13 +2476,13 @@ app.get("/healthz", (_req, res) => {
 });
 
 app.use((err, _req, res, _next) => {
-  console.error("Erro não tratado:", err.message);
+  console.error("Erro nÃ£o tratado:", err.message);
   res.status(500).json({ error: "Erro interno do servidor." });
 });
 
 app.use((req, res) => {
   if (req.path.startsWith("/api/")) {
-    return res.status(404).json({ error: "Rota não encontrada." });
+    return res.status(404).json({ error: "Rota nÃ£o encontrada." });
   }
   return res.status(404).send("Not found");
 });
@@ -2455,4 +2505,3 @@ module.exports = {
     readProducts
   }
 };
-
