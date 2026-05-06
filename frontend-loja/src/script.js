@@ -453,10 +453,11 @@ function setAllPlaceholder(selector, value) {
 }
 
 function getLanguageFlag(locale) {
+  const imageBase = window.location.port === "5173" ? "/src/imagens" : "/imagens";
   const flags = {
-    pt: "/imagens/bandeira_BRA.jpg",
-    en: "/imagens/bandeira_EUA.jpg",
-    es: "/imagens/bandeira_ESP.png"
+    pt: `${imageBase}/bandeira_BRA.jpg`,
+    en: `${imageBase}/bandeira_EUA.jpg`,
+    es: `${imageBase}/bandeira_ESP.png`
   };
   return flags[locale] || flags.pt;
 }
@@ -1109,7 +1110,8 @@ function renderProducts() {
     card.className = "card";
     card.dataset.productId = product.id;
     card.classList.toggle("is-highlighted", product.id === previewProductId);
-    const productLink = `/loja/produto.html?id=${encodeURIComponent(product.id)}`;
+    const productPagePath = window.location.port === "5173" ? "/src/produto.html" : "/loja/produto.html";
+    const productLink = `${productPagePath}?id=${encodeURIComponent(product.id)}`;
 
     const priceLabel = product.price > 0 ? formatCurrency(product.price) : t("priceTbd");
     const isOutOfStock = typeof product.stock === "number" && product.stock === 0;
@@ -1130,7 +1132,7 @@ function renderProducts() {
           <div class="catalog-color-swatches">
             ${colorSwatches.map((color) => `
               <a class="catalog-color-swatch" href="${productLink}" title="${sanitizeText(color.name)}" aria-label="${sanitizeText(color.name)}" style="--swatch-color:${sanitizeText(color.hex)}">
-                ${color.hasImage ? `<img src="${sanitizeText(color.image)}" alt="" loading="lazy">` : ""}
+                ${color.hasImage ? `<img src="${sanitizeText(color.image)}" alt="" loading="lazy" onerror="this.remove()">` : ""}
               </a>
             `).join("")}
           </div>
@@ -1151,7 +1153,7 @@ function renderProducts() {
     card.innerHTML = `
       <a class="card-media-link" href="${productLink}" aria-label="Ver ${sanitizeText(product.name)}">
         <div class="card-media">
-          <img src="${sanitizeText(product.image || product.image_url || (Array.isArray(product.images) ? product.images[0] : "") || PLACEHOLDER_IMAGE)}" alt="${sanitizeText(product.name)}" loading="lazy" onerror="this.src='${PLACEHOLDER_IMAGE}'">
+          <img src="${sanitizeText(product.image || product.image_url || (Array.isArray(product.images) ? product.images[0] : "") || PLACEHOLDER_IMAGE)}" alt="${sanitizeText(product.name)}" loading="lazy" onerror="this.onerror=null;this.src='${PLACEHOLDER_IMAGE}'">
           ${stockBadge}
         </div>
       </a>

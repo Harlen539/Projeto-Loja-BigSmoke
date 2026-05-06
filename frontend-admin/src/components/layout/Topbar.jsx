@@ -2,6 +2,8 @@ import { useNavigate } from "react-router-dom";
 
 import { useAuth } from "../../hooks/useAuth.js";
 
+const storeUrl = import.meta.env.VITE_STORE_URL || "http://localhost:5173";
+
 export function Topbar() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
@@ -20,7 +22,7 @@ export function Topbar() {
       <input placeholder="Buscar produtos, pedidos..." type="search" />
       <div className="topbar-actions">
         <span>{user?.email || "admin"}</span>
-        <a href="http://localhost:5173" target="_blank" rel="noreferrer">Abrir loja</a>
+        <a href={storeUrl} target="_blank" rel="noreferrer">Abrir loja</a>
         <button onClick={exit} type="button">Sair</button>
       </div>
     </header>

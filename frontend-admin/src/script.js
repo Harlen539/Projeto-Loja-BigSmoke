@@ -75,7 +75,7 @@ let state = {
     category: "all",
     featured: "all",
     page: 1,
-    limit: 6
+    limit: 100
   },
   orders: {
     query: "",
@@ -96,6 +96,14 @@ function escapeHtml(value) {
     .replace(/</g, "&lt;")
     .replace(/>/g, "&gt;")
     .replace(/"/g, "&quot;");
+}
+
+function getProductImage(product) {
+  return String(product?.image || product?.image_url || (Array.isArray(product?.images) ? product.images[0] : "") || PLACEHOLDER_IMAGE).trim();
+}
+
+function imageFallbackAttr() {
+  return `onerror="this.onerror=null;this.src='${PLACEHOLDER_IMAGE}';this.classList.add('is-missing')"`;
 }
 
 function setAuthToken(token) {
@@ -220,6 +228,16 @@ function buildUrl(path, params = {}) {
     }
   });
   return url.toString();
+}
+
+function getStoreUrl(path = "/") {
+  const { protocol, hostname, port, origin } = window.location;
+
+  if ((hostname === "localhost" || hostname === "127.0.0.1") && port === "5174") {
+    return new URL(path, `${protocol}//${hostname}:5173`).toString();
+  }
+
+  return new URL(`/loja${path.startsWith("/") ? path : `/${path}`}`, apiBaseUrl || origin).toString();
 }
 
 function normalizeRoute(path) {
@@ -585,7 +603,9 @@ function updateStoreLink() {
   const link = $("open-store-link");
   if (!link) return;
 
-  link.href = apiAvailable ? buildUrl("/loja/") : "../loja/index.html";
+  link.href = getStoreUrl("/");
+  link.target = "_blank";
+  link.rel = "noreferrer";
 }
 
 function openStorePreview(product) {
@@ -1620,7 +1640,7 @@ function renderAdminColorSwatches(product) {
       <div class="product-row-swatches">
         ${colors.map((color) => `
           <span class="product-row-swatch" title="${escapeHtml(color.name)}" style="--swatch-color:${escapeHtml(color.hex)}">
-            ${color.image ? `<img src="${escapeHtml(color.image)}" alt="">` : ""}
+            ${color.image ? `<img src="${escapeHtml(color.image)}" alt="" ${imageFallbackAttr()}>` : ""}
           </span>
         `).join("")}
       </div>
@@ -1644,19 +1664,20 @@ function renderProducts(result) {
     const row = document.createElement("article");
     row.className = "product-row";
     row.dataset.productId = product.id;
+    const productImage = getProductImage(product);
     row.innerHTML = `
-      <img class="product-thumb" src="${product.image || product.image_url || (Array.isArray(product.images) ? product.images[0] : "") || PLACEHOLDER_IMAGE}" alt="${product.name}">
+      <img class="product-thumb" src="${escapeHtml(productImage)}" alt="${escapeHtml(product.name)}" loading="lazy" ${imageFallbackAttr()}>
       <div>
-        <h3>${product.name}</h3>
-        <p>${product.category} • ${formatCurrency(product.price)}</p>
+        <h3>${escapeHtml(product.name)}</h3>
+        <p>${escapeHtml(product.category)} • ${formatCurrency(product.price)}</p>
         <div>
           <span class="badge ${product.active === false ? "" : "badge-active"}">${product.active === false ? "Inativo" : "Ativo"}</span>
           ${product.featured ? '<span class="badge badge-featured">★ Destaque</span>' : ""}
-          <span class="badge">${product.sizes || "Tamanhos em breve"}</span>
+          <span class="badge">${escapeHtml(product.sizes || "Tamanhos em breve")}</span>
           <span class="badge">${Number(product.stock || 0)} em estoque</span>
         </div>
         ${renderAdminColorSwatches(product)}
-        <small>${product.description || "Sem descrição."}</small>
+        <small>${escapeHtml(product.description || "Sem descrição.")}</small>
       </div>
       <div class="row-actions">
         <label class="stock-inline">
@@ -2187,6 +2208,9 @@ function openDrawer() {
   $("product-drawer").classList.add("open");
   $("drawer-overlay").classList.add("open");
   document.body.style.overflow = "hidden";
+  requestAnimationFrame(() => {
+    $("product-form")?.scrollTo({ top: 0, behavior: "auto" });
+  });
 }
 
 function closeDrawer() {

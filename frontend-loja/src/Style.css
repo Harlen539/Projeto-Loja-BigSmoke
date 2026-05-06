@@ -201,11 +201,11 @@ button {
 }
 
 .language-toggle img {
-  width: 1.6rem;
-  height: 1.6rem;
+  width: 1.45rem;
+  height: 1.05rem;
   display: block;
-  border-radius: 999px;
-  object-fit: cover;
+  border-radius: 3px;
+  object-fit: contain;
 }
 
 .language-menu {
@@ -249,16 +249,17 @@ button {
 }
 
 .language-option img {
-  width: 1.6rem;
-  height: 1.6rem;
+  width: 1.45rem;
+  height: 1.05rem;
   display: block;
-  border-radius: 999px;
-  object-fit: cover;
+  border-radius: 3px;
+  object-fit: contain;
 }
 
 .profile-icon-link {
-  width: 2.65rem;
-  height: 2.65rem;
+  width: 2.9rem;
+  height: 2.9rem;
+  flex: 0 0 2.9rem;
   padding: 0;
   border-radius: 999px;
   border: 1px solid rgba(245, 240, 232, 0.16);
@@ -267,22 +268,19 @@ button {
   align-items: center;
   justify-content: center;
   overflow: hidden;
-  cursor: pointer;
-  transition: transform var(--transition), border-color var(--transition), background var(--transition), box-shadow var(--transition);
+  transition: transform var(--transition), border-color var(--transition), background var(--transition);
 }
 
 .profile-icon-link:hover,
-.profile-icon-link:focus-visible,
-.profile-icon-link.is-active {
+.profile-icon-link:focus {
   transform: translateY(-1px);
-  border-color: rgba(245, 240, 232, 0.38);
-  background: rgba(255, 255, 255, 0.07);
-  box-shadow: 0 0 0 4px rgba(245, 240, 232, 0.06);
+  border-color: rgba(245, 240, 232, 0.34);
+  background: rgba(255, 255, 255, 0.06);
 }
 
 .profile-icon-link img {
-  width: 1.75rem;
-  height: 1.75rem;
+  width: 1.7rem;
+  height: 1.7rem;
   display: block;
   border-radius: 999px;
   object-fit: cover;
@@ -2091,8 +2089,3 @@ main {
     font-size: 0.72rem;
   }
 }
-
-/* ─── COR NO CARRINHO ─── */
-.cart-item-color-row { display:flex; align-items:center; gap:0.4rem; margin-top:0.3rem; }
-.cart-item-color-label { font-size:0.7rem; color:var(--text-muted); font-family:'Oswald',sans-serif; letter-spacing:0.08em; text-transform:uppercase; }
-.cart-item-color-value { font-size:0.78rem; color:var(--accent-soft); font-weight:500; }

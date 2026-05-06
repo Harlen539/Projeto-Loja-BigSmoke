@@ -1,5 +1,109 @@
 [
   {
+    "id": "order_39d07806-0011-4ee2-a7ee-462779064880",
+    "orderNumber": 12,
+    "orderNumberFormatted": "#00012",
+    "orderAccessCode": "#3850f44a",
+    "hiddenInAdmin": false,
+    "stripeSessionId": "cs_test_e23cca60-0669-4289-9244-05a266b93db2",
+    "paymentIntentId": "",
+    "stripeEventId": "",
+    "status": "pending",
+    "currency": "brl",
+    "amountSubtotal": 84.9,
+    "shippingAmount": 0,
+    "amountTotal": 84.9,
+    "paymentConfirmed": false,
+    "inventoryDebitedAt": "",
+    "customer": {
+      "name": "HARLEN NASCIMENTO",
+      "email": "",
+      "phone": "83996253060"
+    },
+    "address": {
+      "cep": "58310000",
+      "street": "R. Carmelita Morais de Medeiros,164",
+      "number": "",
+      "neighborhood": "",
+      "city": "Cabedelo",
+      "state": "PB",
+      "complement": ""
+    },
+    "deliveryMethod": "retirada",
+    "shippingLabel": "Retirada na loja",
+    "trackingCode": "#200270cb",
+    "trackingUrl": "http://localhost:3000/loja/pedidos.html?tracking=%233850f44a",
+    "items": [
+      {
+        "id": "preview-1777902029458",
+        "name": "Camiseta BigSmoke Smoke Identity",
+        "quantity": 1,
+        "price": 84.9,
+        "category": "Camisetas",
+        "image": "/uploads/1777901887119-cinza_1.webp",
+        "size": "P"
+      }
+    ],
+    "events": [],
+    "sessionUrl": "http://localhost:3000/loja/?mock_session=cs_test_e23cca60-0669-4289-9244-05a266b93db2",
+    "paidAt": "",
+    "canceledAt": "",
+    "createdAt": "2026-05-05T14:36:35.040Z",
+    "updatedAt": "2026-05-05T14:36:35.040Z"
+  },
+  {
+    "id": "order_8c131e2e-5af5-41a0-880c-9b136cceeca7",
+    "orderNumber": 11,
+    "orderNumberFormatted": "#00011",
+    "orderAccessCode": "#a4fd8ddf",
+    "hiddenInAdmin": false,
+    "stripeSessionId": "cs_test_1b9de658-fa55-4a04-b8d9-ec0b724b8e00",
+    "paymentIntentId": "",
+    "stripeEventId": "",
+    "status": "pending",
+    "currency": "brl",
+    "amountSubtotal": 84.9,
+    "shippingAmount": 0,
+    "amountTotal": 84.9,
+    "paymentConfirmed": false,
+    "inventoryDebitedAt": "",
+    "customer": {
+      "name": "Teste BigSmoke",
+      "email": "teste@bigsmoke.local",
+      "phone": "83999999999"
+    },
+    "address": {
+      "cep": "58000000",
+      "street": "Rua Teste",
+      "number": "1",
+      "neighborhood": "Centro",
+      "city": "Joao Pessoa",
+      "state": "PB",
+      "complement": ""
+    },
+    "deliveryMethod": "retirada",
+    "shippingLabel": "Retirada na loja",
+    "trackingCode": "#4a559507",
+    "trackingUrl": "http://localhost:3000/loja/pedidos.html?tracking=%23a4fd8ddf",
+    "items": [
+      {
+        "id": "preview-1777902029458",
+        "name": "Camiseta BigSmoke Smoke Identity",
+        "quantity": 1,
+        "price": 84.9,
+        "category": "Camisetas",
+        "image": "/uploads/1777901887119-cinza_1.webp",
+        "size": "P"
+      }
+    ],
+    "events": [],
+    "sessionUrl": "http://localhost:3000/loja/?mock_session=cs_test_1b9de658-fa55-4a04-b8d9-ec0b724b8e00",
+    "paidAt": "",
+    "canceledAt": "",
+    "createdAt": "2026-05-05T14:36:05.058Z",
+    "updatedAt": "2026-05-05T14:36:05.058Z"
+  },
+  {
     "id": "order_fa00b219-4cb5-4a94-a725-c9c5047270f1",
     "orderNumber": 8,
     "orderNumberFormatted": "#00008",
