@@ -102,6 +102,199 @@ test("admin can update stock", async () => {
   assert.equal(data.stock, 3);
 });
 
+test("manual paid order debits product stock", async () => {
+  const response = await fetch(`${baseUrl}/api/admin/orders/manual`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`
+    },
+    body: JSON.stringify({
+      status: "processing",
+      customer: {
+        name: "Manual Cliente",
+        email: "manual@teste.com",
+        phone: "5583986494691"
+      },
+      items: [
+        {
+          id: createdProductId,
+          name: "Hoodie Teste",
+          price: 199.9,
+          quantity: 2
+        }
+      ]
+    })
+  });
+
+  assert.equal(response.status, 201);
+
+  const productResponse = await fetch(`${baseUrl}/api/admin/products?query=hoodie&page=1&limit=10`, {
+    headers: {
+      Authorization: `Bearer ${token}`
+    }
+  });
+  const productsData = await productResponse.json();
+  const product = productsData.items.find((entry) => entry.id === createdProductId);
+  assert.equal(product.stock, 1);
+});
+
+test("customer orders endpoint returns public orders by email", async () => {
+  const response = await fetch(`${baseUrl}/api/orders/customer/${encodeURIComponent("manual@teste.com")}`);
+
+  assert.equal(response.status, 200);
+  const orders = await response.json();
+  assert.ok(Array.isArray(orders));
+  assert.ok(orders.some((order) => order.customer?.email === "m***@teste.com"));
+});
+
+test("admin status changes debit and restore stock once", async () => {
+  const createProductResponse = await fetch(`${baseUrl}/api/admin/products`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`
+    },
+    body: JSON.stringify({
+      name: "Calca Status Teste",
+      category: "Calcas",
+      price: 149.9,
+      stock: 5,
+      image: "https://example.com/calca.jpg",
+      sizes: "M",
+      description: "Produto para teste de status.",
+      active: true
+    })
+  });
+  const statusProduct = await createProductResponse.json();
+
+  const orderResponse = await fetch(`${baseUrl}/api/admin/orders`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`
+    },
+    body: JSON.stringify({
+      status: "pending",
+      customer: {
+        name: "Status Cliente",
+        email: "status@teste.com"
+      },
+      items: [
+        {
+          id: statusProduct.id,
+          name: statusProduct.name,
+          price: statusProduct.price,
+          quantity: 2
+        }
+      ]
+    })
+  });
+  const order = await orderResponse.json();
+
+  const processingResponse = await fetch(`${baseUrl}/api/admin/orders/${order.id}`, {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`
+    },
+    body: JSON.stringify({ status: "processing" })
+  });
+  assert.equal(processingResponse.status, 200);
+
+  const deliveredResponse = await fetch(`${baseUrl}/api/admin/orders/${order.id}`, {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`
+    },
+    body: JSON.stringify({ status: "delivered" })
+  });
+  assert.equal(deliveredResponse.status, 200);
+
+  let productResponse = await fetch(`${baseUrl}/api/admin/products?query=calca&page=1&limit=10`, {
+    headers: {
+      Authorization: `Bearer ${token}`
+    }
+  });
+  let productsData = await productResponse.json();
+  let product = productsData.items.find((entry) => entry.id === statusProduct.id);
+  assert.equal(product.stock, 3);
+
+  const cancelResponse = await fetch(`${baseUrl}/api/admin/orders/${order.id}`, {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`
+    },
+    body: JSON.stringify({ status: "canceled" })
+  });
+  assert.equal(cancelResponse.status, 200);
+
+  productResponse = await fetch(`${baseUrl}/api/admin/products?query=calca&page=1&limit=10`, {
+    headers: {
+      Authorization: `Bearer ${token}`
+    }
+  });
+  productsData = await productResponse.json();
+  product = productsData.items.find((entry) => entry.id === statusProduct.id);
+  assert.equal(product.stock, 5);
+});
+
+test("infinite stock products are not decremented", async () => {
+  const createProductResponse = await fetch(`${baseUrl}/api/admin/products`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`
+    },
+    body: JSON.stringify({
+      name: "Gift Card Infinito",
+      category: "Digital",
+      price: 50,
+      stock: -1,
+      image: "https://example.com/gift-card.jpg",
+      sizes: "Unico",
+      description: "Produto com estoque infinito.",
+      active: true
+    })
+  });
+  const infiniteProduct = await createProductResponse.json();
+
+  const orderResponse = await fetch(`${baseUrl}/api/admin/orders/manual`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`
+    },
+    body: JSON.stringify({
+      status: "processing",
+      customer: {
+        name: "Infinito Cliente",
+        email: "infinito@teste.com"
+      },
+      items: [
+        {
+          id: infiniteProduct.id,
+          name: infiniteProduct.name,
+          price: infiniteProduct.price,
+          quantity: 100
+        }
+      ]
+    })
+  });
+  assert.equal(orderResponse.status, 201);
+
+  const productResponse = await fetch(`${baseUrl}/api/admin/products?query=gift&page=1&limit=10`, {
+    headers: {
+      Authorization: `Bearer ${token}`
+    }
+  });
+  const productsData = await productResponse.json();
+  const product = productsData.items.find((entry) => entry.id === infiniteProduct.id);
+  assert.equal(product.stock, -1);
+});
+
 test("checkout session creates a pending order", async () => {
   const response = await fetch(`${baseUrl}/api/checkout/session`, {
     method: "POST",

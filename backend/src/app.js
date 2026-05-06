@@ -173,8 +173,12 @@ function normalizeNumber(value, fallback = 0) {
 
 function normalizeStock(value, fallback = 0) {
   const parsed = Math.floor(Number(value));
+  if (parsed === -1) {
+    return -1;
+  }
   if (!Number.isFinite(parsed) || parsed < 0) {
-    return Math.max(0, Math.floor(Number(fallback) || 0));
+    const fallbackStock = Math.floor(Number(fallback) || 0);
+    return fallbackStock === -1 ? -1 : Math.max(0, fallbackStock);
   }
   return parsed;
 }
@@ -230,6 +234,10 @@ function normalizeOrderStatus(value, fallback = "pending") {
     refunded: "canceled"
   };
   return aliases[raw] || aliases[normalizeText(fallback).toLowerCase()] || "pending";
+}
+
+function orderStatusDebitsInventory(status) {
+  return ["paid", "processing", "shipped", "delivered"].includes(normalizeOrderStatus(status, "pending"));
 }
 
 function toPublicProduct(product) {
@@ -443,8 +451,14 @@ function getAllowedOrigins() {
     process.env.ADMIN_URL,
     "http://localhost:3000",
     "http://127.0.0.1:3000",
+    "http://localhost:5173",
+    "http://127.0.0.1:5173",
+    "http://localhost:5174",
+    "http://127.0.0.1:5174",
     "http://localhost:4173",
-    "http://127.0.0.1:4173"
+    "http://127.0.0.1:4173",
+    "http://localhost:4174",
+    "http://127.0.0.1:4174"
   ];
 
   if (process.env.ALLOWED_ORIGINS) {
@@ -1499,7 +1513,7 @@ function validateProductPayload(payload) {
   if (!Number.isFinite(payload.price) || payload.price < 0) {
     return "Preço inválido.";
   }
-  if (!Number.isInteger(payload.stock) || payload.stock < 0) {
+  if (!Number.isInteger(payload.stock) || payload.stock < -1) {
     return "Estoque inválido.";
   }
   return "";
@@ -1536,6 +1550,9 @@ async function applyStockDelta(items, direction) {
     }
 
     const currentStock = normalizeStock(product.stock, 0);
+    if (currentStock === -1) {
+      continue;
+    }
     const nextStock = currentStock + (quantity * direction);
     if (nextStock < 0) {
       throw new Error(`Estoque insuficiente para ${product.name}.`);
@@ -1545,10 +1562,12 @@ async function applyStockDelta(items, direction) {
   const nextProducts = products.map((product) => {
     const quantity = quantityMap.get(product.id);
     if (!quantity) return product;
+    const currentStock = normalizeStock(product.stock, 0);
+    if (currentStock === -1) return product;
     return normalizeProduct(
       {
         ...product,
-        stock: normalizeStock(product.stock, 0) + (quantity * direction)
+        stock: currentStock + (quantity * direction)
       },
       product
     );
@@ -1855,6 +1874,30 @@ app.get("/api/orders", async (req, res) => {
   }
 });
 
+app.get("/api/orders/customer/:email", async (req, res) => {
+  try {
+    const email = normalizeText(req.params.email).toLowerCase();
+    if (!email || !email.includes("@")) {
+      return res.status(400).json({ error: "E-mail inválido." });
+    }
+
+    const orders = (await readOrders())
+      .filter((order) => !order.hiddenInAdmin && normalizeText(order.customer?.email).toLowerCase() === email)
+      .map((order) => {
+        const responseOrder = decorateOrderForResponse(order, makeBaseUrl(req));
+        return {
+          ...responseOrder,
+          customer: maskPublicCustomer(responseOrder.customer),
+          address: maskPublicAddress(responseOrder.address)
+        };
+      });
+
+    res.json(orders);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 app.get("/api/orders/public/:sessionId", async (req, res) => {
   try {
     const sessionId = normalizeText(req.params.sessionId);
@@ -1942,17 +1985,21 @@ app.post("/api/admin/orders", authMiddleware, async (req, res) => {
     const subtotal = normalizeNumber(body.amountSubtotal, items.reduce((s, i) => s + normalizeNumber(i.price, 0) * Math.max(1, normalizeNumber(i.quantity, 1)), 0));
     const shippingAmount = normalizeNumber(body.shippingAmount, 0);
     const total = normalizeNumber(body.amountTotal, subtotal + shippingAmount);
+    const status = normalizeOrderStatus(body.status || "pending", "pending");
+    const inventoryDebitedAt = orderStatusDebitsInventory(status) ? nowIso() : "";
     const order = normalizeOrder({
       orderNumber,
       orderNumberFormatted: formatOrderNumber(orderNumber),
       orderAccessCode,
       trackingCode,
       trackingUrl: buildInternalTrackingUrl({ orderAccessCode, trackingCode, orderNumberFormatted: formatOrderNumber(orderNumber) }),
-      status: normalizeOrderStatus(body.status || "pending", "pending"),
+      status,
       currency: "brl",
       amountSubtotal: subtotal,
       shippingAmount,
       amountTotal: total,
+      inventoryDebitedAt,
+      paidAt: inventoryDebitedAt,
       customer: {
         name: normalizeText(body.customer?.name),
         email: normalizeText(body.customer?.email),
@@ -1966,6 +2013,9 @@ app.post("/api/admin/orders", authMiddleware, async (req, res) => {
       notes: normalizeText(body.notes),
       events: [{ type: "admin.order.created", id: crypto.randomUUID(), created: nowIso() }],
     });
+    if (inventoryDebitedAt) {
+      await applyStockDelta(order.items || [], -1);
+    }
     await upsertOrder(order);
     res.status(201).json(decorateOrderForResponse(order, makeBaseUrl(req)));
   } catch (error) {
@@ -1987,17 +2037,23 @@ app.post("/api/admin/orders/manual", authMiddleware, async (req, res) => {
     const subtotal = normalizeNumber(body.amountSubtotal, items.reduce((s, i) => s + normalizeNumber(i.price, 0) * Math.max(1, normalizeNumber(i.quantity, 1)), 0));
     const shippingAmount = normalizeNumber(body.shippingAmount, 0);
     const total = normalizeNumber(body.amountTotal, subtotal + shippingAmount);
+    const status = normalizeOrderStatus(body.status || "pending", "pending");
+    const inventoryDebitedAt = orderStatusDebitsInventory(status) ? nowIso() : "";
     const order = normalizeOrder({
       orderNumber, orderNumberFormatted: formatOrderNumber(orderNumber), orderAccessCode, trackingCode,
       trackingUrl: buildInternalTrackingUrl({ orderAccessCode, trackingCode, orderNumberFormatted: formatOrderNumber(orderNumber) }),
-      status: normalizeOrderStatus(body.status || "pending", "pending"),
+      status,
       currency: "brl", amountSubtotal: subtotal, shippingAmount, amountTotal: total,
+      inventoryDebitedAt, paidAt: inventoryDebitedAt,
       customer: { name: normalizeText(body.customer?.name), email: normalizeText(body.customer?.email), phone: normalizeText(body.customer?.phone) },
       address: body.address || {}, deliveryMethod: normalizeText(body.deliveryMethod) || "retirada",
       shippingLabel: normalizeText(body.shippingLabel) || "Pedido manual",
       items, origin: normalizeText(body.origin), notes: normalizeText(body.notes),
       events: [{ type: "admin.order.created", id: crypto.randomUUID(), created: nowIso() }],
     });
+    if (inventoryDebitedAt) {
+      await applyStockDelta(order.items || [], -1);
+    }
     await upsertOrder(order);
     res.status(201).json(decorateOrderForResponse(order, makeBaseUrl(req)));
   } catch (error) {
@@ -2108,6 +2164,17 @@ async function updateOrderStatusHandler(req, res) {
     const hiddenInAdmin = typeof req.body?.hiddenInAdmin === "undefined"
       ? current.hiddenInAdmin || false
       : normalizeBoolean(req.body.hiddenInAdmin, current.hiddenInAdmin || false);
+    const wasInventoryDebited = Boolean(current.inventoryDebitedAt);
+    const shouldDebitInventory = orderStatusDebitsInventory(nextStatus);
+    const inventoryDebitedAt = shouldDebitInventory
+      ? current.inventoryDebitedAt || nowIso()
+      : "";
+
+    if (shouldDebitInventory && !wasInventoryDebited) {
+      await applyStockDelta(current.items || [], -1);
+    } else if (!shouldDebitInventory && wasInventoryDebited) {
+      await applyStockDelta(current.items || [], 1);
+    }
 
     const next = normalizeOrder(
       {
@@ -2116,6 +2183,7 @@ async function updateOrderStatusHandler(req, res) {
         trackingCode,
         trackingUrl: trackingUrl || (!current.trackingUrl || isInternalTrackingUrl(current.trackingUrl) ? buildInternalTrackingUrl({ ...current, trackingCode, orderAccessCode: current.orderAccessCode || computeOrderAccessCode(current) }) : current.trackingUrl),
         hiddenInAdmin,
+        inventoryDebitedAt,
         paymentIntentId: req.body?.paymentIntentId || current.paymentIntentId,
         events: [
           ...(current.events || []),
@@ -2132,7 +2200,7 @@ async function updateOrderStatusHandler(req, res) {
       current
     );
 
-    if (nextStatus === "paid" && !next.paidAt) {
+    if (shouldDebitInventory && !next.paidAt) {
       next.paidAt = nowIso();
     }
     if (nextStatus === "canceled" && !next.canceledAt) {

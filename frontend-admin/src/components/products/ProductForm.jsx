@@ -24,20 +24,66 @@ const empty = {
   ageGroup: "",
   gender: "",
   tags: "",
-  sku: "",
-  barcode: "",
   productType: "physical",
 };
 
-function Section({ title, children, defaultOpen = true }) {
+const Icon = {
+  NameDesc: () => (
+    <svg width="16" height="16" viewBox="0 0 20 20" fill="none"><path d="M3 5h14M3 10h10M3 15h7" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round"/></svg>
+  ),
+  Photos: () => (
+    <svg width="16" height="16" viewBox="0 0 20 20" fill="none"><rect x="2" y="4" width="16" height="12" rx="2" stroke="currentColor" strokeWidth="1.5"/><circle cx="7" cy="8.5" r="1.5" stroke="currentColor" strokeWidth="1.3"/><path d="M2 14l4-4 3 3 3-3 6 5" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"/></svg>
+  ),
+  Prices: () => (
+    <svg width="16" height="16" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="8" stroke="currentColor" strokeWidth="1.5"/><path d="M10 6v1.5M10 12.5V14M7.5 8.5C7.5 7.67 8.17 7 9 7h2a1.5 1.5 0 010 3H9a1.5 1.5 0 000 3h2c.83 0 1.5-.67 1.5-1.5" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/></svg>
+  ),
+  ProductType: () => (
+    <svg width="16" height="16" viewBox="0 0 20 20" fill="none"><rect x="3" y="7" width="14" height="10" rx="1.5" stroke="currentColor" strokeWidth="1.5"/><path d="M7 7V5.5a3 3 0 016 0V7" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>
+  ),
+  Inventory: () => (
+    <svg width="16" height="16" viewBox="0 0 20 20" fill="none"><path d="M10 2L3 6v8l7 4 7-4V6L10 2z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round"/><path d="M3 6l7 4 7-4M10 10v8" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round"/></svg>
+  ),
+  Categories: () => (
+    <svg width="16" height="16" viewBox="0 0 20 20" fill="none"><rect x="2" y="2" width="7" height="7" rx="1.5" stroke="currentColor" strokeWidth="1.5"/><rect x="11" y="2" width="7" height="7" rx="1.5" stroke="currentColor" strokeWidth="1.5"/><rect x="2" y="11" width="7" height="7" rx="1.5" stroke="currentColor" strokeWidth="1.5"/><rect x="11" y="11" width="7" height="7" rx="1.5" stroke="currentColor" strokeWidth="1.5"/></svg>
+  ),
+  Tags: () => (
+    <svg width="16" height="16" viewBox="0 0 20 20" fill="none"><path d="M3 10.5V4a1 1 0 011-1h6.5a1 1 0 01.7.3l5.5 5.5a1 1 0 010 1.4l-5.5 5.5a1 1 0 01-1.4 0l-5.5-5.5A1 1 0 013 10.5z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round"/><circle cx="7" cy="7.5" r="1" fill="currentColor"/></svg>
+  ),
+  Dimensions: () => (
+    <svg width="16" height="16" viewBox="0 0 20 20" fill="none"><rect x="3" y="3" width="14" height="14" rx="1.5" stroke="currentColor" strokeWidth="1.5"/><path d="M3 7h14M7 3v4" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/></svg>
+  ),
+  Social: () => (
+    <svg width="16" height="16" viewBox="0 0 20 20" fill="none"><rect x="2" y="2" width="16" height="16" rx="4" stroke="currentColor" strokeWidth="1.5"/><circle cx="10" cy="10" r="3" stroke="currentColor" strokeWidth="1.4"/><circle cx="14.5" cy="5.5" r="1" fill="currentColor"/></svg>
+  ),
+  Featured: () => (
+    <svg width="16" height="16" viewBox="0 0 20 20" fill="none"><path d="M10 2l2.4 4.9 5.4.8-3.9 3.8.9 5.4L10 14.3l-4.8 2.6.9-5.4L2.2 7.7l5.4-.8L10 2z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round"/></svg>
+  ),
+  Upload: () => (
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M12 16V8M12 8l-3 3M12 8l3 3" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/><path d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/></svg>
+  ),
+  Chevron: ({ open }) => (
+    <svg width="14" height="14" viewBox="0 0 16 16" fill="none" style={{ transform: open ? "rotate(180deg)" : "rotate(0deg)", transition: "transform 0.25s ease" }}><path d="M4 6l4 4 4-4" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/></svg>
+  ),
+  Close: () => (
+    <svg width="16" height="16" viewBox="0 0 20 20" fill="none"><path d="M5 5l10 10M15 5L5 15" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/></svg>
+  ),
+  Check: () => (
+    <svg width="14" height="14" viewBox="0 0 20 20" fill="none"><path d="M4 10l4.5 4.5L16 6" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+  ),
+};
+
+function Section({ icon: IconComp, title, children, defaultOpen = true }) {
   const [open, setOpen] = useState(defaultOpen);
   return (
     <div className="pf-section">
       <button type="button" className="pf-section-toggle" onClick={() => setOpen((o) => !o)}>
-        <span>{title}</span>
-        <span className="pf-chevron">{open ? "∧" : "∨"}</span>
+        <span className="pf-section-icon">{IconComp && <IconComp />}</span>
+        <span className="pf-section-title">{title}</span>
+        <span className="pf-section-chevron"><Icon.Chevron open={open} /></span>
       </button>
-      {open && <div className="pf-section-body">{children}</div>}
+      <div className={"pf-section-body" + (open ? " open" : "")}>
+        <div className="pf-section-inner">{children}</div>
+      </div>
     </div>
   );
 }
@@ -46,6 +92,7 @@ export function ProductForm({ product, onCancel, onSubmit }) {
   const { token } = useAuth();
   const [form, setForm] = useState(empty);
   const [uploading, setUploading] = useState(false);
+  const [showPriceInStore, setShowPriceInStore] = useState(true);
   const fileRef = useRef(null);
 
   useEffect(() => {
@@ -132,190 +179,184 @@ export function ProductForm({ product, onCancel, onSubmit }) {
     <div className="pf-overlay">
       <div className="pf-drawer">
         <div className="pf-header">
-          <h2>{product ? "Editar produto" : "Novo produto"}</h2>
-          <button className="pf-close" type="button" onClick={onCancel}>✕</button>
+          <div className="pf-header-info">
+            <h2 className="pf-title">{product ? "Editar produto" : "Novo produto"}</h2>
+            <p className="pf-subtitle">{product ? "Atualize as informações do produto" : "Preencha os dados do novo produto"}</p>
+          </div>
+          <button className="pf-close" type="button" onClick={onCancel} aria-label="Fechar">
+            <Icon.Close />
+          </button>
         </div>
-        <form className="pf-body" onSubmit={submit}>
 
-          <Section title="Nome e descrição">
+        <form className="pf-body" onSubmit={submit}>
+          <Section icon={Icon.NameDesc} title="Nome e descrição" defaultOpen={true}>
             <div className="pf-field">
-              <label>Nome</label>
-              <input value={form.name} onChange={(e) => update("name", e.target.value)} placeholder="Jaqueta de couro" required />
+              <label className="pf-label">Nome do produto <span className="pf-required">*</span></label>
+              <input className="pf-input" value={form.name} onChange={(e) => update("name", e.target.value)} placeholder="Ex: Jaqueta de couro BigSmoke" required />
             </div>
             <div className="pf-field">
-              <label>Descrição</label>
-              <textarea value={form.description} onChange={(e) => update("description", e.target.value)} placeholder="Descreva o produto..." rows={4} />
+              <label className="pf-label">Descrição</label>
+              <textarea className="pf-textarea" value={form.description} onChange={(e) => update("description", e.target.value)} placeholder="Descreva o produto com detalhes..." rows={4} />
             </div>
           </Section>
 
-          <Section title="Fotos e vídeo">
+          <Section icon={Icon.Photos} title="Fotos do produto" defaultOpen={true}>
             <div className="pf-dropzone" onClick={() => fileRef.current?.click()}>
               <input ref={fileRef} type="file" accept="image/*" multiple style={{ display: "none" }} onChange={handleFileUpload} />
-              <span className="pf-dropzone-icon">⊕</span>
-              <span>{uploading ? "Enviando..." : "Selecione fotos do produto"}</span>
-              <small>Tamanho mínimo: 1280px — WEBP, PNG, JPEG ou GIF</small>
+              <div className="pf-dropzone-icon"><Icon.Upload /></div>
+              <div className="pf-dropzone-text">
+                <span>{uploading ? "Enviando imagens..." : "Clique para selecionar fotos"}</span>
+                <small>WEBP, PNG, JPEG ou GIF — tamanho mínimo 1280px</small>
+              </div>
             </div>
             {(form.images || []).length > 0 && (
               <div className="pf-image-grid">
                 {form.images.map((img) => (
-                  <div key={img} className={`pf-img-thumb${form.image === img ? " pf-img-main" : ""}`}>
+                  <div key={img} className={"pf-img-thumb" + (form.image === img ? " pf-img-main" : "")}>
                     <img src={img} alt="" onClick={() => update("image", img)} />
                     {form.image === img && <span className="pf-img-main-badge">Principal</span>}
-                    <button type="button" className="pf-img-remove" onClick={() => removeImage(img)}>✕</button>
+                    <button type="button" className="pf-img-remove" onClick={() => removeImage(img)}><Icon.Close /></button>
                   </div>
                 ))}
               </div>
             )}
             <div className="pf-field" style={{ marginTop: "0.75rem" }}>
-              <label>URL da imagem</label>
-              <input value={form.image} onChange={(e) => update("image", e.target.value)} placeholder="https://..." />
+              <label className="pf-label">URL da imagem</label>
+              <input className="pf-input" value={form.image} onChange={(e) => update("image", e.target.value)} placeholder="https://..." />
             </div>
           </Section>
 
-          <Section title="Preços">
+          <Section icon={Icon.Prices} title="Preços" defaultOpen={true}>
             <div className="pf-row-2">
               <div className="pf-field">
-                <label>Preço de venda</label>
-                <div className="pf-input-prefix">
-                  <span>R$</span>
-                  <input value={form.price} onChange={(e) => update("price", e.target.value)} placeholder="0,00" required type="number" step="0.01" min="0" />
-                </div>
+                <label className="pf-label">Preço de venda <span className="pf-required">*</span></label>
+                <div className="pf-input-prefix"><span>R$</span><input className="pf-input" value={form.price} onChange={(e) => update("price", e.target.value)} placeholder="0.00" required type="number" step="0.01" min="0" /></div>
               </div>
               <div className="pf-field">
-                <label>Preço promocional</label>
-                <div className="pf-input-prefix">
-                  <span>R$</span>
-                  <input value={form.promotionalPrice} onChange={(e) => update("promotionalPrice", e.target.value)} placeholder="0,00" type="number" step="0.01" min="0" />
-                </div>
+                <label className="pf-label">Preço promocional</label>
+                <div className="pf-input-prefix"><span>R$</span><input className="pf-input" value={form.promotionalPrice} onChange={(e) => update("promotionalPrice", e.target.value)} placeholder="0.00" type="number" step="0.01" min="0" /></div>
               </div>
+            </div>
+            <div className="pf-checkbox-inline">
+              <label className="pf-checkbox-label">
+                <input type="checkbox" checked={showPriceInStore} onChange={(e) => setShowPriceInStore(e.target.checked)} />
+                <span className="pf-checkbox-box">{showPriceInStore && <Icon.Check />}</span>
+                Exibir o preço na loja
+              </label>
             </div>
             <div className="pf-row-2">
               <div className="pf-field">
-                <label>Custo <small>(uso interno)</small></label>
-                <div className="pf-input-prefix">
-                  <span>R$</span>
-                  <input value={form.cost} onChange={(e) => update("cost", e.target.value)} placeholder="0,00" type="number" step="0.01" min="0" />
-                </div>
+                <label className="pf-label">Custo <small className="pf-label-hint">(uso interno)</small></label>
+                <div className="pf-input-prefix"><span>R$</span><input className="pf-input" value={form.cost} onChange={(e) => update("cost", e.target.value)} placeholder="0.00" type="number" step="0.01" min="0" /></div>
+                <small className="pf-hint">Seus clientes não verão na loja.</small>
               </div>
               <div className="pf-field">
-                <label>Margem de lucro</label>
-                <div className="pf-margin-display">{margin !== null ? `${margin}%` : "—"}</div>
+                <label className="pf-label">Margem de lucro</label>
+                <div className={"pf-margin-display" + (margin !== null ? (Number(margin) > 0 ? " positive" : " negative") : "")}>
+                  {margin !== null ? margin + "%" : "—"}
+                </div>
               </div>
             </div>
           </Section>
 
-          <Section title="Tipo de produto">
+          <Section icon={Icon.ProductType} title="Tipo de produto" defaultOpen={true}>
             <div className="pf-radio-group">
               {[["physical","Físico"],["digital","Digital / serviço"]].map(([v,l]) => (
-                <label key={v} className={`pf-radio${form.productType === v ? " active" : ""}`}>
+                <label key={v} className={"pf-radio" + (form.productType === v ? " active" : "")}>
                   <input type="radio" name="productType" value={v} checked={form.productType === v} onChange={() => update("productType", v)} />
-                  {l}
+                  <span className="pf-radio-dot" />{l}
                 </label>
               ))}
             </div>
           </Section>
 
-          <Section title="Inventário">
-            <label className="pf-label-sm">Estoque</label>
+          <Section icon={Icon.Inventory} title="Inventário" defaultOpen={false}>
+            <label className="pf-label" style={{ marginBottom: "0.5rem", display: "block" }}>Estoque</label>
             <div className="pf-radio-group">
               {[["infinite","Infinito"],["limited","Limitado"]].map(([v,l]) => (
-                <label key={v} className={`pf-radio${form.stockType === v ? " active" : ""}`}>
+                <label key={v} className={"pf-radio" + (form.stockType === v ? " active" : "")}>
                   <input type="radio" name="stockType" value={v} checked={form.stockType === v} onChange={() => update("stockType", v)} />
-                  {l}
+                  <span className="pf-radio-dot" />{l}
                 </label>
               ))}
             </div>
             {form.stockType === "limited" && (
               <div className="pf-field" style={{ marginTop: "0.75rem" }}>
-                <label>Quantidade</label>
-                <input value={form.stock} onChange={(e) => update("stock", e.target.value)} placeholder="0" type="number" min="0" />
+                <label className="pf-label">Quantidade em estoque</label>
+                <input className="pf-input" value={form.stock} onChange={(e) => update("stock", e.target.value)} placeholder="0" type="number" min="0" />
               </div>
             )}
             <div className="pf-field" style={{ marginTop: "0.75rem" }}>
-              <label>Tamanhos <small>(separados por vírgula)</small></label>
-              <input value={form.sizes} onChange={(e) => update("sizes", e.target.value)} placeholder="P, M, G, GG" />
+              <label className="pf-label">Tamanhos <small className="pf-label-hint">(separados por vírgula)</small></label>
+              <input className="pf-input" value={form.sizes} onChange={(e) => update("sizes", e.target.value)} placeholder="P, M, G, GG, XGG" />
             </div>
           </Section>
 
-          <Section title="Códigos" defaultOpen={false}>
-            <div className="pf-row-2">
-              <div className="pf-field">
-                <label>SKU</label>
-                <input value={form.sku} onChange={(e) => update("sku", e.target.value)} placeholder="BS-001" />
-                <small>Código interno de controle com variações.</small>
-              </div>
-              <div className="pf-field">
-                <label>Código de barras</label>
-                <input value={form.barcode} onChange={(e) => update("barcode", e.target.value)} placeholder="EAN / UPC" />
-              </div>
-            </div>
-          </Section>
-
-          <Section title="Categorias e variações" defaultOpen={false}>
+          <Section icon={Icon.Categories} title="Categorias e variações" defaultOpen={false}>
             <div className="pf-field">
-              <label>Categoria</label>
-              <input value={form.category} onChange={(e) => update("category", e.target.value)} placeholder="Moletons" required />
-              <small>Ajuda seus clientes a encontrarem produtos mais rápido.</small>
+              <label className="pf-label">Categoria <span className="pf-required">*</span></label>
+              <input className="pf-input" value={form.category} onChange={(e) => update("category", e.target.value)} placeholder="Ex: Moletons, Camisetas..." required />
+              <small className="pf-hint">Ajuda seus clientes a encontrarem produtos mais rápido.</small>
             </div>
             <div className="pf-field" style={{ marginTop: "0.75rem" }}>
-              <label>Badge / variação</label>
-              <input value={form.badge} onChange={(e) => update("badge", e.target.value)} placeholder="Mais pedido, Novo, BigSmoke" />
-              <small>Combina diferentes propriedades: cor + tamanho.</small>
+              <label className="pf-label">Badge / variação</label>
+              <input className="pf-input" value={form.badge} onChange={(e) => update("badge", e.target.value)} placeholder="Mais pedido, Novo, BigSmoke" />
+              <small className="pf-hint">Combina diferentes propriedades: cor + tamanho.</small>
             </div>
           </Section>
 
-          <Section title="Tags, Marca e SEO" defaultOpen={false}>
+          <Section icon={Icon.Tags} title="Tags, Marca e SEO" defaultOpen={false}>
             <div className="pf-field">
-              <label>Tags <small>(separadas por vírgula)</small></label>
-              <input value={form.tags} onChange={(e) => update("tags", e.target.value)} placeholder="streetwear, moletom" />
-              <small>Crie palavras-chave para facilitar a busca na loja e nos buscadores Google.</small>
+              <label className="pf-label">Tags <small className="pf-label-hint">(separadas por vírgula)</small></label>
+              <input className="pf-input" value={form.tags} onChange={(e) => update("tags", e.target.value)} placeholder="streetwear, moletom, bigsmoke" />
+              <small className="pf-hint">Crie palavras-chave para facilitar a busca na loja e no Google.</small>
             </div>
           </Section>
 
-          <Section title="Peso e dimensões" defaultOpen={false}>
-            <small className="pf-hint">Preencha para calcular o custo de envio dos produtos e mostrar os meios de envio na sua loja.</small>
+          <Section icon={Icon.Dimensions} title="Peso e dimensões" defaultOpen={false}>
+            <small className="pf-hint" style={{ display: "block", marginBottom: "0.75rem" }}>Preencha para calcular o custo de envio e mostrar os meios de envio na sua loja.</small>
+            <div className="pf-row-2">
+              <div className="pf-field">
+                <label className="pf-label">Peso</label>
+                <div className="pf-input-suffix"><input className="pf-input" value={form.weight} onChange={(e) => update("weight", e.target.value)} placeholder="0.14" type="number" step="0.001" min="0" /><span>kg</span></div>
+              </div>
+              <div className="pf-field">
+                <label className="pf-label">Comprimento</label>
+                <div className="pf-input-suffix"><input className="pf-input" value={form.length} onChange={(e) => update("length", e.target.value)} placeholder="30" type="number" min="0" /><span>cm</span></div>
+              </div>
+            </div>
+            <div className="pf-row-2">
+              <div className="pf-field">
+                <label className="pf-label">Largura</label>
+                <div className="pf-input-suffix"><input className="pf-input" value={form.width} onChange={(e) => update("width", e.target.value)} placeholder="30" type="number" min="0" /><span>cm</span></div>
+              </div>
+              <div className="pf-field">
+                <label className="pf-label">Altura</label>
+                <div className="pf-input-suffix"><input className="pf-input" value={form.height} onChange={(e) => update("height", e.target.value)} placeholder="30" type="number" min="0" /><span>cm</span></div>
+              </div>
+            </div>
+          </Section>
+
+          <Section icon={Icon.Social} title="Instagram e Google Shopping" defaultOpen={false}>
+            <small className="pf-hint" style={{ display: "block", marginBottom: "0.75rem" }}>Destaque seus produtos nas vitrines virtuais do Instagram e do Google gratuitamente.</small>
+            <div className="pf-field">
+              <label className="pf-label">MPN</label>
+              <input className="pf-input" value={form.mpn} onChange={(e) => update("mpn", e.target.value)} placeholder="Definir MPN" />
+            </div>
             <div className="pf-row-2" style={{ marginTop: "0.75rem" }}>
               <div className="pf-field">
-                <label>Peso</label>
-                <div className="pf-input-suffix"><input value={form.weight} onChange={(e) => update("weight", e.target.value)} placeholder="0.14" type="number" step="0.001" min="0" /><span>kg</span></div>
-              </div>
-              <div className="pf-field">
-                <label>Comprimento</label>
-                <div className="pf-input-suffix"><input value={form.length} onChange={(e) => update("length", e.target.value)} placeholder="30" type="number" min="0" /><span>cm</span></div>
-              </div>
-            </div>
-            <div className="pf-row-2">
-              <div className="pf-field">
-                <label>Largura</label>
-                <div className="pf-input-suffix"><input value={form.width} onChange={(e) => update("width", e.target.value)} placeholder="30" type="number" min="0" /><span>cm</span></div>
-              </div>
-              <div className="pf-field">
-                <label>Altura</label>
-                <div className="pf-input-suffix"><input value={form.height} onChange={(e) => update("height", e.target.value)} placeholder="30" type="number" min="0" /><span>cm</span></div>
-              </div>
-            </div>
-          </Section>
-
-          <Section title="Instagram e Google Shopping" defaultOpen={false}>
-            <small className="pf-hint">Destaque seus produtos nas vitrines virtuais do Instagram e do Google gratuitamente.</small>
-            <div className="pf-field" style={{ marginTop: "0.75rem" }}>
-              <label>MPN</label>
-              <input value={form.mpn} onChange={(e) => update("mpn", e.target.value)} placeholder="Definir" />
-            </div>
-            <div className="pf-row-2">
-              <div className="pf-field">
-                <label>Faixa etária</label>
-                <select value={form.ageGroup} onChange={(e) => update("ageGroup", e.target.value)}>
-                  <option value="">Selecione a faixa etária</option>
+                <label className="pf-label">Faixa etária</label>
+                <select className="pf-select" value={form.ageGroup} onChange={(e) => update("ageGroup", e.target.value)}>
+                  <option value="">Selecione</option>
                   <option value="adult">Adulto</option>
                   <option value="teen">Adolescente</option>
                   <option value="kids">Criança</option>
                 </select>
               </div>
               <div className="pf-field">
-                <label>Sexo</label>
-                <select value={form.gender} onChange={(e) => update("gender", e.target.value)}>
-                  <option value="">Selecione o sexo</option>
+                <label className="pf-label">Sexo</label>
+                <select className="pf-select" value={form.gender} onChange={(e) => update("gender", e.target.value)}>
+                  <option value="">Selecione</option>
                   <option value="male">Masculino</option>
                   <option value="female">Feminino</option>
                   <option value="unisex">Unissex</option>
@@ -324,15 +365,17 @@ export function ProductForm({ product, onCancel, onSubmit }) {
             </div>
           </Section>
 
-          <Section title="Destacar produto" defaultOpen={false}>
-            <small className="pf-hint">Escolha em quais seções da loja você quer destacar este produto.</small>
-            <div style={{ marginTop: "0.75rem", display: "grid", gap: "0.5rem" }}>
+          <Section icon={Icon.Featured} title="Destacar produto" defaultOpen={false}>
+            <small className="pf-hint" style={{ display: "block", marginBottom: "0.75rem" }}>Escolha em quais seções da loja você quer destacar este produto.</small>
+            <div className="pf-checks-stack">
               <label className="pf-checkbox-label">
                 <input type="checkbox" checked={form.featured} onChange={(e) => update("featured", e.target.checked)} />
+                <span className="pf-checkbox-box">{form.featured && <Icon.Check />}</span>
                 Produto em destaque
               </label>
               <label className="pf-checkbox-label">
                 <input type="checkbox" checked={form.active} onChange={(e) => update("active", e.target.checked)} />
+                <span className="pf-checkbox-box">{form.active && <Icon.Check />}</span>
                 Produto ativo (visível na loja)
               </label>
             </div>
@@ -340,7 +383,7 @@ export function ProductForm({ product, onCancel, onSubmit }) {
 
           <div className="pf-footer">
             <button type="button" className="pf-btn-cancel" onClick={onCancel}>Cancelar</button>
-            <button type="submit" className="pf-btn-save">✓ Salvar produto</button>
+            <button type="submit" className="pf-btn-save"><Icon.Check /> Salvar produto</button>
           </div>
         </form>
       </div>

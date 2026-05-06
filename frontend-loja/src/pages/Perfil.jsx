@@ -168,7 +168,7 @@ export function Perfil() {
     if (!customer?.email) return;
     setLoadingOrders(true);
     try {
-      const data = await apiFetch(`/api/orders/public/${encodeURIComponent(customer.email)}`);
+      const data = await apiFetch(`/api/orders/customer/${encodeURIComponent(customer.email)}`);
       setOrders(Array.isArray(data) ? data : [data]);
     } catch (_) {
       setOrders([]);

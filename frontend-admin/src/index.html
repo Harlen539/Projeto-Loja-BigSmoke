@@ -307,10 +307,14 @@
     <form id="product-form" class="product-form">
       <input id="product-name" type="text" placeholder="Nome do produto" required>
       <input id="product-category" type="text" placeholder="Categoria" required>
-      <input id="product-price" type="number" min="0" step="0.01" placeholder="Preço" required>
       <input id="product-badge" type="text" placeholder="Badge">
       <input id="product-stock" type="number" min="0" step="1" placeholder="Estoque" required>
       <input id="product-sizes" type="text" placeholder="Tamanhos">
+      <div class="full-col textarea-wrap drawer-description-field">
+        <label for="product-description">Descrição</label>
+        <textarea id="product-description" rows="5" placeholder="Descreva seu produto de forma atrativa..."></textarea>
+        <span class="char-counter" id="desc-char-counter">0 / 500</span>
+      </div>
       <div id="upload-zone-wrapper" class="full-col">
         <div id="upload-zone" class="upload-zone">
           <div id="upload-zone-droparea" class="upload-zone-droparea" role="button" tabindex="0">
@@ -322,9 +326,9 @@
               </svg>
             </div>
             <div class="upload-zone-copy">
-              <div class="upload-zone-title">Fotos do produto</div>
+              <div class="upload-zone-title">Selecione fotos do produto</div>
               <div class="upload-zone-sub"><span id="upload-zone-click" class="upload-zone-link">clique para selecionar</span></div>
-              <div class="upload-zone-meta">JPG, PNG, WEBP · até 8 MB cada · múltiplas de uma vez</div>
+              <div class="upload-zone-meta">Tamanho mínimo recomendado: 1280px / Formatos: WEBP, PNG, JPEG ou GIF</div>
             </div>
           </div>
           <div id="upload-thumbstrip" class="upload-thumbstrip" style="display:none">
@@ -377,15 +381,63 @@
         </div>
         <div id="colors-list" class="colors-list"></div>
       </section>
+      <details class="drawer-accordion drawer-prices-section full-col" open>
+        <summary><span>💰 Preços</span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 10l5 5 5-5"/></svg></summary>
+        <div class="drawer-accordion-body">
+          <div class="drawer-price-grid">
+            <label class="drawer-money-field">
+              <span>Preço de venda *</span>
+              <div class="drawer-money-input">
+                <small>R$</small>
+                <input id="product-price" type="number" min="0" step="0.01" placeholder="0.00" required>
+              </div>
+            </label>
+            <label class="drawer-money-field">
+              <span>Preço promocional</span>
+              <div class="drawer-money-input">
+                <small>R$</small>
+                <input type="number" min="0" step="0.01" placeholder="0.00">
+              </div>
+            </label>
+          </div>
+          <label class="drawer-check-row">
+            <input type="checkbox" checked>
+            <span>Exibir o preço na loja</span>
+          </label>
+          <div class="drawer-price-grid">
+            <label class="drawer-money-field">
+              <span>Custo <em>(uso interno)</em></span>
+              <div class="drawer-money-input">
+                <small>R$</small>
+                <input type="number" min="0" step="0.01" placeholder="0.00">
+              </div>
+              <p>Os seus clientes não o verão na loja.</p>
+            </label>
+            <label class="drawer-money-field">
+              <span>Margem de lucro</span>
+              <div class="drawer-margin-box">—</div>
+            </label>
+          </div>
+        </div>
+      </details>
+      <details class="drawer-accordion drawer-product-type-section full-col" open>
+        <summary><span>📦 Tipo de produto</span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 10l5 5 5-5"/></svg></summary>
+        <div class="drawer-accordion-body">
+          <label class="drawer-type-option active">
+            <input type="radio" name="drawer-product-type" checked>
+            <span>Físico</span>
+          </label>
+          <label class="drawer-type-option">
+            <input type="radio" name="drawer-product-type">
+            <span>Digital / serviço</span>
+          </label>
+        </div>
+      </details>
       <input id="product-image" type="url" placeholder="URL da imagem principal (opcional)" class="full-col" style="display:none">
       <input id="product-file" type="file" accept="image/*" style="display:none">
       <input id="product-extra-files" type="file" accept="image/*" multiple style="display:none">
       <div id="extra-images-preview" class="extra-images-grid full-col" style="display:none"></div>
       <input type="hidden" id="product-extra-urls">
-      <div class="full-col textarea-wrap">
-        <textarea id="product-description" rows="4" placeholder="Descrição"></textarea>
-        <span class="char-counter" id="desc-char-counter">0 / 500</span>
-      </div>
       <label class="toggle">
         <input id="product-active" type="checkbox" checked>
         <span>Produto ativo</span>
@@ -394,6 +446,57 @@
         <input id="product-featured" type="checkbox">
         <span>Em destaque</span>
       </label>
+      <div class="drawer-advanced full-col" aria-label="Configurações avançadas do produto">
+        <details class="drawer-accordion">
+          <summary><span>🔢 Códigos</span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 10l5 5 5-5"/></svg></summary>
+          <div class="drawer-accordion-body">
+            <input type="text" placeholder="SKU">
+            <input type="text" placeholder="Código de barras">
+          </div>
+        </details>
+        <details class="drawer-accordion">
+          <summary><span>🏷️ Categorias</span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 10l5 5 5-5"/></svg></summary>
+          <div class="drawer-accordion-body">
+            <p>Use o campo Categoria no topo para definir onde esse produto aparece.</p>
+          </div>
+        </details>
+        <details class="drawer-accordion">
+          <summary><span>🔍 Tags, Marca e SEO</span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 10l5 5 5-5"/></svg></summary>
+          <div class="drawer-accordion-body">
+            <input type="text" placeholder="Tags separadas por vírgula">
+            <input type="text" placeholder="Marca">
+          </div>
+        </details>
+        <details class="drawer-accordion">
+          <summary><span>📐 Peso e dimensões</span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 10l5 5 5-5"/></svg></summary>
+          <div class="drawer-accordion-body drawer-accordion-grid">
+            <input type="number" min="0" step="0.01" placeholder="Peso (kg)">
+            <input type="number" min="0" step="0.1" placeholder="Altura (cm)">
+            <input type="number" min="0" step="0.1" placeholder="Largura (cm)">
+            <input type="number" min="0" step="0.1" placeholder="Comprimento (cm)">
+          </div>
+        </details>
+        <details class="drawer-accordion" open>
+          <summary><span>🛍️ Instagram e Google Shopping</span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 10l5 5 5-5"/></svg></summary>
+          <div class="drawer-accordion-body">
+            <div class="drawer-tip">✨ Destaque seus produtos nas vitrines virtuais do Instagram e do Google gratuitamente.</div>
+            <input type="text" placeholder="MPN">
+            <div class="drawer-accordion-grid">
+              <select>
+                <option>Selecione a faixa etária</option>
+                <option>Adulto</option>
+                <option>Infantil</option>
+              </select>
+              <select>
+                <option>Selecione o sexo</option>
+                <option>Unissex</option>
+                <option>Masculino</option>
+                <option>Feminino</option>
+              </select>
+            </div>
+          </div>
+        </details>
+      </div>
       <div class="image-preview full-col" id="preview-gallery-wrapper">
         <div class="preview-main-wrap">
           <img id="product-image-preview" src="https://placehold.co/600x800/111111/F5F0E8?text=Preview" alt="Pré-visualização do produto">
