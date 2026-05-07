@@ -1,5 +1,57 @@
 [
   {
+    "id": "order_ea3b5991-8d97-45a0-866b-d44c1cd9cfea",
+    "orderNumber": 29,
+    "orderNumberFormatted": "#00029",
+    "orderAccessCode": "#b89bec2a",
+    "hiddenInAdmin": false,
+    "stripeSessionId": "cs_test_b1HjFHeleGFvqTLBi020UXhi2Etfb1O1zwzhaWUATwowakrcY47obKMB6V",
+    "paymentIntentId": "",
+    "stripeEventId": "",
+    "status": "pending",
+    "currency": "brl",
+    "amountSubtotal": 249.9,
+    "shippingAmount": 28,
+    "amountTotal": 277.9,
+    "paymentConfirmed": false,
+    "inventoryDebitedAt": "",
+    "customer": {
+      "name": "Cliente Stripe",
+      "email": "",
+      "phone": ""
+    },
+    "address": {
+      "cep": "",
+      "street": "",
+      "number": "",
+      "neighborhood": "",
+      "city": "",
+      "state": "",
+      "complement": ""
+    },
+    "deliveryMethod": "stripe_checkout",
+    "shippingLabel": "Envio nacional",
+    "trackingCode": "#bc9d355f",
+    "trackingUrl": "http://localhost:3000/loja/pedidos.html?tracking=%23b89bec2a",
+    "items": [
+      {
+        "id": "moletom-classic",
+        "name": "Moletom Classic BigSmoke",
+        "quantity": 1,
+        "price": 249.9,
+        "category": "Moletons",
+        "image": "/uploads/1777991004394-moletom_frente.webp",
+        "size": "M"
+      }
+    ],
+    "events": [],
+    "sessionUrl": "https://checkout.stripe.com/c/pay/cs_test_b1HjFHeleGFvqTLBi020UXhi2Etfb1O1zwzhaWUATwowakrcY47obKMB6V#fidnandhYHdWcXxpYCc%2FJ2FgY2RwaXEnKSdpamZkaWAnPyd1cShHVycpJ2JwZGZkaGppYFNkd2xka3EnPydmamtxd2ppJyknZHVsTmB8Jz8ndW5acWB2cVowNFFUZnVCQXN%2FY0N9aWJqd3ZpfGlfMVBCclVfSF1ja1F%2FbktoYjxNUkJrQFZLNTB9dHNqUzJraH1rfGFLZmFMR012QDwxbTYydF1ybDV%2FNlxJcWZMNDY8MDU1PEFASzF9UW4nKSdjd2poVmB3c2B3Jz9xd3BgKSdnZGZuYndqcGthRmppancnPycmY2NjY2NjJyknaWR8anBxUXx1YCc%2FJ2hwaXFsWmxxYGgnKSdga2RnaWBVaWRmYG1qaWFgd3YnP3F3cGB4JSUl",
+    "paidAt": "",
+    "canceledAt": "",
+    "createdAt": "2026-05-07T03:48:22.906Z",
+    "updatedAt": "2026-05-07T03:48:23.898Z"
+  },
+  {
     "id": "order_1ebd64a9-e369-4503-a27e-2aaded7b1d48",
     "orderNumber": 28,
     "orderNumberFormatted": "#00028",
@@ -8,7 +60,7 @@
     "stripeSessionId": "cs_test_b139c5xVI4qQiACSXG8Iv9e0hfJ51XKYvfzPbWtYTcEGwSTdcWwcuaIKU6",
     "paymentIntentId": "",
     "stripeEventId": "",
-    "status": "paid",
+    "status": "delivered",
     "currency": "brl",
     "amountSubtotal": 249.9,
     "shippingAmount": 28,
@@ -52,13 +104,21 @@
         "status": "paid",
         "trackingCode": "#14f7377e",
         "trackingUrl": "http://localhost:3000/loja/pedidos.html?tracking=%236b3a06f7"
+      },
+      {
+        "type": "admin.order.updated",
+        "id": "96d6aba9-9d03-4cd1-b81b-b416c8e51dbf",
+        "created": "2026-05-07T03:47:41.804Z",
+        "status": "delivered",
+        "trackingCode": "#14f7377e",
+        "trackingUrl": "http://localhost:3000/loja/pedidos.html?tracking=%236b3a06f7"
       }
     ],
     "sessionUrl": "https://checkout.stripe.com/c/pay/cs_test_b139c5xVI4qQiACSXG8Iv9e0hfJ51XKYvfzPbWtYTcEGwSTdcWwcuaIKU6#fidnandhYHdWcXxpYCc%2FJ2FgY2RwaXEnKSdpamZkaWAnPyd1cShHVycpJ2JwZGZkaGppYFNkd2xka3EnPydmamtxd2ppJyknZHVsTmB8Jz8ndW5acWB2cVowNFFUZnVCQXN%2FY0N9aWJqd3ZpfGlfMVBCclVfSF1ja1F%2FbktoYjxNUkJrQFZLNTB9dHNqUzJraH1rfGFLZmFMR012QDwxbTYydF1ybDV%2FNlxJcWZMNDY8MDU1PEFASzF9UW4nKSdjd2poVmB3c2B3Jz9xd3BgKSdnZGZuYndqcGthRmppancnPycmY2NjY2NjJyknaWR8anBxUXx1YCc%2FJ2hwaXFsWmxxYGgnKSdga2RnaWBVaWRmYG1qaWFgd3YnP3F3cGB4JSUl",
     "paidAt": "2026-05-06T23:28:10.760Z",
     "canceledAt": "",
     "createdAt": "2026-05-06T23:17:37.516Z",
-    "updatedAt": "2026-05-06T23:28:10.760Z"
+    "updatedAt": "2026-05-07T03:47:41.804Z"
   },
   {
     "id": "order_9d10c295-f77d-41c2-814d-c754a4f047f5",

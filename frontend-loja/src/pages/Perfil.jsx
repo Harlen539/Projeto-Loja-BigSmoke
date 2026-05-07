@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { apiFetch } from "../services/api.js";
+import { useAuth } from "../context/AuthContext.jsx";
 
 const STORAGE_KEY = "bigsmoke_customer";
 
@@ -64,8 +65,9 @@ function OrderCard({ order }) {
 }
 
 export function Perfil() {
+  const { user: authUser, logout: authLogout, openAuth } = useAuth();
   const [tab, setTab] = useState("account");
-  const [customer, setCustomer] = useState(getStored());
+  const [customer, setCustomer] = useState(() => authUser || getStored());
   const [form, setForm] = useState({
     firstName: "",
     lastName: "",
@@ -287,7 +289,13 @@ export function Perfil() {
                 type="button"
                 className="btn btn-outline full-width"
                 style={{ marginTop: "0.75rem" }}
-                onClick={() => { saveStored(null); localStorage.removeItem(STORAGE_KEY); setCustomer(null); setForm({ firstName:"",lastName:"",email:"",phone:"",cpf:"",cep:"",state:"",city:"",neighborhood:"",street:"",number:"",complement:"" }); }}
+                onClick={() => { 
+                  saveStored(null); 
+                  localStorage.removeItem(STORAGE_KEY); 
+                  authLogout();
+                  setCustomer(null); 
+                  setForm({ firstName:"",lastName:"",email:"",phone:"",cpf:"",cep:"",state:"",city:"",neighborhood:"",street:"",number:"",complement:"" }); 
+                }}
               >
                 Sair da conta
               </button>

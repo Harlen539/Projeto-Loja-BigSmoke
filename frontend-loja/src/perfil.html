@@ -76,6 +76,18 @@
       box-shadow: 0 8px 24px rgba(0,0,0,0.45);
     }
 
+    .profile-avatar-photo {
+      position: absolute;
+      inset: 0;
+      width: 92px;
+      height: 92px;
+      border-radius: 50%;
+      border: 2px solid rgba(245, 240, 232, 0.18);
+      object-fit: cover;
+      background: #111;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.45);
+    }
+
     .avatar-status {
       position: absolute;
       bottom: 4px;
@@ -279,6 +291,115 @@
     .tab-panel.active {
       display: grid;
       gap: 1rem;
+    }
+
+    .account-nav {
+      width: fit-content;
+      max-width: 100%;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.3rem;
+      margin: 1.25rem 0 1.5rem;
+      padding: 0.35rem;
+      border: 1px solid rgba(245, 240, 232, 0.12);
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.03);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+      overflow-x: auto;
+      scrollbar-width: none;
+    }
+
+    .account-nav::-webkit-scrollbar { display: none; }
+
+    .account-nav-btn {
+      border: 0;
+      border-radius: 999px;
+      background: transparent;
+      color: var(--text-secondary);
+      font: 800 0.78rem "Oswald", sans-serif;
+      letter-spacing: 0.09em;
+      padding: 0.55rem 0.9rem;
+      text-transform: uppercase;
+      white-space: nowrap;
+      transition: color var(--transition), background var(--transition), box-shadow var(--transition);
+    }
+
+    .account-nav-btn.active {
+      background: linear-gradient(135deg, rgba(245, 240, 232, 0.95), rgba(214, 197, 160, 0.95));
+      color: #0b0b0b;
+      box-shadow: 0 8px 22px rgba(0, 0, 0, 0.28);
+      outline: 0;
+    }
+
+    .account-nav-btn:hover:not(.active),
+    .account-nav-btn:focus:not(.active) {
+      color: var(--text-primary);
+      background: rgba(255, 255, 255, 0.06);
+    }
+
+    .account-nav-separator {
+      width: 1px;
+      height: 1.25rem;
+      flex: 0 0 auto;
+      background: rgba(245, 240, 232, 0.14);
+    }
+
+    .account-panel {
+      display: none;
+    }
+
+    .account-panel.active {
+      display: block;
+    }
+
+    .account-info-card {
+      border: 1px solid rgba(245, 240, 232, 0.12);
+      border-radius: 20px;
+      background: rgba(255, 255, 255, 0.03);
+      padding: 1.15rem;
+      margin-top: 0.85rem;
+    }
+
+    .profile-photo-tools {
+      display: flex;
+      align-items: center;
+      gap: 0.85rem;
+      margin-bottom: 1rem;
+      padding-bottom: 1rem;
+      border-bottom: 1px solid rgba(245, 240, 232, 0.09);
+    }
+
+    .profile-photo-mini {
+      width: 4rem;
+      height: 4rem;
+      flex: 0 0 4rem;
+      display: grid;
+      place-items: center;
+      overflow: hidden;
+      border: 1px solid rgba(245, 240, 232, 0.16);
+      border-radius: 999px;
+      background: #0f0f0f;
+      color: var(--text-secondary);
+      font-family: "Oswald", sans-serif;
+      font-weight: 800;
+    }
+
+    .profile-photo-mini img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .profile-photo-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+    }
+
+    .profile-photo-actions input {
+      position: absolute;
+      opacity: 0;
+      pointer-events: none;
     }
 
     @keyframes fadeIn {
@@ -886,10 +1007,18 @@
     <a href="/src/pedidos.html">Rastrear</a>
   </nav>
   <div class="header-actions">
-    <a class="profile-icon-link is-active" href="/src/perfil.html" aria-label="Meu Perfil" aria-current="page" title="Meu Perfil">
-      <img src="/src/imagens/icone_bigsmoke_conta.png" alt="" aria-hidden="true">
-      <span class="sr-only">Meu Perfil</span>
-    </a>
+    <div class="profile-menu-wrap">
+      <button class="profile-icon-link is-active" id="profile-menu-toggle" type="button" aria-label="Abrir menu do perfil" aria-haspopup="menu" aria-expanded="false" title="Meu Perfil">
+        <img src="/src/imagens/icone_bigsmoke_conta.png" alt="" aria-hidden="true">
+        <span class="sr-only">Meu Perfil</span>
+      </button>
+      <div class="profile-menu" id="profile-menu" role="menu" hidden>
+        <a role="menuitem" href="https://wa.me/5583986494691" target="_blank" rel="noopener">WhatsApp</a>
+        <a role="menuitem" href="/loja/">Ver catálogo</a>
+        <button role="menuitem" type="button" id="switch-account">Trocar conta</button>
+        <button role="menuitem" type="button" id="logout-account">Sair</button>
+      </div>
+    </div>
     <button class="cart-toggle" type="button" onclick="toggleCart()" aria-label="Abrir carrinho">
       <svg viewBox="0 0 24 24" class="cart-icon" aria-hidden="true">
         <path d="M2.75 4.25h2.2c.48 0 .89.33 1 .8l.28 1.2m0 0 1.45 6.54a2 2 0 0 0 1.95 1.57h6.98a2 2 0 0 0 1.93-1.48l1.55-5.59H7.23Z"></path>
@@ -915,6 +1044,7 @@
         <!-- B logo simplified -->
         <text x="50" y="75" text-anchor="middle" font-family="Oswald, sans-serif" font-size="9" fill="rgba(245,240,232,0.55)" letter-spacing="2">BIGSMOKE</text>
       </svg>
+      <img class="profile-avatar-photo" id="profile-avatar-photo" alt="" hidden>
       <span class="avatar-status" aria-label="Online"></span>
     </div>
 
@@ -922,10 +1052,6 @@
       <h1 class="profile-name" id="profile-name">Carregandoâ€¦</h1>
       <p class="profile-email" id="profile-email">â€”</p>
       <div class="profile-badges">
-        <span class="badge">
-          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 2 4 6v6c0 5 3.5 9.6 8 11 4.5-1.4 8-6 8-11V6l-8-4z"/></svg>
-          BigSmoke Member
-        </span>
         <span class="badge badge-gold" id="gold-badge" style="display:none">
           <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
           Cliente Ouro
@@ -933,13 +1059,6 @@
       </div>
     </div>
 
-    <div class="profile-actions">
-      <a href="https://wa.me/5583986494691" target="_blank" rel="noopener" class="btn btn-primary" style="font-size:0.84rem;padding:0.65rem 1.1rem;">
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
-        WhatsApp
-      </a>
-      <a href="/loja/" class="btn btn-outline" style="font-size:0.84rem;padding:0.65rem 1.1rem;">Ver catÃ¡logo</a>
-    </div>
   </section>
 
   <!-- STATS -->
@@ -961,8 +1080,16 @@
     </div>
   </div>
 
+  <nav class="account-nav" aria-label="Área da conta">
+    <button class="account-nav-btn active" type="button" data-account-panel="orders">Pedidos</button>
+    <span class="account-nav-separator" aria-hidden="true"></span>
+    <button class="account-nav-btn" type="button" data-account-panel="profile">Perfil</button>
+    <span class="account-nav-separator" aria-hidden="true"></span>
+    <button class="account-nav-btn" type="button" data-account-panel="addresses">Endereços</button>
+  </nav>
+
   <!-- TABS + CONTENT -->
-  <div>
+  <div class="account-panel active" id="account-panel-orders">
     <p class="section-kicker">Painel de compras</p>
     <div class="section-head">
       <h2 class="section-title">Meus Pedidos</h2>
@@ -1000,6 +1127,43 @@
           <div class="skeleton" style="height:90px;border-radius:20px;"></div>
           <div class="skeleton" style="height:90px;border-radius:20px;"></div>
         </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="account-panel" id="account-panel-profile">
+    <p class="section-kicker">Dados da conta</p>
+    <div class="section-head">
+      <h2 class="section-title">Perfil</h2>
+    </div>
+    <div class="account-info-card">
+      <div class="profile-photo-tools">
+        <div class="profile-photo-mini" id="profile-photo-mini">—</div>
+        <div class="profile-photo-actions">
+          <label class="btn btn-outline" style="font-size:0.84rem;padding:0.65rem 1.1rem;">
+            Alterar foto
+            <input type="file" id="profile-photo-input" accept="image/*">
+          </label>
+          <button class="btn btn-outline" id="profile-photo-remove" type="button" style="font-size:0.84rem;padding:0.65rem 1.1rem;">Remover</button>
+        </div>
+      </div>
+      <div class="detail-grid">
+        <div class="info-row"><span class="lbl">Nome</span><span class="val" id="account-profile-name">—</span></div>
+        <div class="info-row"><span class="lbl">E-mail</span><span class="val" id="account-profile-email">—</span></div>
+        <div class="info-row"><span class="lbl">Status</span><span class="val" id="account-profile-status">Conta ativa</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="account-panel" id="account-panel-addresses">
+    <p class="section-kicker">Entrega</p>
+    <div class="section-head">
+      <h2 class="section-title">Endereços</h2>
+    </div>
+    <div class="account-info-card" id="account-address-card">
+      <div class="empty-state" style="padding:1.5rem 1rem;">
+        <p>Nenhum endereço salvo ainda. Ele aparecerá aqui depois do primeiro pedido.</p>
+        <a href="/loja/" class="btn btn-primary" style="margin-top:0.5rem;font-size:0.85rem;">Ver catálogo</a>
       </div>
     </div>
   </div>
@@ -1046,6 +1210,204 @@
     const d = new Date(v);
     if (isNaN(d)) return String(v);
     return new Intl.DateTimeFormat('pt-BR', { dateStyle:'short' }).format(d);
+  }
+
+  function readStoredCustomer() {
+    try {
+      const customer = JSON.parse(localStorage.getItem('bigsmoke_customer') || 'null');
+      if (customer && typeof customer === 'object') return customer;
+    } catch {}
+    return null;
+  }
+
+  function saveStoredCustomer(customer) {
+    localStorage.setItem('bigsmoke_customer', JSON.stringify(customer));
+    try {
+      const users = JSON.parse(localStorage.getItem('bigsmoke_users') || '[]');
+      const nextUsers = users.map(user => user.email === customer.email ? { ...user, ...customer } : user);
+      localStorage.setItem('bigsmoke_users', JSON.stringify(nextUsers));
+    } catch {}
+  }
+
+  function readFileAsDataUrl(file) {
+    return new Promise((resolve) => {
+      if (!file) {
+        resolve('');
+        return;
+      }
+      const reader = new FileReader();
+      reader.onload = () => resolve(String(reader.result || ''));
+      reader.onerror = () => resolve('');
+      reader.readAsDataURL(file);
+    });
+  }
+
+  function getCustomerName(customer) {
+    const fullName = [customer?.firstName, customer?.lastName].filter(Boolean).join(' ').trim();
+    return fullName || customer?.name || 'Entre na sua conta';
+  }
+
+  function getCustomerEmail(customer) {
+    return customer?.email || 'Faça login para ver seus dados';
+  }
+
+  function normalizeEmail(value) {
+    return String(value || '').trim().toLowerCase();
+  }
+
+  function getOrderCustomerEmail(order) {
+    return normalizeEmail(order?.customer?.email || order?.customerEmail || order?.email);
+  }
+
+  function updateProfileIdentity() {
+    const customer = readStoredCustomer();
+    const name = getCustomerName(customer);
+    const email = getCustomerEmail(customer);
+    const nameEl = document.getElementById('profile-name');
+    const emailEl = document.getElementById('profile-email');
+    const profileLink = document.querySelector('.profile-icon-link');
+    const avatarPhoto = document.getElementById('profile-avatar-photo');
+    const photoMini = document.getElementById('profile-photo-mini');
+    const removePhoto = document.getElementById('profile-photo-remove');
+
+    if (nameEl) nameEl.textContent = name;
+    if (emailEl) emailEl.textContent = email;
+
+    document.getElementById('logout-account')?.toggleAttribute('hidden', !customer);
+    document.getElementById('switch-account')?.toggleAttribute('hidden', !customer);
+
+    if (profileLink && customer) {
+      const initial = String(customer.firstName?.[0] || customer.email?.[0] || 'B').toUpperCase();
+      profileLink.classList.add('profile-authenticated');
+      profileLink.innerHTML = customer.photo
+        ? `<img class="profile-photo-thumb" src="${customer.photo}" alt=""><span class="sr-only">Abrir menu do perfil</span>`
+        : `${initial}<span class="sr-only">Abrir menu do perfil</span>`;
+      profileLink.setAttribute('aria-label', `Perfil de ${name}`);
+      profileLink.setAttribute('title', email);
+    }
+
+    if (avatarPhoto) {
+      avatarPhoto.hidden = !customer?.photo;
+      if (customer?.photo) avatarPhoto.src = customer.photo;
+    }
+
+    if (photoMini) {
+      const initial = String(customer?.firstName?.[0] || customer?.email?.[0] || 'B').toUpperCase();
+      photoMini.innerHTML = customer?.photo ? `<img src="${customer.photo}" alt="">` : initial;
+    }
+
+    if (removePhoto) removePhoto.hidden = !customer?.photo;
+  }
+
+  function setupAccountPanels() {
+    document.querySelectorAll('[data-account-panel]').forEach(button => {
+      button.addEventListener('click', () => {
+        const target = button.dataset.accountPanel;
+        document.querySelectorAll('[data-account-panel]').forEach(item => {
+          item.classList.toggle('active', item === button);
+        });
+        document.querySelectorAll('.account-panel').forEach(panel => {
+          panel.classList.toggle('active', panel.id === `account-panel-${target}`);
+        });
+      });
+    });
+  }
+
+  function updateAccountDetails(customer, orders) {
+    const name = getCustomerName(customer);
+    const email = getCustomerEmail(customer);
+    const nameField = document.getElementById('account-profile-name');
+    const emailField = document.getElementById('account-profile-email');
+    const statusField = document.getElementById('account-profile-status');
+    const addressCard = document.getElementById('account-address-card');
+    const firstAddress = orders.map(order => order?.address).find(address => address && Object.keys(address).length);
+
+    if (nameField) nameField.textContent = name;
+    if (emailField) emailField.textContent = email;
+    if (statusField) statusField.textContent = customer ? 'Conta ativa' : 'Faça login para ativar';
+
+    if (!addressCard) return;
+
+    if (!customer) {
+      addressCard.innerHTML = `<div class="empty-state" style="padding:1.5rem 1rem;">
+        <p>Entre na sua conta para ver seus endereços.</p>
+        <a href="/loja/?login=1" class="btn btn-primary" style="margin-top:0.5rem;font-size:0.85rem;">Entrar</a>
+      </div>`;
+      return;
+    }
+
+    if (!firstAddress) {
+      addressCard.innerHTML = `<div class="empty-state" style="padding:1.5rem 1rem;">
+        <p>Nenhum endereço salvo ainda. Ele aparecerá aqui depois do primeiro pedido.</p>
+        <a href="/loja/" class="btn btn-primary" style="margin-top:0.5rem;font-size:0.85rem;">Ver catálogo</a>
+      </div>`;
+      return;
+    }
+
+    addressCard.innerHTML = `<div class="detail-grid">
+      <div class="info-row"><span class="lbl">Rua</span><span class="val">${esc(firstAddress.street || '—')}, ${esc(firstAddress.number || '—')}</span></div>
+      <div class="info-row"><span class="lbl">Complemento</span><span class="val">${esc(firstAddress.complement || '—')}</span></div>
+      <div class="info-row"><span class="lbl">Cidade</span><span class="val">${esc(firstAddress.city || '—')} - ${esc(firstAddress.state || '—')}</span></div>
+      <div class="info-row"><span class="lbl">CEP</span><span class="val">${esc(firstAddress.cep || '—')}</span></div>
+    </div>`;
+  }
+
+  function logoutAccount(redirectToLogin = false) {
+    localStorage.removeItem('bigsmoke_customer');
+    const next = redirectToLogin ? '/loja/?login=1' : '/loja/';
+    window.location.href = next;
+  }
+
+  function closeProfileMenu() {
+    const menu = document.getElementById('profile-menu');
+    const toggle = document.getElementById('profile-menu-toggle');
+    if (!menu || !toggle) return;
+    menu.hidden = true;
+    toggle.setAttribute('aria-expanded', 'false');
+  }
+
+  function setupProfileMenu() {
+    const menu = document.getElementById('profile-menu');
+    const toggle = document.getElementById('profile-menu-toggle');
+    if (!menu || !toggle) return;
+
+    toggle.addEventListener('click', (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+      const nextOpen = menu.hidden;
+      menu.hidden = !nextOpen;
+      toggle.setAttribute('aria-expanded', String(nextOpen));
+    });
+
+    menu.addEventListener('click', (event) => {
+      event.stopPropagation();
+    });
+
+    document.addEventListener('click', closeProfileMenu);
+    document.addEventListener('keydown', (event) => {
+      if (event.key === 'Escape') closeProfileMenu();
+    });
+  }
+
+  function setupProfilePhotoTools() {
+    const input = document.getElementById('profile-photo-input');
+    const remove = document.getElementById('profile-photo-remove');
+
+    input?.addEventListener('change', async (event) => {
+      const customer = readStoredCustomer();
+      if (!customer) return;
+      const photo = await readFileAsDataUrl(event.currentTarget.files?.[0]);
+      if (!photo) return;
+      saveStoredCustomer({ ...customer, photo });
+      updateProfileIdentity();
+    });
+
+    remove?.addEventListener('click', () => {
+      const customer = readStoredCustomer();
+      if (!customer) return;
+      saveStoredCustomer({ ...customer, photo: '' });
+      updateProfileIdentity();
+    });
   }
 
   /* â”€â”€ status helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
@@ -1310,9 +1672,23 @@
     });
   });
 
+  document.getElementById('logout-account')?.addEventListener('click', () => {
+    logoutAccount(false);
+  });
+
+  document.getElementById('switch-account')?.addEventListener('click', () => {
+    logoutAccount(true);
+  });
+
+  setupProfileMenu();
+  setupProfilePhotoTools();
+  setupAccountPanels();
+
   /* â”€â”€ load data â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
   async function loadProfile() {
     let orders = [];
+    const customer = readStoredCustomer();
+    const customerEmail = normalizeEmail(customer?.email);
     try {
       const res = await fetch(`${API_BASE}/api/orders`);
       if (res.ok) {
@@ -1321,6 +1697,10 @@
       }
     } catch (error) {
       console.error('Erro ao carregar pedidos do perfil:', error);
+    }
+
+    if (customerEmail) {
+      orders = orders.filter(order => getOrderCustomerEmail(order) === customerEmail);
     }
 
     const active  = orders.filter(isActive);
@@ -1334,9 +1714,8 @@
     document.getElementById('stat-delivered').textContent = delivered;
     document.getElementById('stat-spent').textContent     = fmt(totalSpent).replace('R$\u00A0','R$');
 
-    // Profile info â€” brand identity, not customer data
-    document.getElementById('profile-name').textContent  = 'BigSmoke Store';
-    document.getElementById('profile-email').textContent = 'contato@bigsmoke.com.br';
+    updateProfileIdentity();
+    updateAccountDetails(customer, orders);
     if (delivered >= 3) document.getElementById('gold-badge').style.display = 'inline-flex';
 
     // Tab counts
@@ -1347,6 +1726,12 @@
     const activeContainer = document.getElementById('active-orders-container');
     if (active.length) {
       activeContainer.innerHTML = `<div style="display:grid;gap:1rem;padding-top:1rem;">${active.map(renderActiveOrder).join('')}</div>`;
+    } else if (!customer) {
+      activeContainer.innerHTML = `<div class="empty-state" style="margin-top:1rem;">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><path d="M12 8v5"/><path d="M12 16h.01"/></svg>
+        <p>Entre na sua conta para ver seus pedidos.</p>
+        <a href="/loja/?login=1" class="btn btn-primary" style="margin-top:0.5rem;font-size:0.85rem;">Entrar na conta</a>
+      </div>`;
     } else {
       activeContainer.innerHTML = `<div class="empty-state" style="margin-top:1rem;">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>
@@ -1359,6 +1744,12 @@
     const histContainer = document.getElementById('history-orders-container');
     if (history.length) {
       histContainer.innerHTML = `<div style="display:grid;gap:0.65rem;padding-top:1rem;">${history.map(renderHistoryRow).join('')}</div>`;
+    } else if (!customer) {
+      histContainer.innerHTML = `<div class="empty-state" style="margin-top:1rem;">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><path d="M12 8v5"/><path d="M12 16h.01"/></svg>
+        <p>Nenhum histórico para mostrar sem login.</p>
+        <a href="/loja/?login=1" class="btn btn-primary" style="margin-top:0.5rem;font-size:0.85rem;">Entrar</a>
+      </div>`;
     } else {
       histContainer.innerHTML = `<div class="empty-state" style="margin-top:1rem;">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>

@@ -39,6 +39,8 @@ const TRACKING_INPUT_ID = "order-tracking-input";
 const LOCAL_PRODUCTS_KEY = "bigsmoke-local-products";
 const LEGACY_LOCAL_PRODUCTS_KEY = "bigsmoke-custom-products";
 const LOCALE_KEY = "bigsmoke-language";
+const AUTH_USERS_KEY = "bigsmoke_users";
+const AUTH_CUSTOMER_KEY = "bigsmoke_customer";
 const REMOVED_PRODUCT_IDS = new Set(["camiseta-oversized"]);
 let apiBaseUrl = "";
 
@@ -2311,9 +2313,356 @@ function setupSmokeEffect() {
   animate();
 }
 
+function getAuthUsers() {
+  return loadStorage(AUTH_USERS_KEY, []);
+}
+
+function getAuthCustomer() {
+  return loadStorage(AUTH_CUSTOMER_KEY, null);
+}
+
+function readFileAsDataUrl(file) {
+  return new Promise((resolve) => {
+    if (!file) {
+      resolve("");
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = () => resolve(String(reader.result || ""));
+    reader.onerror = () => resolve("");
+    reader.readAsDataURL(file);
+  });
+}
+
+function showAuthError(message) {
+  const error = document.getElementById("auth-error");
+  if (!error) return;
+  error.textContent = message || "";
+  error.hidden = !message;
+}
+
+function setAuthMode(mode) {
+  const isRegister = mode === "register";
+  const form = document.getElementById("auth-form");
+  const title = document.getElementById("auth-title");
+  const subtitle = document.querySelector(".auth-subtitle");
+  const registerFields = document.querySelector(".auth-register-fields");
+  const confirmField = document.querySelector(".auth-confirm-field");
+  const submit = document.querySelector(".auth-submit");
+  const switchText = document.getElementById("auth-switch-text");
+  const switchAction = document.getElementById("auth-switch-action");
+  const forgot = document.querySelector(".auth-forgot");
+  const password = document.querySelector('#auth-form input[name="password"]');
+
+  document.querySelectorAll("[data-auth-mode]").forEach((button) => {
+    button.classList.toggle("active", button.dataset.authMode === mode);
+  });
+
+  if (form) form.dataset.mode = mode;
+  if (title) title.textContent = isRegister ? "CRIAR CONTA" : "INICIAR SESSÃO";
+  if (subtitle) subtitle.textContent = isRegister ? "Cadastre-se na BigSmoke" : "Acesse sua conta BigSmoke";
+  if (registerFields) registerFields.hidden = !isRegister;
+  if (confirmField) confirmField.hidden = !isRegister;
+  if (submit) submit.textContent = isRegister ? "CRIAR CONTA" : "INICIAR SESSÃO";
+  if (switchText) switchText.textContent = isRegister ? "Já tem uma conta?" : "Não possui uma conta ainda?";
+  if (switchAction) switchAction.textContent = isRegister ? "Entrar" : "Criar uma conta";
+  if (forgot) forgot.hidden = isRegister;
+  if (password) password.autocomplete = isRegister ? "new-password" : "current-password";
+
+  showAuthError("");
+}
+
+function openAuthModal() {
+  const overlay = document.getElementById("auth-overlay");
+  const email = document.querySelector('#auth-form input[name="email"]');
+  if (!overlay) return;
+  overlay.hidden = false;
+  overlay.setAttribute("aria-hidden", "false");
+  document.body.style.overflow = "hidden";
+  setAuthMode("login");
+  window.setTimeout(() => email?.focus(), 40);
+}
+
+function closeAuthModal() {
+  const overlay = document.getElementById("auth-overlay");
+  if (!overlay) return;
+  overlay.hidden = true;
+  overlay.setAttribute("aria-hidden", "true");
+  document.body.style.overflow = "";
+  showAuthError("");
+}
+
+function updateAuthProfileButton() {
+  const profileLink = document.querySelector(".profile-icon-link");
+  const user = getAuthCustomer();
+  if (!profileLink) return;
+
+  if (!profileLink.dataset.defaultContent) {
+    profileLink.dataset.defaultContent = profileLink.innerHTML;
+  }
+
+  if (!user) {
+    profileLink.classList.remove("profile-authenticated");
+    profileLink.innerHTML = profileLink.dataset.defaultContent;
+    profileLink.setAttribute("aria-label", "Meu Perfil");
+    profileLink.setAttribute("title", "Meu Perfil");
+    return;
+  }
+
+  const initial = String(user.firstName?.[0] || user.email?.[0] || "B").toUpperCase();
+  profileLink.classList.add("profile-authenticated");
+  profileLink.innerHTML = user.photo
+    ? `<img class="profile-photo-thumb" src="${user.photo}" alt="">`
+    : initial;
+  profileLink.setAttribute("aria-label", "Perfil");
+  profileLink.setAttribute("title", "Perfil");
+}
+
+async function handleAuthSubmit(event) {
+  event.preventDefault();
+  const form = event.currentTarget;
+  const mode = form.dataset.mode || "login";
+  const data = new FormData(form);
+  const firstName = String(data.get("firstName") || "").trim();
+  const lastName = String(data.get("lastName") || "").trim();
+  const email = String(data.get("email") || "").trim().toLowerCase();
+  const password = String(data.get("password") || "");
+  const confirmPassword = String(data.get("confirmPassword") || "");
+
+  if (!email || !email.includes("@")) {
+    showAuthError("Informe um e-mail válido.");
+    return;
+  }
+
+  if (!password) {
+    showAuthError("Informe sua senha.");
+    return;
+  }
+
+  const users = getAuthUsers();
+
+  if (mode === "register") {
+    if (!firstName) {
+      showAuthError("Informe seu nome.");
+      return;
+    }
+    if (password.length < 6) {
+      showAuthError("A senha deve ter pelo menos 6 caracteres.");
+      return;
+    }
+    if (password !== confirmPassword) {
+      showAuthError("As senhas não coincidem.");
+      return;
+    }
+    if (users.some((user) => user.email === email)) {
+      showAuthError("Este e-mail já está cadastrado. Faça login.");
+      return;
+    }
+
+    const photo = await readFileAsDataUrl(data.get("photo"));
+    const newUser = { firstName, lastName, email, password, photo, createdAt: new Date().toISOString() };
+    saveStorage(AUTH_USERS_KEY, [...users, newUser]);
+    saveStorage(AUTH_CUSTOMER_KEY, { firstName, lastName, email, photo });
+    form.reset();
+    updateAuthPhotoPreview("");
+    updateAuthProfileButton();
+    closeAuthModal();
+    return;
+  }
+
+  const found = users.find((user) => user.email === email && user.password === password);
+  if (!found) {
+    showAuthError("E-mail ou senha incorretos.");
+    return;
+  }
+
+  saveStorage(AUTH_CUSTOMER_KEY, {
+    firstName: found.firstName,
+    lastName: found.lastName,
+    email: found.email,
+    photo: found.photo || ""
+  });
+  form.reset();
+  updateAuthPhotoPreview("");
+  updateAuthProfileButton();
+  closeAuthModal();
+}
+
+function updateAuthPhotoPreview(src) {
+  const preview = document.getElementById("auth-photo-preview");
+  if (!preview) return;
+  preview.innerHTML = src ? `<img src="${src}" alt="">` : "+";
+}
+
+function getGoogleClientId() {
+  return (
+    document.querySelector('meta[name="google-client-id"]')?.content ||
+    window.BIGSMOKE_GOOGLE_CLIENT_ID ||
+    localStorage.getItem("bigsmoke_google_client_id") ||
+    ""
+  ).trim();
+}
+
+function decodeJwtPayload(token) {
+  try {
+    const payload = token.split(".")[1];
+    const normalized = payload.replace(/-/g, "+").replace(/_/g, "/");
+    const decoded = decodeURIComponent(
+      atob(normalized)
+        .split("")
+        .map((char) => `%${(`00${char.charCodeAt(0).toString(16)}`).slice(-2)}`)
+        .join("")
+    );
+    return JSON.parse(decoded);
+  } catch {
+    return null;
+  }
+}
+
+function saveGoogleUser(profile) {
+  const fullName = String(profile.name || profile.email?.split("@")[0] || "Google").trim();
+  const [firstName, ...rest] = fullName.split(/\s+/);
+  const user = {
+    firstName: firstName || "Google",
+    lastName: rest.join(" "),
+    email: String(profile.email || "").trim().toLowerCase(),
+    photo: profile.picture || "",
+    provider: "google",
+    createdAt: new Date().toISOString()
+  };
+
+  if (!user.email) {
+    showAuthError("Não foi possível ler o e-mail da conta Google.");
+    return;
+  }
+
+  const users = getAuthUsers();
+  const existingIndex = users.findIndex((entry) => entry.email === user.email);
+  if (existingIndex >= 0) {
+    users[existingIndex] = { ...users[existingIndex], ...user };
+  } else {
+    users.push({ ...user, password: "" });
+  }
+
+  saveStorage(AUTH_USERS_KEY, users);
+  saveStorage(AUTH_CUSTOMER_KEY, user);
+  updateAuthProfileButton();
+  closeAuthModal();
+}
+
+function handleGoogleCredential(response) {
+  const profile = decodeJwtPayload(response?.credential || "");
+  if (!profile) {
+    showAuthError("Não foi possível acessar os dados da conta Google.");
+    return;
+  }
+  saveGoogleUser(profile);
+}
+
+function handleGoogleAuth() {
+  const clientId = getGoogleClientId();
+  if (clientId && window.google?.accounts?.id) {
+    window.google.accounts.id.initialize({
+      client_id: clientId,
+      callback: handleGoogleCredential
+    });
+    window.google.accounts.id.prompt();
+    return;
+  }
+
+  const email = prompt("Digite seu e-mail Google para continuar:");
+  if (!email || !email.includes("@")) {
+    showAuthError("Informe um e-mail Google válido.");
+    return;
+  }
+  const cleanEmail = email.trim().toLowerCase();
+  const name = prompt("Nome para sua conta BigSmoke:", cleanEmail.split("@")[0]) || cleanEmail.split("@")[0];
+  const [firstName, ...rest] = name.trim().split(/\s+/);
+  const user = {
+    firstName: firstName || "Google",
+    lastName: rest.join(" "),
+    email: cleanEmail,
+    photo: prompt("Cole a URL da foto do Google, se quiser usar no perfil:", "") || "",
+    provider: "google",
+    createdAt: new Date().toISOString()
+  };
+  const users = getAuthUsers();
+  const existingIndex = users.findIndex((entry) => entry.email === cleanEmail);
+  if (existingIndex >= 0) {
+    users[existingIndex] = { ...users[existingIndex], ...user };
+  } else {
+    users.push({ ...user, password: "" });
+  }
+  saveStorage(AUTH_USERS_KEY, users);
+  saveStorage(AUTH_CUSTOMER_KEY, user);
+  updateAuthProfileButton();
+  closeAuthModal();
+}
+
+function setupAuthProfileModal() {
+  const profileLink = document.querySelector(".profile-icon-link");
+  const overlay = document.getElementById("auth-overlay");
+  const form = document.getElementById("auth-form");
+  const closeButton = document.getElementById("auth-close");
+  const switchAction = document.getElementById("auth-switch-action");
+  const eyeButton = document.querySelector(".auth-eye");
+  const forgot = document.querySelector(".auth-forgot");
+  const photoInput = document.querySelector('#auth-form input[name="photo"]');
+  const googleButton = document.getElementById("auth-google");
+
+  updateAuthProfileButton();
+
+  profileLink?.addEventListener("click", (event) => {
+    if (getAuthCustomer()) return;
+    event.preventDefault();
+    openAuthModal();
+  });
+
+  overlay?.addEventListener("click", (event) => {
+    if (event.target === overlay) closeAuthModal();
+  });
+
+  closeButton?.addEventListener("click", closeAuthModal);
+
+  document.querySelectorAll("[data-auth-mode]").forEach((button) => {
+    button.addEventListener("click", () => setAuthMode(button.dataset.authMode));
+  });
+
+  switchAction?.addEventListener("click", () => {
+    setAuthMode(form?.dataset.mode === "register" ? "login" : "register");
+  });
+
+  eyeButton?.addEventListener("click", () => {
+    const password = document.querySelector('#auth-form input[name="password"]');
+    if (!password) return;
+    password.type = password.type === "password" ? "text" : "password";
+    eyeButton.setAttribute("aria-label", password.type === "password" ? "Mostrar senha" : "Ocultar senha");
+  });
+
+  forgot?.addEventListener("click", () => {
+    alert("Para recuperar sua senha, entre em contato conosco pelo WhatsApp.");
+  });
+
+  photoInput?.addEventListener("change", async (event) => {
+    const src = await readFileAsDataUrl(event.currentTarget.files?.[0]);
+    updateAuthPhotoPreview(src);
+  });
+
+  googleButton?.addEventListener("click", handleGoogleAuth);
+
+  form?.addEventListener("submit", handleAuthSubmit);
+  setAuthMode("login");
+
+  const params = new URLSearchParams(window.location.search);
+  if (!getAuthCustomer() && params.get("login") === "1") {
+    window.setTimeout(openAuthModal, 120);
+  }
+}
+
 function setupGlobalInteractions() {
   document.addEventListener("keydown", (event) => {
     if (event.key === "Escape") {
+      closeAuthModal();
       closeCheckout();
       toggleCart(false);
       closeLanguageMenu();
@@ -2336,6 +2685,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   setupOrderTrackingLookup();
   setupPaymentSuccessStyles();
   setupSmokeEffect();
+  setupAuthProfileModal();
   setupGlobalInteractions();
   window.addEventListener("beforeunload", stopOrderTrackingPolling);
   applyLocale(currentLocale);

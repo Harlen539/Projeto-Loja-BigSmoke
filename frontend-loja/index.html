@@ -12,10 +12,12 @@
   <link rel="shortcut icon" href="/src/imagens/logo_sem_fundo.png">
   <meta property="og:title" content="BigSmoke | Streetwear Autêntico">
   <meta property="og:description" content="Loja online BigSmoke com visual streetwear, catálogo dinâmico e checkout Stripe.">
+  <meta name="google-client-id" content="">
   <link rel="stylesheet" href="/src/Style.css">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@300;400;500;600;700&family=Oswald:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
 </head>
 <body>
 <div class="top-ticker" aria-label="Informações da loja">
@@ -371,6 +373,94 @@
     <path d="M16 3C8.8 3 3 8.8 3 16c0 2.5.7 4.8 2 6.8L3 29l6.4-1.9c1.9 1.1 4.1 1.8 6.6 1.8 7.2 0 13-5.8 13-13S23.2 3 16 3zm7.6 18.5c-.3.8-1.6 1.5-2.2 1.6-.6.1-1.4.2-2.3-.1-.5-.2-1.2-.4-2-.8-3.6-1.6-5.9-5.3-6.1-5.5-.2-.3-1.4-1.9-1.4-3.6 0-1.8.9-2.7 1.2-3.1.3-.3.7-.4.9-.4h.7c.2 0 .5 0 .7.5.3.8 1 2.7 1.1 2.9.1.2.1.4 0 .6-.1.2-.2.4-.4.6-.2.2-.3.4-.5.6-.2.2-.3.5-.1.8.2.3.9 1.6 2 2.6 1.4 1.3 2.5 1.7 2.9 1.9.4.2.6.2.9-.1.3-.3 1.1-1.2 1.4-1.6.2-.3.5-.3.8-.2.3.1 2.2 1 2.6 1.2.4.2.7.3.8.5.1.2.1 1-.2 1.8z"></path>
   </svg>
 </a>
+
+<div class="auth-overlay" id="auth-overlay" aria-hidden="true" hidden>
+  <section class="auth-modal" role="dialog" aria-modal="true" aria-labelledby="auth-title">
+    <button class="auth-close" id="auth-close" type="button" aria-label="Fechar">
+      <svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true">
+        <path d="M2 2L16 16M16 2L2 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path>
+      </svg>
+    </button>
+
+    <div class="auth-header">
+      <div class="auth-logo-ring" aria-hidden="true">
+        <svg width="28" height="28" viewBox="0 0 28 28">
+          <circle cx="14" cy="14" r="13" fill="none" stroke="currentColor" stroke-width="1.4"></circle>
+          <path d="M14 8a4 4 0 0 1 4 4v1M10 13v-1a4 4 0 0 1 4-4" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"></path>
+          <path d="M10.5 13.5h7v6h-7z" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"></path>
+          <path d="M14 16v1.5" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"></path>
+        </svg>
+      </div>
+      <h2 class="auth-title" id="auth-title">INICIAR SESSÃO</h2>
+      <p class="auth-subtitle">Acesse sua conta BigSmoke</p>
+    </div>
+
+    <div class="auth-tabs" role="tablist" aria-label="Acesso">
+      <button class="auth-tab active" type="button" data-auth-mode="login">ENTRAR</button>
+      <button class="auth-tab" type="button" data-auth-mode="register">CRIAR CONTA</button>
+    </div>
+
+    <button class="auth-google" id="auth-google" type="button">
+      <span aria-hidden="true">G</span>
+      Continuar com Google
+    </button>
+
+    <form class="auth-form" id="auth-form" novalidate>
+      <div class="auth-register-fields" hidden>
+        <label class="auth-photo-field">
+          <input type="file" name="photo" accept="image/*">
+          <span class="auth-photo-preview" id="auth-photo-preview" aria-hidden="true">+</span>
+          <span>Adicionar foto de perfil</span>
+        </label>
+        <div class="auth-row">
+          <label class="auth-field">
+            <span>Nome</span>
+            <input type="text" name="firstName" placeholder="Seu nome" autocomplete="given-name">
+          </label>
+          <label class="auth-field">
+            <span>Sobrenome</span>
+            <input type="text" name="lastName" placeholder="Seu sobrenome" autocomplete="family-name">
+          </label>
+        </div>
+      </div>
+
+      <label class="auth-field">
+        <span>E-mail</span>
+        <input type="email" name="email" placeholder="ex.: seuemail@email.com.br" autocomplete="email">
+      </label>
+
+      <label class="auth-field">
+        <span class="auth-password-label">
+          Senha
+          <button class="auth-forgot" type="button">Esqueceu a senha?</button>
+        </span>
+        <span class="auth-password-wrap">
+          <input type="password" name="password" placeholder="ex.: suasenha" autocomplete="current-password">
+          <button class="auth-eye" type="button" aria-label="Mostrar senha">
+            <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M1.5 12s3.8-7 10.5-7 10.5 7 10.5 7-3.8 7-10.5 7-10.5-7-10.5-7Z" fill="none" stroke="currentColor" stroke-width="2"></path>
+              <circle cx="12" cy="12" r="3" fill="none" stroke="currentColor" stroke-width="2"></circle>
+            </svg>
+          </button>
+        </span>
+      </label>
+
+      <label class="auth-field auth-confirm-field" hidden>
+        <span>Confirmar senha</span>
+        <input type="password" name="confirmPassword" placeholder="Repita a senha" autocomplete="new-password">
+      </label>
+
+      <p class="auth-error" id="auth-error" role="alert" hidden></p>
+
+      <button class="auth-submit" type="submit">INICIAR SESSÃO</button>
+
+      <p class="auth-switch">
+        <span id="auth-switch-text">Não possui uma conta ainda?</span>
+        <button type="button" id="auth-switch-action">Criar uma conta</button>
+      </p>
+    </form>
+  </section>
+</div>
 
 <script src="/src/script.js"></script>
 </body>

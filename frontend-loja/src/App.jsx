@@ -4,6 +4,7 @@ import { CartDrawer } from "./components/cart/CartDrawer.jsx";
 import { Footer } from "./components/layout/Footer.jsx";
 import { Navbar } from "./components/layout/Navbar.jsx";
 import { TopTicker } from "./components/layout/TopTicker.jsx";
+import { AuthModal } from "./components/auth/AuthModal.jsx";
 import { Home } from "./pages/Home.jsx";
 import { NotFound } from "./pages/NotFound.jsx";
 import { Pedidos } from "./pages/Pedidos.jsx";
@@ -27,6 +28,7 @@ export default function App() {
       </Routes>
       <Footer />
       <CartDrawer />
+      <AuthModal />
     </>
   );
 }
