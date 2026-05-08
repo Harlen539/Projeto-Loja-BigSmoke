@@ -18,9 +18,16 @@ export async function apiFetch(path, options = {}) {
   });
 
   const text = await response.text();
-  const data = text ? JSON.parse(text) : null;
+  let data = null;
+  if (text) {
+    try {
+      data = JSON.parse(text);
+    } catch {
+      data = null;
+    }
+  }
   if (!response.ok) {
-    throw new Error(data?.error || "Erro ao falar com a API.");
+    throw new Error(data?.error || "A API não respondeu em JSON. Verifique se o backend está rodando na porta 3000.");
   }
   return data;
 }

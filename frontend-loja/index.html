@@ -273,6 +273,19 @@
   </div>
   <ul id="cart-items"></ul>
   <div class="empty-cart" id="empty-cart">Nenhuma peça adicionada ainda.</div>
+  <div class="coupon-panel cart-coupon-panel">
+    <label for="cart-coupon-code">Aplique o cupom de desconto</label>
+    <div class="coupon-input-row">
+      <input id="cart-coupon-code" type="text" placeholder="Ex: BIG10" autocomplete="off">
+      <button id="apply-cart-coupon" type="button">Aplicar</button>
+    </div>
+    <div id="cart-coupon-suggestions" class="coupon-suggestions"></div>
+    <small id="cart-coupon-message" class="coupon-message"></small>
+  </div>
+  <div class="total-section cart-discount-row" id="cart-discount-row" hidden>
+    <span>Desconto</span>
+    <span>- R$ <span id="cart-discount">0,00</span></span>
+  </div>
   <div class="total-section">
     <span>Total</span>
     <span>R$ <span id="total">0,00</span></span>
@@ -348,6 +361,19 @@
         <div class="summary-line">
           <span>Frete</span>
           <strong id="checkout-shipping">R$ 0,00</strong>
+        </div>
+        <div class="coupon-panel">
+          <label for="coupon-code">Cupom de desconto</label>
+          <div class="coupon-input-row">
+            <input id="coupon-code" type="text" placeholder="Ex: BIG10" autocomplete="off">
+            <button id="apply-coupon" type="button">Aplicar</button>
+          </div>
+          <div id="coupon-suggestions" class="coupon-suggestions"></div>
+          <small id="coupon-message" class="coupon-message"></small>
+        </div>
+        <div class="summary-line" id="checkout-discount-row" hidden>
+          <span>Desconto</span>
+          <strong id="checkout-discount">- R$ 0,00</strong>
         </div>
         <div class="summary-line total-line">
           <span>Total final</span>
@@ -462,6 +488,6 @@
   </section>
 </div>
 
-<script src="/src/script.js"></script>
+<script type="module" src="/src/script.js"></script>
 </body>
 </html>

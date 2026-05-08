@@ -1,0 +1,32 @@
+[
+  {
+    "id": "c1",
+    "code": "BIG10",
+    "type": "percent",
+    "target": "products",
+    "value": 10,
+    "active": true,
+    "minOrderValue": 100,
+    "usageLimit": 50
+  },
+  {
+    "id": "c2",
+    "code": "STREET20",
+    "type": "percent",
+    "target": "products",
+    "value": 20,
+    "active": true,
+    "minOrderValue": 200,
+    "usageLimit": 25
+  },
+  {
+    "id": "c3",
+    "code": "FRETE199",
+    "type": "fixed",
+    "target": "shipping",
+    "value": 25,
+    "active": false,
+    "minOrderValue": 199.9,
+    "usageLimit": 100
+  }
+]

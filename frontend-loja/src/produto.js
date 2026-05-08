@@ -17,6 +17,38 @@ function apiUrl(path) {
   return new URL(path, API_BASE).toString();
 }
 
+function escapeHtml(value) {
+  return String(value ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
+function safeImageUrl(value) {
+  const raw = String(value || "").trim();
+  if (!raw) return "";
+  if (/^\/(?!\/)/.test(raw)) return raw;
+  if (/^data:image\/(png|jpe?g|webp|gif);base64,/i.test(raw)) return raw;
+  try {
+    const url = new URL(raw, window.location.origin);
+    return url.protocol === "http:" || url.protocol === "https:" ? url.toString() : "";
+  } catch {
+    return "";
+  }
+}
+
+async function readApiJson(response) {
+  const text = await response.text();
+  if (!text) return null;
+  try {
+    return JSON.parse(text);
+  } catch {
+    return null;
+  }
+}
+
 function getFallbackProducts() {
   if (typeof loadLocalProducts === "function") {
     return loadLocalProducts();
@@ -102,7 +134,11 @@ function renderThumbs(images) {
     thumb.type = "button";
     thumb.className = `thumb-item${index === 0 ? " active" : ""}`;
     thumb.setAttribute("aria-label", `Abrir foto ${index + 1}`);
-    thumb.innerHTML = `<img src="${url}" alt="Foto ${index + 1}" loading="lazy">`;
+    const img = document.createElement("img");
+    img.src = safeImageUrl(url);
+    img.alt = `Foto ${index + 1}`;
+    img.loading = "lazy";
+    thumb.appendChild(img);
     thumb.addEventListener("click", () => trocarFoto(index));
     thumbsEl.appendChild(thumb);
   });
@@ -112,7 +148,7 @@ function trocarFoto(index) {
   if (!todasFotos.length) return;
   fotoAtual = index;
   const principal = document.getElementById("foto-principal");
-  principal.src = todasFotos[index];
+  principal.src = safeImageUrl(todasFotos[index]);
   document.querySelectorAll(".thumb-item").forEach((el, currentIndex) => {
     el.classList.toggle("active", currentIndex === index);
   });
@@ -369,7 +405,7 @@ async function carregarProduto() {
     try {
       const listResponse = await fetch(apiUrl("/api/products"));
       if (listResponse.ok) {
-        const list = await listResponse.json();
+        const list = await readApiJson(listResponse);
         apiResolved = true;
         produto = Array.isArray(list)
           ? list.find((item) => String(item.id) === String(id)) || null
@@ -384,7 +420,7 @@ async function carregarProduto() {
     try {
       const response = await fetch(apiUrl(`/api/products/${encodeURIComponent(id)}`));
       if (response.ok) {
-        produto = await response.json();
+        produto = await readApiJson(response);
         apiResolved = true;
       }
     } catch {
@@ -626,7 +662,7 @@ function resolveFabricItems(product) {
     return raw.map((item) => String(item || "").trim()).filter(Boolean);
   }
   if (typeof raw === "string") {
-    return raw.split(/[\n,•]/).map((item) => item.trim()).filter(Boolean);
+    return raw.split(/[\n,"]/).map((item) => item.trim()).filter(Boolean);
   }
   return DEFAULT_FABRIC_ITEMS;
 }
@@ -636,7 +672,7 @@ function renderFabricList(product) {
   if (!list) return;
 
   const items = resolveFabricItems(product);
-  list.innerHTML = items.map((item) => `<li class="fabric-item">${item}</li>`).join("");
+  list.innerHTML = items.map((item) => `<li class="fabric-item">${escapeHtml(item)}</li>`).join("");
 }
 
 function resolveSizeTable(product) {
@@ -707,19 +743,19 @@ function renderSizeTable(product) {
       <thead>
         <tr>
           <th>Medida</th>
-          ${sizes.map((size) => `<th class="${size === selectedSize ? "highlight-col" : ""}">${size}</th>`).join("")}
+          ${sizes.map((size) => `<th class="${size === selectedSize ? "highlight-col" : ""}">${escapeHtml(size)}</th>`).join("")}
         </tr>
       </thead>
       <tbody>
         ${rows.map((row) => `
           <tr>
-            <th>${row.label}</th>
-            ${sizes.map((size) => `<td class="${size === selectedSize ? "highlight-col" : ""}">${row.values[size] || "-"}</td>`).join("")}
+            <th>${escapeHtml(row.label)}</th>
+            ${sizes.map((size) => `<td class="${size === selectedSize ? "highlight-col" : ""}">${escapeHtml(row.values[size] || "-")}</td>`).join("")}
           </tr>
         `).join("")}
       </tbody>
     </table>
-    <div class="size-table-note">${tableData.note}</div>
+    <div class="size-table-note">${escapeHtml(tableData.note)}</div>
   `;
 }
 
@@ -836,7 +872,7 @@ async function carregarProduto() {
     try {
       const listResponse = await fetch(apiUrl("/api/products"));
       if (listResponse.ok) {
-        const list = await listResponse.json();
+        const list = await readApiJson(listResponse);
         apiResolved = true;
         produto = Array.isArray(list)
           ? list.find((item) => String(item.id) === String(id)) || null
@@ -851,7 +887,7 @@ async function carregarProduto() {
     try {
       const response = await fetch(apiUrl(`/api/products/${encodeURIComponent(id)}`));
       if (response.ok) {
-        produto = await response.json();
+        produto = await readApiJson(response);
         apiResolved = true;
       }
     } catch {
@@ -904,9 +940,9 @@ async function carregarProduto() {
   renderSizeTable(produto);
 }
 
-/* ═══════════════════════════════════════════════════════
-   VARIAÇÕES DE COR — Produto
-   ═══════════════════════════════════════════════════════ */
+/* PPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPP
+   VARIAÇÕES DE COR - Produto
+   PPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPP */
 let colorsObjectMap = {};
 
 const COLOR_HEX_MAP = {
@@ -1107,7 +1143,7 @@ function renderFabricList(product) {
   if (Array.isArray(src)) {
     items = src.map((value) => String(value || "").trim()).filter(Boolean);
   } else if (typeof src === "string" && src.trim()) {
-    items = src.split(/[;\n•]/).map((value) => value.trim()).filter(Boolean);
+    items = src.split(/[;\n"]/).map((value) => value.trim()).filter(Boolean);
   } else {
     items = [
       "Oversized",
@@ -1118,7 +1154,7 @@ function renderFabricList(product) {
     ];
   }
 
-  container.innerHTML = items.map((item) => `<div class="fabric-item">${item}</div>`).join("");
+  container.innerHTML = items.map((item) => `<div class="fabric-item">${escapeHtml(item)}</div>`).join("");
 }
 
 function renderSizeTable(product) {
@@ -1135,17 +1171,17 @@ function renderSizeTable(product) {
     <div class="size-table-wrap">
       <table class="size-table">
         <thead>
-          <tr>${headers.map((header, index) => `<th${index === highlightIndex ? ' class="highlight-col"' : ''}>${header}</th>`).join("")}</tr>
+          <tr>${headers.map((header, index) => `<th${index === highlightIndex ? ' class="highlight-col"' : ''}>${escapeHtml(header)}</th>`).join("")}</tr>
         </thead>
         <tbody>
           ${rows.map((row) => `
             <tr>
-              ${row.map((cell, index) => `<td${index === highlightIndex && index > 0 ? ' class="highlight-col"' : ''}>${cell}</td>`).join("")}
+              ${row.map((cell, index) => `<td${index === highlightIndex && index > 0 ? ' class="highlight-col"' : ''}>${escapeHtml(cell)}</td>`).join("")}
             </tr>
           `).join("")}
         </tbody>
       </table>
-      <p class="size-table-note">${table.note || DEFAULT_SIZE_TABLE_V2.note}</p>
+      <p class="size-table-note">${escapeHtml(table.note || DEFAULT_SIZE_TABLE_V2.note)}</p>
     </div>
   `;
 }

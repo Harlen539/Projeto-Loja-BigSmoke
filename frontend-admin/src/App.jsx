@@ -3,7 +3,6 @@ import { Navigate, Route, Routes } from "react-router-dom";
 import { Sidebar } from "./components/layout/Sidebar.jsx";
 import { Topbar } from "./components/layout/Topbar.jsx";
 import { useAuth } from "./hooks/useAuth.js";
-import { Charts } from "./pages/Charts.jsx";
 import { Customers } from "./pages/Customers.jsx";
 import { Dashboard } from "./pages/Dashboard.jsx";
 import { Login } from "./pages/Login.jsx";
@@ -74,13 +73,7 @@ export default function App() {
       />
       <Route
         path="/graficos"
-        element={
-          <PrivateRoute>
-            <Shell>
-              <Charts />
-            </Shell>
-          </PrivateRoute>
-        }
+        element={<Navigate replace to="/" />}
       />
       <Route
         path="/clientes"

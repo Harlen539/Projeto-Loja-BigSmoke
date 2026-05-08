@@ -1,0 +1,64 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Product {
+  id          String   @id
+  name        String   @default("")
+  category    String   @default("")
+  description String   @default("")
+  price       Decimal  @default(0) @db.Decimal(10, 2)
+  stock       Int      @default(0)
+  image       String   @default("")
+  sizes       String   @default("P, M, G, GG")
+  badge       String   @default("")
+  active      Boolean  @default(true)
+  featured    Boolean  @default(false)
+  colors      Json     @default("[]")
+  data        Json     @default("{}")
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt   DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  @@index([updatedAt(sort: Desc)], map: "products_updated_at_idx")
+  @@index([active], map: "products_active_idx")
+  @@index([category], map: "products_category_idx")
+  @@map("products")
+}
+
+model Order {
+  id              String   @id
+  orderNumber     String?  @map("order_number")
+  status          String   @default("pending")
+  customerName    String   @default("") @map("customer_name")
+  customerEmail   String   @default("") @map("customer_email")
+  customerPhone   String   @default("") @map("customer_phone")
+  totalAmount     Decimal  @default(0) @map("total_amount") @db.Decimal(10, 2)
+  shippingAmount  Decimal  @default(0) @map("shipping_amount") @db.Decimal(10, 2)
+  deliveryMethod  String   @default("retirada") @map("delivery_method")
+  stripeSessionId String?  @map("stripe_session_id")
+  paymentIntentId String?  @map("payment_intent_id")
+  data            Json     @default("{}")
+  createdAt       DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt       DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  @@index([updatedAt(sort: Desc)], map: "orders_updated_at_idx")
+  @@index([status], map: "orders_status_idx")
+  @@index([stripeSessionId], map: "orders_session_idx")
+  @@index([customerEmail], map: "orders_customer_idx")
+  @@index([orderNumber], map: "orders_number_idx")
+  @@map("orders")
+}
+
+model OrderCounter {
+  id        String   @id
+  next      Int      @default(1)
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  @@map("order_counters")
+}

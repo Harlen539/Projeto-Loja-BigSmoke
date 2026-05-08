@@ -1,4 +1,4 @@
-﻿const crypto = require("node:crypto");
+const crypto = require("node:crypto");
 const { existsSync } = require("node:fs");
 const fs = require("node:fs/promises");
 const path = require("node:path");
@@ -15,6 +15,7 @@ const Twilio = require("twilio");
 const Stripe = require("stripe");
 const { createClient } = require("@supabase/supabase-js");
 require("dotenv").config();
+const { prisma, usePrisma } = require("./services/prismaService");
 
 const repoRoot = path.resolve(__dirname, "..", "..");
 const frontendLojaDir = path.join(repoRoot, "frontend-loja", "src");
@@ -26,6 +27,7 @@ const uploadsDir = path.resolve(process.env.BIGSMOKE_UPLOADS_DIR || path.join(__
 const productsFile = path.join(dataDir, "products.json");
 const ordersFile = path.join(dataDir, "orders.json");
 const orderCounterFile = path.join(dataDir, "order_counter.json");
+const couponsFile = path.join(dataDir, "coupons.json");
 const PRODUCT_TABLE = process.env.SUPABASE_PRODUCTS_TABLE || "products";
 const ORDER_TABLE = process.env.SUPABASE_ORDERS_TABLE || "orders";
 const JWT_SECRET = process.env.JWT_SECRET || "";
@@ -42,18 +44,18 @@ const supabase = process.env.SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_K
   ? createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY)
   : null;
 
-const useSupabase = Boolean(supabase);
+const useSupabase = Boolean(supabase) && !usePrisma;
 const DEFAULT_STORE = {
   city: process.env.STORE_CITY || "Fortaleza",
   state: process.env.STORE_STATE || "CE",
   originCep: process.env.STORE_ORIGIN_CEP || "60000000"
 };
-const FREE_SHIPPING_CITIES = new Set(["joao pessoa", "joÃ£o pessoa", "bayeux", "cabedelo"]);
+const FREE_SHIPPING_CITIES = new Set(["joao pessoa", "joão pessoa", "bayeux", "cabedelo"]);
 const ORDER_STATUS_FLOW = ["pending", "paid", "processing", "shipped", "delivered"];
 const ORDER_STATUS_LABELS = {
   pending: "Pendente",
   paid: "Pago",
-  processing: "Em separaÃ§Ã£o",
+  processing: "Em separação",
   shipped: "Enviado",
   delivered: "Entregue",
   canceled: "Cancelado"
@@ -80,7 +82,7 @@ const upload = multer({
       callback(null, true);
       return;
     }
-    callback(new Error("Apenas imagens sÃ£o aceitas."));
+    callback(new Error("Apenas imagens são aceitas."));
   },
   limits: {
     fileSize: 8 * 1024 * 1024
@@ -91,8 +93,30 @@ const app = express();
 app.set("trust proxy", 1);
 app.use(helmet({
   crossOriginResourcePolicy: { policy: "cross-origin" },
-  contentSecurityPolicy: false // gerenciado separadamente se necessÃ¡rio
+  contentSecurityPolicy: {
+    useDefaults: true,
+    directives: {
+      "default-src": ["'self'"],
+      "base-uri": ["'self'"],
+      "object-src": ["'none'"],
+      "frame-ancestors": ["'self'"],
+      "script-src": ["'self'", "'unsafe-inline'", "https://js.stripe.com"],
+      "style-src": ["'self'", "'unsafe-inline'", "https:"],
+      "img-src": ["'self'", "data:", "blob:", "https:"],
+      "connect-src": ["'self'", "https://api.stripe.com", "https://viacep.com.br"],
+      "frame-src": ["'self'", "https://js.stripe.com", "https://checkout.stripe.com"],
+      "form-action": ["'self'", "https://checkout.stripe.com"],
+      "upgrade-insecure-requests": []
+    }
+  },
+  frameguard: { action: "sameorigin" },
+  referrerPolicy: { policy: "strict-origin-when-cross-origin" },
+  noSniff: true
 }));
+app.use((_req, res, next) => {
+  res.setHeader("Permissions-Policy", "camera=(), microphone=(), geolocation=(self), payment=(self)");
+  next();
+});
 
 function validateRuntimeConfig() {
   const issues = [];
@@ -108,20 +132,20 @@ function validateRuntimeConfig() {
   if (!adminPasswordHash && !adminPassword) {
     issues.push("ADMIN_PASSWORD ou ADMIN_PASSWORD_HASH deve ser definido.");
   } else if (!adminPasswordHash && adminPassword && adminPassword.length < 12) {
-    issues.push("ADMIN_PASSWORD deve ter pelo menos 12 caracteres quando ADMIN_PASSWORD_HASH nÃ£o estiver definido.");
+    issues.push("ADMIN_PASSWORD deve ter pelo menos 12 caracteres quando ADMIN_PASSWORD_HASH não estiver definido.");
   }
 
   if (isProduction) {
-    if (!process.env.SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
-      issues.push("Em produÃ§Ã£o, SUPABASE_URL e SUPABASE_SERVICE_ROLE_KEY sÃ£o obrigatÃ³rios para persistÃªncia de dados.");
+    if (!usePrisma && (!process.env.SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY)) {
+      issues.push("Em produção, defina DATABASE_URL para Prisma ou SUPABASE_URL e SUPABASE_SERVICE_ROLE_KEY para persistência de dados.");
     }
     if (!process.env.ALLOWED_ORIGINS) {
-      issues.push("Em produÃ§Ã£o, ALLOWED_ORIGINS deve ser definido para restringir o CORS.");
+      issues.push("Em produção, ALLOWED_ORIGINS deve ser definido para restringir o CORS.");
     }
   }
 
   if (issues.length) {
-    const message = `ConfiguraÃ§Ã£o invÃ¡lida: ${issues.join(" ")}`;
+    const message = `Configuração inválida: ${issues.join(" ")}`;
     if (isProduction) {
       throw new Error(message);
     }
@@ -135,7 +159,7 @@ const generalLimiter = rateLimit({
   max: 200,
   standardHeaders: true,
   legacyHeaders: false,
-  message: { error: "Muitas requisiÃ§Ãµes. Tente novamente em alguns minutos." }
+  message: { error: "Muitas requisições. Tente novamente em alguns minutos." }
 });
 
 // Rate limiting para login
@@ -161,7 +185,7 @@ const seedProducts = [
     id: "moletom-classic",
     name: "Moletom Classic BigSmoke",
     category: "Moletons",
-    description: "PeÃ§a premium para dias frios, pronta para campanha e venda assistida.",
+    description: "Peça premium para dias frios, pronta para campanha e venda assistida.",
     price: 249.9,
     stock: 18,
     image: "https://placehold.co/900x1200/141414/F5F0E8?text=Moletom+Classic",
@@ -173,6 +197,11 @@ const seedProducts = [
     updatedAt: "2026-04-27T00:00:00.000Z"
   }
 ];
+const defaultCoupons = [
+  { id: "c1", code: "BIG10", type: "percent", target: "products", value: 10, active: true, minOrderValue: 100, usageLimit: 50 },
+  { id: "c2", code: "STREET20", type: "percent", target: "products", value: 20, active: true, minOrderValue: 200, usageLimit: 25 },
+  { id: "c3", code: "FRETE199", type: "fixed", target: "shipping", value: 25, active: false, minOrderValue: 199.9, usageLimit: 100 }
+];
 const REMOVED_PRODUCT_IDS = new Set(["camiseta-oversized"]);
 
 function nowIso() {
@@ -181,6 +210,161 @@ function nowIso() {
 
 function normalizeText(value) {
   return String(value ?? "").trim();
+}
+
+function sanitizePlainText(value, maxLength = 2000) {
+  let text = normalizeText(value)
+    .replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F]/g, "")
+    .replace(/<\s*\/?\s*(script|iframe|object|embed|svg|math|meta|link|style|base|form|input|button|textarea|select|option|video|audio|source|track|img)\b[^>]*>/gi, "")
+    .replace(/\s+on[a-z]+\s*=\s*("[^"]*"|'[^']*'|[^\s>]+)/gi, "")
+    .replace(/\b(?:javascript|vbscript|data:text\/html)\s*:/gi, "");
+
+  text = text.replace(/<[^>]*>/g, "").trim();
+  return text.slice(0, maxLength);
+}
+
+function sanitizeIdentifier(value, fallback = "") {
+  const id = sanitizePlainText(value, 120).replace(/[^a-z0-9_.:-]/gi, "-").replace(/-+/g, "-").replace(/^-|-$/g, "");
+  return id || fallback;
+}
+
+function sanitizeSafeUrl(value, { allowDataImage = false } = {}) {
+  const raw = sanitizePlainText(value, 4000);
+  if (!raw) return "";
+
+  if (/^\/(?!\/)/.test(raw)) {
+    return raw;
+  }
+
+  if (allowDataImage && /^data:image\/(png|jpe?g|webp|gif);base64,[a-z0-9+/=\s]+$/i.test(raw)) {
+    return raw.replace(/\s/g, "");
+  }
+
+  try {
+    const url = new URL(raw);
+    if (url.protocol === "http:" || url.protocol === "https:") {
+      return url.toString();
+    }
+  } catch {
+    return "";
+  }
+
+  return "";
+}
+
+function sanitizeOrderItems(items) {
+  if (!Array.isArray(items)) return [];
+  return items.map((item) => ({
+    ...item,
+    id: sanitizeIdentifier(item?.id),
+    name: sanitizePlainText(item?.name, 180),
+    category: sanitizePlainText(item?.category, 120),
+    image: sanitizeSafeUrl(item?.image, { allowDataImage: true }),
+    size: sanitizePlainText(item?.size || item?.tamanho, 40),
+    color: sanitizePlainText(item?.color || item?.cor, 80),
+    quantity: Math.max(1, Math.floor(normalizeNumber(item?.quantity, 1))),
+    price: Math.max(0, normalizeNumber(item?.price, 0))
+  })).filter((item) => item.id);
+}
+
+function normalizeCoupon(input = {}) {
+  const code = sanitizePlainText(input.code, 40).toUpperCase().replace(/[^A-Z0-9_-]/g, "");
+  const type = input.type === "fixed" ? "fixed" : "percent";
+  const target = ["products", "shipping", "both"].includes(input.target) ? input.target : "products";
+  const value = Math.max(0, normalizeNumber(input.value, 0));
+  return {
+    id: sanitizeIdentifier(input.id, `coupon_${crypto.randomUUID()}`),
+    code,
+    type,
+    target,
+    value: type === "percent" ? Math.min(100, value) : value,
+    active: normalizeBoolean(input.active, true),
+    minOrderValue: Math.max(0, normalizeNumber(input.minOrderValue, 0)),
+    usageLimit: Math.max(0, Math.floor(normalizeNumber(input.usageLimit, 0)))
+  };
+}
+
+function getCouponDiscount(coupon, subtotal, shippingAmount) {
+  const normalized = normalizeCoupon(coupon);
+  const orderBase = subtotal + shippingAmount;
+  if (!normalized.code || !normalized.active || orderBase < normalized.minOrderValue) {
+    return null;
+  }
+
+  const productBase = normalized.target === "shipping" ? 0 : subtotal;
+  const shippingBase = normalized.target === "products" ? 0 : shippingAmount;
+  const discountBase = productBase + shippingBase;
+  if (discountBase <= 0) return null;
+
+  const discount = normalized.type === "percent"
+    ? discountBase * (normalized.value / 100)
+    : normalized.value;
+  const safeDiscount = Math.min(discountBase, Math.max(0, discount));
+  const productDiscount = discountBase > 0 ? Math.min(productBase, safeDiscount * (productBase / discountBase)) : 0;
+  const shippingDiscount = Math.min(shippingBase, safeDiscount - productDiscount);
+
+  return {
+    coupon: normalized,
+    productDiscount,
+    shippingDiscount,
+    totalDiscount: productDiscount + shippingDiscount
+  };
+}
+
+function expandDiscountedLineItems(items, productDiscount, baseUrl) {
+  const units = [];
+  items.forEach((item) => {
+    const quantity = Math.max(1, Math.floor(normalizeNumber(item.quantity, 1)));
+    const unitAmount = Math.max(0, Math.round(normalizeNumber(item.price, 0) * 100));
+    for (let index = 0; index < quantity; index += 1) {
+      units.push({ item, unitAmount, discount: 0 });
+    }
+  });
+
+  const subtotalCents = units.reduce((sum, unit) => sum + unit.unitAmount, 0);
+  const discountCents = Math.min(subtotalCents, Math.max(0, Math.round(productDiscount * 100)));
+  if (subtotalCents > 0 && discountCents > 0) {
+    let assigned = 0;
+    const allocations = units.map((unit, index) => {
+      const exact = (discountCents * unit.unitAmount) / subtotalCents;
+      const floor = Math.floor(exact);
+      assigned += floor;
+      return { index, floor, remainder: exact - floor };
+    });
+    allocations
+      .sort((a, b) => b.remainder - a.remainder)
+      .slice(0, discountCents - assigned)
+      .forEach((allocation) => { allocation.floor += 1; });
+    allocations.forEach((allocation) => {
+      units[allocation.index].discount = allocation.floor;
+    });
+  }
+
+  return units
+    .map(({ item, unitAmount, discount }) => ({
+      item,
+      amount: Math.max(0, unitAmount - discount)
+    }))
+    .filter(({ amount }) => amount > 0)
+    .map(({ item, amount }) => ({
+      price_data: {
+        currency: "brl",
+        product_data: {
+          name: item.size ? `${item.name} - ${item.size}` : item.name,
+          description: item.size ? `${item.category} - Tamanho ${item.size}` : item.category,
+          images: (() => {
+            const imageUrl = toAbsoluteHttpUrl(item.image, baseUrl);
+            return imageUrl ? [imageUrl] : [];
+          })()
+        },
+        unit_amount: amount
+      },
+      quantity: 1
+    }));
+}
+
+function sendServerError(res) {
+  return res.status(500).json({ error: "Erro interno do servidor." });
 }
 
 function normalizeNumber(value, fallback = 0) {
@@ -228,9 +412,9 @@ function normalizeColors(input, fallback) {
   if (!Array.isArray(input)) return fallback || [];
   return input
     .map((c) => ({
-      name: String(c.name || "").trim(),
-      hex: String(c.hex || "#888888").trim(),
-      images: Array.isArray(c.images) ? c.images.map((u) => String(u || "").trim()).filter(Boolean) : [],
+      name: sanitizePlainText(c.name, 80),
+      hex: /^#[0-9a-f]{3}([0-9a-f]{3})?$/i.test(String(c.hex || "").trim()) ? String(c.hex).trim() : "#888888",
+      images: Array.isArray(c.images) ? c.images.map((u) => sanitizeSafeUrl(u, { allowDataImage: true })).filter(Boolean) : [],
       stock: c.stock !== undefined ? Number(c.stock) : undefined
     }))
     .filter((c) => c.name);
@@ -283,8 +467,8 @@ function normalizeProductImages(input = {}, current = {}) {
     : Array.isArray(current.images)
       ? current.images
       : [];
-  const mainImage = normalizeText(input.image || input.image_url || current.image || current.image_url || rawImages[0] || "");
-  const extraImages = rawImages.map((value) => normalizeText(value)).filter(Boolean);
+  const mainImage = sanitizeSafeUrl(input.image || input.image_url || current.image || current.image_url || rawImages[0] || "", { allowDataImage: true });
+  const extraImages = rawImages.map((value) => sanitizeSafeUrl(value, { allowDataImage: true })).filter(Boolean);
   const mergedImages = [mainImage, ...extraImages].filter(Boolean);
   return {
     image: mainImage,
@@ -296,18 +480,19 @@ function normalizeProductImages(input = {}, current = {}) {
 function normalizeProduct(input = {}, current = {}) {
   const createdAt = current.createdAt || input.createdAt || nowIso();
   const normalizedImages = normalizeProductImages(input, current);
+  const category = sanitizePlainText(input.category, 120);
   return {
-    id: normalizeText(input.id) || current.id || crypto.randomUUID(),
-    name: normalizeText(input.name),
-    category: normalizeText(input.category),
-    description: normalizeText(input.description),
+    id: sanitizeIdentifier(input.id, current.id || crypto.randomUUID()),
+    name: sanitizePlainText(input.name, 180),
+    category,
+    description: sanitizePlainText(input.description, 2000),
     price: Math.max(0, normalizeNumber(input.price, 0)),
     stock: normalizeStock(input.stock, current.stock ?? 0),
     image: normalizedImages.image,
     image_url: normalizedImages.image_url,
     images: normalizedImages.images,
-    sizes: normalizeText(input.sizes) || "P, M, G, GG",
-    badge: normalizeText(input.badge) || normalizeText(input.category) || "BigSmoke",
+    sizes: sanitizePlainText(input.sizes, 120) || "P, M, G, GG",
+    badge: sanitizePlainText(input.badge, 80) || category || "BigSmoke",
     active: normalizeBoolean(input.active, current.active !== false),
     featured: normalizeBoolean(input.featured, Boolean(current.featured)),
     colors: normalizeColors(input.colors, current.colors),
@@ -320,44 +505,48 @@ function normalizeOrder(input = {}, current = {}) {
   const status = normalizeOrderStatus(input.status || current.status, current.status || "pending");
   const orderNumber = input.orderNumber || current.orderNumber || null;
   return {
-    id: normalizeText(input.id) || current.id || `order_${crypto.randomUUID()}`,
-    orderNumber,
-    orderNumberFormatted: input.orderNumberFormatted || current.orderNumberFormatted || formatOrderNumberValue(orderNumber),
-    orderAccessCode: normalizeText(input.orderAccessCode || current.orderAccessCode) || null,
+    id: sanitizeIdentifier(input.id, current.id || `order_${crypto.randomUUID()}`),
+    orderNumber: sanitizePlainText(orderNumber, 40),
+    orderNumberFormatted: sanitizePlainText(input.orderNumberFormatted || current.orderNumberFormatted || formatOrderNumberValue(orderNumber), 40),
+    orderAccessCode: sanitizePlainText(input.orderAccessCode || current.orderAccessCode, 40) || null,
     hiddenInAdmin: normalizeBoolean(input.hiddenInAdmin, current.hiddenInAdmin || false),
-    stripeSessionId: normalizeText(input.stripeSessionId) || current.stripeSessionId || "",
-    paymentIntentId: normalizeText(input.paymentIntentId) || current.paymentIntentId || "",
-    stripeEventId: normalizeText(input.stripeEventId) || current.stripeEventId || "",
+    stripeSessionId: sanitizePlainText(input.stripeSessionId, 180) || current.stripeSessionId || "",
+    paymentIntentId: sanitizePlainText(input.paymentIntentId, 180) || current.paymentIntentId || "",
+    stripeEventId: sanitizePlainText(input.stripeEventId, 180) || current.stripeEventId || "",
     status,
-    currency: normalizeText(input.currency) || current.currency || "brl",
+    currency: sanitizePlainText(input.currency, 10) || current.currency || "brl",
     amountSubtotal: normalizeNumber(input.amountSubtotal, current.amountSubtotal || 0),
     shippingAmount: normalizeNumber(input.shippingAmount, current.shippingAmount || 0),
     amountTotal: normalizeNumber(input.amountTotal, current.amountTotal || 0),
     paymentConfirmed: normalizeBoolean(input.paymentConfirmed, current.paymentConfirmed || false),
     inventoryDebitedAt: normalizeText(input.inventoryDebitedAt) || current.inventoryDebitedAt || "",
     customer: {
-      name: normalizeText(input.customer?.name || current.customer?.name),
-      email: normalizeText(input.customer?.email || current.customer?.email),
-      phone: normalizeText(input.customer?.phone || current.customer?.phone)
+      name: sanitizePlainText(input.customer?.name || current.customer?.name, 180),
+      email: sanitizePlainText(input.customer?.email || current.customer?.email, 180).toLowerCase(),
+      phone: sanitizePlainText(input.customer?.phone || current.customer?.phone, 40)
     },
     address: {
-      cep: normalizeText(input.address?.cep || current.address?.cep),
-      street: normalizeText(input.address?.street || current.address?.street),
-      number: normalizeText(input.address?.number || current.address?.number),
-      neighborhood: normalizeText(input.address?.neighborhood || current.address?.neighborhood),
-      city: normalizeText(input.address?.city || current.address?.city),
-      state: normalizeText(input.address?.state || current.address?.state),
-      complement: normalizeText(input.address?.complement || current.address?.complement)
+      cep: sanitizePlainText(input.address?.cep || current.address?.cep, 20),
+      street: sanitizePlainText(input.address?.street || current.address?.street, 180),
+      number: sanitizePlainText(input.address?.number || current.address?.number, 40),
+      neighborhood: sanitizePlainText(input.address?.neighborhood || current.address?.neighborhood, 120),
+      city: sanitizePlainText(input.address?.city || current.address?.city, 120),
+      state: sanitizePlainText(input.address?.state || current.address?.state, 40),
+      complement: sanitizePlainText(input.address?.complement || current.address?.complement, 180)
     },
-    deliveryMethod: normalizeText(input.deliveryMethod || current.deliveryMethod),
-    shippingLabel: normalizeText(input.shippingLabel || current.shippingLabel),
-    trackingCode: normalizeText(input.trackingCode || input.tracking_code || current.trackingCode),
-    trackingUrl: normalizeText(input.trackingUrl || input.tracking_url || current.trackingUrl),
-    items: Array.isArray(input.items) ? input.items : Array.isArray(current.items) ? current.items : [],
+    deliveryMethod: sanitizePlainText(input.deliveryMethod || current.deliveryMethod, 80),
+    shippingLabel: sanitizePlainText(input.shippingLabel || current.shippingLabel, 120),
+    discountAmount: normalizeNumber(input.discountAmount, current.discountAmount || 0),
+    productDiscountAmount: normalizeNumber(input.productDiscountAmount, current.productDiscountAmount || 0),
+    shippingDiscountAmount: normalizeNumber(input.shippingDiscountAmount, current.shippingDiscountAmount || 0),
+    coupon: input.coupon ? normalizeCoupon(input.coupon) : current.coupon || null,
+    trackingCode: sanitizePlainText(input.trackingCode || input.tracking_code || current.trackingCode, 120),
+    trackingUrl: sanitizeSafeUrl(input.trackingUrl || input.tracking_url || current.trackingUrl),
+    items: sanitizeOrderItems(Array.isArray(input.items) ? input.items : Array.isArray(current.items) ? current.items : []),
     events: Array.isArray(input.events) ? input.events : Array.isArray(current.events) ? current.events : [],
-    sessionUrl: normalizeText(input.sessionUrl || current.sessionUrl),
-    paidAt: input.paidAt || current.paidAt || "",
-    canceledAt: input.canceledAt || current.canceledAt || "",
+    sessionUrl: sanitizeSafeUrl(input.sessionUrl || current.sessionUrl),
+    paidAt: sanitizePlainText(input.paidAt || current.paidAt, 40),
+    canceledAt: sanitizePlainText(input.canceledAt || current.canceledAt, 40),
     createdAt: current.createdAt || input.createdAt || nowIso(),
     updatedAt: nowIso()
   };
@@ -537,6 +726,12 @@ async function ensureDataFiles() {
   await fs.mkdir(dataDir, { recursive: true });
   await fs.mkdir(uploadsDir, { recursive: true });
 
+  try {
+    await fs.access(couponsFile);
+  } catch {
+    await fs.writeFile(couponsFile, JSON.stringify(defaultCoupons, null, 2), "utf8");
+  }
+
   if (useSupabase) return;
 
   try {
@@ -581,7 +776,78 @@ async function writeJsonFile(file, value) {
   await fs.writeFile(file, JSON.stringify(value, null, 2), "utf8");
 }
 
+async function readCoupons({ activeOnly = false } = {}) {
+  const coupons = await readJsonFile(couponsFile, defaultCoupons);
+  const normalized = coupons.map((coupon) => normalizeCoupon(coupon)).filter((coupon) => coupon.code);
+  return activeOnly ? normalized.filter((coupon) => coupon.active) : normalized;
+}
+
+async function writeCoupons(coupons) {
+  const normalized = coupons.map((coupon) => normalizeCoupon(coupon)).filter((coupon) => coupon.code);
+  await writeJsonFile(couponsFile, normalized);
+  return normalized;
+}
+
+async function findActiveCouponByCode(code) {
+  const normalizedCode = sanitizePlainText(code, 40).toUpperCase().replace(/[^A-Z0-9_-]/g, "");
+  if (!normalizedCode) return null;
+  const coupons = await readCoupons({ activeOnly: true });
+  return coupons.find((coupon) => coupon.code === normalizedCode) || null;
+}
+
+function toDateOrUndefined(value) {
+  if (!value) return undefined;
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? undefined : date;
+}
+
+function productToPrismaData(product) {
+  return {
+    id: product.id,
+    name: product.name || "",
+    category: product.category || "",
+    description: product.description || "",
+    price: normalizeNumber(product.price, 0),
+    stock: normalizeStock(product.stock, 0),
+    image: product.image || product.image_url || "",
+    sizes: product.sizes || "P, M, G, GG",
+    badge: product.badge || "",
+    active: product.active !== false,
+    featured: Boolean(product.featured),
+    colors: Array.isArray(product.colors) ? product.colors : [],
+    data: product,
+    createdAt: toDateOrUndefined(product.createdAt),
+    updatedAt: toDateOrUndefined(product.updatedAt)
+  };
+}
+
+function orderToPrismaData(order) {
+  return {
+    id: order.id,
+    orderNumber: order.orderNumber ? String(order.orderNumber) : null,
+    status: normalizeOrderStatus(order.status, "pending"),
+    customerName: order.customer?.name || "",
+    customerEmail: order.customer?.email || "",
+    customerPhone: order.customer?.phone || "",
+    totalAmount: normalizeNumber(order.amountTotal, 0),
+    shippingAmount: normalizeNumber(order.shippingAmount, 0),
+    deliveryMethod: order.deliveryMethod || "retirada",
+    stripeSessionId: order.stripeSessionId || null,
+    paymentIntentId: order.paymentIntentId || null,
+    data: order,
+    createdAt: toDateOrUndefined(order.createdAt),
+    updatedAt: toDateOrUndefined(order.updatedAt)
+  };
+}
+
 async function readProducts() {
+  if (usePrisma) {
+    const rows = await prisma.product.findMany({ orderBy: { updatedAt: "desc" } });
+    return rows
+      .map((row) => row.data)
+      .filter((product) => product && !REMOVED_PRODUCT_IDS.has(String(product.id || "").trim()));
+  }
+
   if (useSupabase) {
     const { data, error } = await supabase.from(PRODUCT_TABLE).select("data").order("updated_at", { ascending: false });
     if (error) throw new Error(error.message);
@@ -595,6 +861,24 @@ async function readProducts() {
 }
 
 async function writeProducts(products) {
+  if (usePrisma) {
+    await prisma.$transaction(async (tx) => {
+      const incomingIds = products.map((product) => product.id).filter(Boolean);
+      await tx.product.deleteMany({
+        where: incomingIds.length ? { id: { notIn: incomingIds } } : {}
+      });
+      for (const product of products) {
+        const payload = productToPrismaData(product);
+        await tx.product.upsert({
+          where: { id: product.id },
+          create: payload,
+          update: payload
+        });
+      }
+    });
+    return;
+  }
+
   if (useSupabase) {
     const payload = products.map((product) => ({
       id: product.id,
@@ -612,12 +896,28 @@ async function writeProducts(products) {
 }
 
 async function insertProduct(product) {
+  if (usePrisma) {
+    const payload = productToPrismaData(product);
+    await prisma.product.create({ data: payload });
+    return product;
+  }
+
   const products = await readProducts();
   products.unshift(product);
   await writeProducts(products);
 }
 
 async function updateProductById(id, nextProduct) {
+  if (usePrisma) {
+    const exists = await prisma.product.findUnique({ where: { id } });
+    if (!exists) return null;
+    await prisma.product.update({
+      where: { id },
+      data: productToPrismaData(nextProduct)
+    });
+    return nextProduct;
+  }
+
   const products = await readProducts();
   const index = products.findIndex((product) => product.id === id);
   if (index === -1) return null;
@@ -627,6 +927,16 @@ async function updateProductById(id, nextProduct) {
 }
 
 async function deleteProductById(id) {
+  if (usePrisma) {
+    try {
+      await prisma.product.delete({ where: { id } });
+      return true;
+    } catch (error) {
+      if (error.code === "P2025") return false;
+      throw error;
+    }
+  }
+
   const products = await readProducts();
   const nextProducts = products.filter((product) => product.id !== id);
   if (nextProducts.length === products.length) return false;
@@ -635,6 +945,11 @@ async function deleteProductById(id) {
 }
 
 async function readOrders() {
+  if (usePrisma) {
+    const rows = await prisma.order.findMany({ orderBy: { updatedAt: "desc" } });
+    return rows.map((row) => row.data).filter(Boolean);
+  }
+
   if (useSupabase) {
     const { data, error } = await supabase.from(ORDER_TABLE).select("data").order("updated_at", { ascending: false });
     if (error) throw new Error(error.message);
@@ -645,6 +960,24 @@ async function readOrders() {
 }
 
 async function writeOrders(orders) {
+  if (usePrisma) {
+    await prisma.$transaction(async (tx) => {
+      const incomingIds = orders.map((order) => order.id).filter(Boolean);
+      await tx.order.deleteMany({
+        where: incomingIds.length ? { id: { notIn: incomingIds } } : {}
+      });
+      for (const order of orders) {
+        const payload = orderToPrismaData(order);
+        await tx.order.upsert({
+          where: { id: order.id },
+          create: payload,
+          update: payload
+        });
+      }
+    });
+    return;
+  }
+
   if (useSupabase) {
     const payload = orders.map((order) => ({
       id: order.id,
@@ -665,6 +998,16 @@ async function writeOrders(orders) {
 }
 
 async function upsertOrder(order) {
+  if (usePrisma) {
+    const payload = orderToPrismaData(order);
+    await prisma.order.upsert({
+      where: { id: order.id },
+      create: payload,
+      update: payload
+    });
+    return order;
+  }
+
   const orders = await readOrders();
   const index = orders.findIndex((item) => item.id === order.id);
   if (index === -1) {
@@ -839,7 +1182,7 @@ function authMiddleware(req, res, next) {
     req.admin = jwt.verify(token, JWT_SECRET);
     return next();
   } catch {
-    return res.status(401).json({ error: "SessÃ£o expirada ou invÃ¡lida." });
+    return res.status(401).json({ error: "Sessão expirada ou inválida." });
   }
 }
 
@@ -849,7 +1192,7 @@ function verifyPassword(plainPassword) {
   }
   const plainEnvPassword = process.env.ADMIN_PASSWORD || "";
   if (!plainEnvPassword) {
-    // Em produÃ§Ã£o, nenhuma senha configurada = login bloqueado por seguranÃ§a
+    // Em produção, nenhuma senha configurada = login bloqueado por segurança
     return Promise.resolve(false);
   }
   return Promise.resolve(plainPassword === plainEnvPassword);
@@ -879,7 +1222,7 @@ function estimateShipping({ deliveryMethod, address = {}, store = DEFAULT_STORE,
   const normalizedTargetCity = normalizeCityName(address.city || cepData?.localidade || "");
 
   if (targetState === "PB" && FREE_SHIPPING_CITIES.has(normalizedTargetCity)) {
-    return { price: 0, label: `Frete grÃ¡tis para ${cepData?.localidade || address.city || "a regiÃ£o"}` };
+    return { price: 0, label: `Frete grátis para ${cepData?.localidade || address.city || "a região"}` };
   }
 
   if (!targetState) {
@@ -899,7 +1242,7 @@ function estimateShipping({ deliveryMethod, address = {}, store = DEFAULT_STORE,
   }
 
   if (targetCity === storeCity && targetState === storeState) {
-    return { price: 16, label: `Envio rÃ¡pido em ${cepData?.localidade || address.city || store.city}` };
+    return { price: 16, label: `Envio rápido em ${cepData?.localidade || address.city || store.city}` };
   }
   if (targetState === storeState) {
     return { price: 24, label: "Envio no mesmo estado" };
@@ -923,7 +1266,7 @@ function createMockSession(payload) {
 
 async function createImageUrl(file) {
   if (!file) {
-    throw new Error("Arquivo nÃ£o enviado.");
+    throw new Error("Arquivo não enviado.");
   }
 
   const originalBaseName = path.parse(file.originalname || "image").name || "image";
@@ -1199,7 +1542,7 @@ async function notifyOrderCreated(order) {
     await notifyTwilioCustomerConfirmation(order);
     return await notifyWhatsAppWebhook(order);
   } catch (error) {
-    console.warn("Falha ao enviar notificaÃ§Ã£o do pedido:", error.message);
+    console.warn("Falha ao enviar notificação do pedido:", error.message);
     return false;
   }
 }
@@ -1403,6 +1746,15 @@ function paginate(items, page = 1, limit = 10) {
 }
 
 async function getNextOrderNumber() {
+  if (usePrisma) {
+    const counter = await prisma.orderCounter.upsert({
+      where: { id: "orders" },
+      create: { id: "orders", next: 2 },
+      update: { next: { increment: 1 } }
+    });
+    return Math.max(1, Math.floor(Number(counter.next) || 2) - 1);
+  }
+
   let counter = { next: 1 };
   try {
     counter = JSON.parse(await fs.readFile(orderCounterFile, "utf8"));
@@ -1534,13 +1886,13 @@ async function buildOrderPayloadFromCheckout({ sessionId, items, customer, addre
 
 function validateProductPayload(payload) {
   if (!payload.name || !payload.category) {
-    return "Nome e categoria sÃ£o obrigatÃ³rios.";
+    return "Nome e categoria são obrigatórios.";
   }
   if (!Number.isFinite(payload.price) || payload.price < 0) {
-    return "PreÃ§o invÃ¡lido.";
+    return "Preço inválido.";
   }
   if (!Number.isInteger(payload.stock) || payload.stock < -1) {
-    return "Estoque invÃ¡lido.";
+    return "Estoque inválido.";
   }
   return "";
 }
@@ -1572,7 +1924,7 @@ async function applyStockDelta(items, direction) {
   for (const [id, quantity] of quantityMap.entries()) {
     const product = products.find((entry) => entry.id === id);
     if (!product) {
-      throw new Error(`Produto invÃ¡lido: ${id}`);
+      throw new Error(`Produto inválido: ${id}`);
     }
 
     const currentStock = normalizeStock(product.stock, 0);
@@ -1615,6 +1967,8 @@ function buildMetadataForOrder(order) {
     shipping_label: order.shippingLabel || "",
     shipping_amount: String(order.shippingAmount || 0),
     amount_total: String(order.amountTotal || 0),
+    coupon_code: order.coupon?.code || "",
+    discount_amount: String(order.discountAmount || 0),
     address_city: order.address?.city || "",
     address_state: order.address?.state || "",
     address_cep: order.address?.cep || "",
@@ -1670,10 +2024,10 @@ app.use(cors(createCorsOptions()));
 
 app.post("/api/stripe/webhook", express.raw({ type: "application/json" }), async (req, res) => {
   if (!stripe) {
-    return res.status(400).json({ error: "Stripe nÃ£o configurado." });
+    return res.status(400).json({ error: "Stripe não configurado." });
   }
   if (!WEBHOOK_SECRET) {
-    return res.status(400).json({ error: "STRIPE_WEBHOOK_SECRET nÃ£o configurado." });
+    return res.status(400).json({ error: "STRIPE_WEBHOOK_SECRET não configurado." });
   }
 
   try {
@@ -1829,7 +2183,8 @@ app.get("/api/config", (_req, res) => {
     orderNotificationConfigured: canSendTwilioWhatsApp() || Boolean(WHATSAPP_WEBHOOK_URL),
     adminConfigured: Boolean(process.env.ADMIN_EMAIL || process.env.ADMIN_PASSWORD || process.env.ADMIN_PASSWORD_HASH),
     supabaseConfigured: useSupabase,
-    dataMode: useSupabase ? "supabase" : "local"
+    prismaConfigured: usePrisma,
+    dataMode: usePrisma ? "prisma" : useSupabase ? "supabase" : "local"
   });
 });
 
@@ -1842,10 +2197,10 @@ app.post("/api/auth/login", loginLimiter, async (req, res) => {
     return res.status(400).json({ error: "Informe e-mail e senha." });
   }
   if (email !== adminEmail) {
-    return res.status(401).json({ error: "Credenciais invÃ¡lidas." });
+    return res.status(401).json({ error: "Credenciais inválidas." });
   }
   if (!(await verifyPassword(password))) {
-    return res.status(401).json({ error: "Credenciais invÃ¡lidas." });
+    return res.status(401).json({ error: "Credenciais inválidas." });
   }
 
   const token = jwt.sign({ email: adminEmail, role: "admin" }, JWT_SECRET, { expiresIn: "12h" });
@@ -1864,7 +2219,7 @@ app.get("/api/products", async (_req, res) => {
     const products = await readProducts();
     res.json(products.filter((product) => product.active !== false).map(toPublicProduct));
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    sendServerError(res);
   }
 });
 
@@ -1874,11 +2229,20 @@ app.get("/api/products/:id", async (req, res) => {
     const products = await readProducts();
     const product = products.find((item) => String(item.id) === String(id));
     if (!product) {
-      return res.status(404).json({ error: "Produto nÃ£o encontrado." });
+      return res.status(404).json({ error: "Produto não encontrado." });
     }
     res.json(toPublicProduct(product));
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    sendServerError(res);
+  }
+});
+
+app.get("/api/coupons", async (_req, res) => {
+  try {
+    const coupons = await readCoupons({ activeOnly: true });
+    res.json(coupons);
+  } catch (error) {
+    sendServerError(res);
   }
 });
 
@@ -1897,7 +2261,7 @@ app.get("/api/orders", async (req, res) => {
 
     res.json(orders);
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    sendServerError(res);
   }
 });
 
@@ -1905,7 +2269,7 @@ app.get("/api/orders/customer/:email", async (req, res) => {
   try {
     const email = normalizeText(req.params.email).toLowerCase();
     if (!email || !email.includes("@")) {
-      return res.status(400).json({ error: "E-mail invÃ¡lido." });
+      return res.status(400).json({ error: "E-mail inválido." });
     }
 
     const orders = (await readOrders())
@@ -1921,7 +2285,7 @@ app.get("/api/orders/customer/:email", async (req, res) => {
 
     res.json(orders);
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    sendServerError(res);
   }
 });
 
@@ -1937,7 +2301,7 @@ app.get("/api/orders/public/:sessionId", async (req, res) => {
       || await findOrderBySessionId(sessionId)
       || (numericSession ? await findOrderByNumber(numericSession) : null);
     if (!order) {
-      return res.status(404).json({ error: "Pedido nÃ£o encontrado." });
+      return res.status(404).json({ error: "Pedido não encontrado." });
     }
     order = await syncOrderFromStripeSession(order);
     const responseOrder = decorateOrderForResponse(order, makeBaseUrl(req));
@@ -1966,7 +2330,7 @@ app.get("/api/orders/public/:sessionId", async (req, res) => {
       createdAt: responseOrder.createdAt
     });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    sendServerError(res);
   }
 });
 
@@ -1984,7 +2348,7 @@ app.get("/api/admin/products", authMiddleware, async (req, res) => {
     };
     res.json(page);
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    sendServerError(res);
   }
 });
 
@@ -1995,7 +2359,7 @@ app.get("/api/admin/orders", authMiddleware, async (req, res) => {
     page.items = page.items.map((order) => decorateOrderForResponse(order, makeBaseUrl(req)));
     res.json(page);
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    sendServerError(res);
   }
 });
 
@@ -2046,7 +2410,7 @@ app.post("/api/admin/orders", authMiddleware, async (req, res) => {
     await upsertOrder(order);
     res.status(201).json(decorateOrderForResponse(order, makeBaseUrl(req)));
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    sendServerError(res);
   }
 });
 
@@ -2084,7 +2448,7 @@ app.post("/api/admin/orders/manual", authMiddleware, async (req, res) => {
     await upsertOrder(order);
     res.status(201).json(decorateOrderForResponse(order, makeBaseUrl(req)));
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    sendServerError(res);
   }
 });
 
@@ -2092,11 +2456,11 @@ app.get("/api/admin/orders/:id", authMiddleware, async (req, res) => {
   try {
     const order = await findOrderById(req.params.id);
     if (!order) {
-      return res.status(404).json({ error: "Pedido nÃ£o encontrado." });
+      return res.status(404).json({ error: "Pedido não encontrado." });
     }
     res.json(decorateOrderForResponse(order, makeBaseUrl(req)));
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    sendServerError(res);
   }
 });
 
@@ -2106,7 +2470,70 @@ app.get("/api/admin/analytics", authMiddleware, async (_req, res) => {
     const orders = await readOrders();
     res.json(buildAnalytics(products, orders));
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    sendServerError(res);
+  }
+});
+
+app.get("/api/admin/coupons", authMiddleware, async (_req, res) => {
+  try {
+    res.json(await readCoupons());
+  } catch (error) {
+    sendServerError(res);
+  }
+});
+
+app.post("/api/admin/coupons", authMiddleware, async (req, res) => {
+  try {
+    const coupon = normalizeCoupon(req.body || {});
+    if (!coupon.code || !coupon.value) {
+      return res.status(400).json({ error: "Código e valor do cupom são obrigatórios." });
+    }
+    const coupons = await readCoupons();
+    if (coupons.some((item) => item.code === coupon.code)) {
+      return res.status(409).json({ error: "Já existe um cupom com esse código." });
+    }
+    const next = await writeCoupons([coupon, ...coupons]);
+    res.status(201).json(next.find((item) => item.id === coupon.id));
+  } catch (error) {
+    sendServerError(res);
+  }
+});
+
+app.put("/api/admin/coupons/:id", authMiddleware, async (req, res) => {
+  try {
+    const id = sanitizeIdentifier(req.params.id);
+    const coupons = await readCoupons();
+    const index = coupons.findIndex((coupon) => coupon.id === id);
+    if (index === -1) {
+      return res.status(404).json({ error: "Cupom não encontrado." });
+    }
+    const coupon = normalizeCoupon({ ...coupons[index], ...req.body, id });
+    if (!coupon.code || !coupon.value) {
+      return res.status(400).json({ error: "Código e valor do cupom são obrigatórios." });
+    }
+    if (coupons.some((item) => item.id !== id && item.code === coupon.code)) {
+      return res.status(409).json({ error: "Já existe um cupom com esse código." });
+    }
+    coupons[index] = coupon;
+    await writeCoupons(coupons);
+    res.json(coupon);
+  } catch (error) {
+    sendServerError(res);
+  }
+});
+
+app.delete("/api/admin/coupons/:id", authMiddleware, async (req, res) => {
+  try {
+    const id = sanitizeIdentifier(req.params.id);
+    const coupons = await readCoupons();
+    const next = coupons.filter((coupon) => coupon.id !== id);
+    if (next.length === coupons.length) {
+      return res.status(404).json({ error: "Cupom não encontrado." });
+    }
+    await writeCoupons(next);
+    res.status(204).end();
+  } catch (error) {
+    sendServerError(res);
   }
 });
 
@@ -2120,13 +2547,13 @@ app.post("/api/admin/products", authMiddleware, async (req, res) => {
 
     const products = await readProducts();
     if (products.some((product) => product.id === incoming.id)) {
-      return res.status(409).json({ error: "JÃ¡ existe um produto com esse id." });
+      return res.status(409).json({ error: "Já existe um produto com esse id." });
     }
 
     await insertProduct(incoming);
     res.status(201).json(incoming);
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    sendServerError(res);
   }
 });
 
@@ -2136,7 +2563,7 @@ app.put("/api/admin/products/:id", authMiddleware, async (req, res) => {
     const products = await readProducts();
     const current = products.find((product) => product.id === id);
     if (!current) {
-      return res.status(404).json({ error: "Produto nÃ£o encontrado." });
+      return res.status(404).json({ error: "Produto não encontrado." });
     }
 
     const updated = normalizeProduct({ ...current, ...req.body, id }, current);
@@ -2148,7 +2575,7 @@ app.put("/api/admin/products/:id", authMiddleware, async (req, res) => {
     await updateProductById(id, updated);
     res.json(updated);
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    sendServerError(res);
   }
 });
 
@@ -2158,11 +2585,11 @@ app.put("/api/admin/products/:id/stock", authMiddleware, async (req, res) => {
     const nextStock = normalizeStock(req.body?.stock, 0);
     const updated = await updateProductStockById(id, nextStock);
     if (!updated) {
-      return res.status(404).json({ error: "Produto nÃ£o encontrado." });
+      return res.status(404).json({ error: "Produto não encontrado." });
     }
     res.json(updated);
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    sendServerError(res);
   }
 });
 
@@ -2170,11 +2597,11 @@ app.delete("/api/admin/products/:id", authMiddleware, async (req, res) => {
   try {
     const deleted = await deleteProductById(normalizeText(req.params.id));
     if (!deleted) {
-      return res.status(404).json({ error: "Produto nÃ£o encontrado." });
+      return res.status(404).json({ error: "Produto não encontrado." });
     }
     res.status(204).end();
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    sendServerError(res);
   }
 });
 
@@ -2183,7 +2610,7 @@ async function updateOrderStatusHandler(req, res) {
     const id = normalizeText(req.params.id);
     const current = await findOrderById(id);
     if (!current) {
-      return res.status(404).json({ error: "Pedido nÃ£o encontrado." });
+      return res.status(404).json({ error: "Pedido não encontrado." });
     }
     const nextStatus = normalizeOrderStatus(req.body?.status || current.status, current.status);
     const trackingCode = normalizeText(req.body?.trackingCode || req.body?.tracking_code || current.trackingCode);
@@ -2240,7 +2667,7 @@ async function updateOrderStatusHandler(req, res) {
     await updateOrderById(id, next);
     res.json(next);
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    sendServerError(res);
   }
 }
 
@@ -2251,11 +2678,11 @@ app.post("/api/admin/orders/:id/reset", authMiddleware, async (req, res) => {
   try {
     const next = await resetOrderById(normalizeText(req.params.id));
     if (!next) {
-      return res.status(404).json({ error: "Pedido nÃ£o encontrado." });
+      return res.status(404).json({ error: "Pedido não encontrado." });
     }
     res.json(next);
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    sendServerError(res);
   }
 });
 
@@ -2263,11 +2690,11 @@ app.delete("/api/admin/orders/:id", authMiddleware, async (req, res) => {
   try {
     const deleted = await deleteOrderById(normalizeText(req.params.id));
     if (!deleted) {
-      return res.status(404).json({ error: "Pedido nÃ£o encontrado." });
+      return res.status(404).json({ error: "Pedido não encontrado." });
     }
     res.status(204).end();
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    sendServerError(res);
   }
 });
 
@@ -2284,7 +2711,7 @@ app.post("/api/admin/uploads", authMiddleware, upload.fields([{ name: "image", m
 app.post("/api/checkout/session", checkoutLimiter, async (req, res) => {
   if (!stripe && !MOCK_STRIPE) {
     return res.status(400).json({
-      error: "Stripe nÃ£o configurado. Defina STRIPE_SECRET_KEY ou STRIPE_MOCK."
+      error: "Stripe não configurado. Defina STRIPE_SECRET_KEY ou STRIPE_MOCK."
     });
   }
 
@@ -2300,7 +2727,7 @@ app.post("/api/checkout/session", checkoutLimiter, async (req, res) => {
     const customer = req.body?.customer || {};
     const address = req.body?.address || {};
 
-    // ValidaÃ§Ãµes obrigatÃ³rias do cliente
+    // Validações obrigatórias do cliente
     const customerEmail = normalizeText(customer.email).toLowerCase();
     const customerName = normalizeText(customer.name) || "Cliente Stripe";
     const customerPhone = normalizeText(customer.phone);
@@ -2308,18 +2735,18 @@ app.post("/api/checkout/session", checkoutLimiter, async (req, res) => {
       return res.status(400).json({ error: "E-mail do cliente invalido." });
     }
 
-    // ValidaÃ§Ã£o do endereÃ§o para entrega nacional
+    // Validação do endereço para entrega nacional
     const deliveryMethodRaw = normalizeText(req.body?.deliveryMethod) || "stripe_checkout";
     if (deliveryMethodRaw === "national" || deliveryMethodRaw === "entrega") {
       const cep = normalizeText(address.cep).replace(/\D/g, "");
       if (!cep || cep.length !== 8) {
-        return res.status(400).json({ error: "CEP invÃ¡lido. Informe 8 dÃ­gitos." });
+        return res.status(400).json({ error: "CEP inválido. Informe 8 dígitos." });
       }
       if (!normalizeText(address.street)) {
-        return res.status(400).json({ error: "EndereÃ§o (rua) Ã© obrigatÃ³rio para entrega." });
+        return res.status(400).json({ error: "Endereço (rua) é obrigatório para entrega." });
       }
       if (!normalizeText(address.city)) {
-        return res.status(400).json({ error: "Cidade Ã© obrigatÃ³ria para entrega." });
+        return res.status(400).json({ error: "Cidade é obrigatória para entrega." });
       }
     }
     const deliveryMethod = deliveryMethodRaw;
@@ -2330,7 +2757,7 @@ app.post("/api/checkout/session", checkoutLimiter, async (req, res) => {
       const resolvedId = resolveProductId(productMap, item.id);
       const product = productMap.get(resolvedId);
       if (!product || product.active === false) {
-        throw new Error(`Produto invÃ¡lido: ${normalizeText(item.id)}`);
+        throw new Error(`Produto inválido: ${normalizeText(item.id)}`);
       }
       const size = normalizeText(item.size || item.tamanho);
 
@@ -2363,7 +2790,18 @@ app.post("/api/checkout/session", checkoutLimiter, async (req, res) => {
     }
 
     const shipping = estimateShipping({ deliveryMethod, address, store: DEFAULT_STORE, cepData });
-    const total = subtotal + shipping.price;
+    const coupon = await findActiveCouponByCode(req.body?.couponCode);
+    const couponDiscount = coupon ? getCouponDiscount(coupon, subtotal, shipping.price) : null;
+    const productDiscount = couponDiscount?.productDiscount || 0;
+    const shippingDiscount = couponDiscount?.shippingDiscount || 0;
+    const discountedShipping = Math.max(0, shipping.price - shippingDiscount);
+    const total = Math.max(0, subtotal - productDiscount + discountedShipping);
+    const shippingForOrder = {
+      ...shipping,
+      price: discountedShipping,
+      originalPrice: shipping.price,
+      discount: shippingDiscount
+    };
 
     const order = await buildOrderPayloadFromCheckout({
       sessionId: "",
@@ -2375,18 +2813,24 @@ app.post("/api/checkout/session", checkoutLimiter, async (req, res) => {
       },
       address,
       deliveryMethod,
-      shipping,
+      shipping: shippingForOrder,
       subtotal,
       total,
       sessionUrl: ""
     });
+    if (couponDiscount) {
+      order.coupon = couponDiscount.coupon;
+      order.discountAmount = couponDiscount.totalDiscount;
+      order.productDiscountAmount = productDiscount;
+      order.shippingDiscountAmount = shippingDiscount;
+    }
 
     const lineItems = normalizedItems.map((item) => ({
       price_data: {
         currency: "brl",
         product_data: {
           name: item.size ? `${item.name} - ${item.size}` : item.name,
-          description: item.size ? `${item.category} â€¢ Tamanho ${item.size}` : item.category,
+          description: item.size ? `${item.category} • Tamanho ${item.size}` : item.category,
           images: (() => {
             const imageUrl = toAbsoluteHttpUrl(item.image, baseUrl);
             return imageUrl ? [imageUrl] : [];
@@ -2396,18 +2840,23 @@ app.post("/api/checkout/session", checkoutLimiter, async (req, res) => {
       },
       quantity: item.quantity
     }));
+    lineItems.splice(0, lineItems.length, ...expandDiscountedLineItems(normalizedItems, productDiscount, baseUrl));
 
-    if (shipping.price > 0) {
+    if (discountedShipping > 0) {
       lineItems.push({
         price_data: {
           currency: "brl",
           product_data: {
             name: shipping.label
           },
-          unit_amount: Math.round(shipping.price * 100)
+          unit_amount: Math.round(discountedShipping * 100)
         },
         quantity: 1
       });
+    }
+
+    if (!lineItems.length || total < 0.5) {
+      return res.status(400).json({ error: "O total do pedido precisa ser maior que R$ 0,50 para pagamento via Stripe." });
     }
 
     let session;
@@ -2442,8 +2891,12 @@ app.post("/api/checkout/session", checkoutLimiter, async (req, res) => {
         sessionUrl: session.url,
         items: normalizedItems,
         amountSubtotal: subtotal,
-        shippingAmount: shipping.price,
+        shippingAmount: discountedShipping,
         amountTotal: total,
+        coupon: couponDiscount?.coupon || null,
+        discountAmount: couponDiscount?.totalDiscount || 0,
+        productDiscountAmount: productDiscount,
+        shippingDiscountAmount: shippingDiscount,
         status: "pending"
       },
       order
@@ -2456,7 +2909,14 @@ app.post("/api/checkout/session", checkoutLimiter, async (req, res) => {
       id: session.id,
       orderId: nextOrder.id,
       orderNumber: nextOrder.orderNumber || null,
-      orderNumberFormatted: nextOrder.orderNumberFormatted || null
+      orderNumberFormatted: nextOrder.orderNumberFormatted || null,
+      coupon: nextOrder.coupon || null,
+      discountAmount: nextOrder.discountAmount || 0,
+      productDiscountAmount: nextOrder.productDiscountAmount || 0,
+      shippingDiscountAmount: nextOrder.shippingDiscountAmount || 0,
+      amountSubtotal: nextOrder.amountSubtotal,
+      shippingAmount: nextOrder.shippingAmount,
+      amountTotal: nextOrder.amountTotal
     });
   } catch (error) {
     res.status(400).json({ error: error.message });
@@ -2467,7 +2927,8 @@ app.get("/healthz", (_req, res) => {
   res.json({
     ok: true,
     timestamp: nowIso(),
-    mode: useSupabase ? "supabase" : "local",
+    mode: usePrisma ? "prisma" : useSupabase ? "supabase" : "local",
+    prisma: usePrisma,
     supabase: useSupabase,
     stripe: Boolean(stripe),
     paymentMetricsEnabled: STRIPE_LIVE_MODE,
@@ -2476,13 +2937,13 @@ app.get("/healthz", (_req, res) => {
 });
 
 app.use((err, _req, res, _next) => {
-  console.error("Erro nÃ£o tratado:", err.message);
+  console.error("Erro não tratado:", err.message);
   res.status(500).json({ error: "Erro interno do servidor." });
 });
 
 app.use((req, res) => {
   if (req.path.startsWith("/api/")) {
-    return res.status(404).json({ error: "Rota nÃ£o encontrada." });
+    return res.status(404).json({ error: "Rota não encontrada." });
   }
   return res.status(404).send("Not found");
 });

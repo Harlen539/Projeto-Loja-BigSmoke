@@ -20,6 +20,26 @@ let baseUrl;
 let token;
 let createdProductId;
 
+function collectStringValues(value, output = []) {
+  if (typeof value === "string") {
+    output.push(value);
+    return output;
+  }
+  if (Array.isArray(value)) {
+    value.forEach((item) => collectStringValues(item, output));
+    return output;
+  }
+  if (value && typeof value === "object") {
+    Object.values(value).forEach((item) => collectStringValues(item, output));
+  }
+  return output;
+}
+
+function assertNoXssValues(value) {
+  const joined = collectStringValues(value).join(" ");
+  assert.doesNotMatch(joined, /<|>|javascript:|onerror|onload|iframe|object|embed|svg|script/i);
+}
+
 test.before(async () => {
   await fs.rm(process.env.BIGSMOKE_DATA_DIR, { recursive: true, force: true });
   await fs.rm(process.env.BIGSMOKE_UPLOADS_DIR, { recursive: true, force: true });
@@ -396,4 +416,214 @@ test("stripe webhook marks order as paid", async () => {
   const order = await orderResponse.json();
   assert.equal(order.status, "paid");
   assert.equal(order.paymentIntentId, "pi_test_123");
+});
+
+test("security headers include baseline XSS protections", async () => {
+  const response = await fetch(`${baseUrl}/healthz`);
+
+  assert.equal(response.status, 200);
+  assert.match(response.headers.get("content-security-policy") || "", /object-src 'none'/);
+  assert.equal(response.headers.get("x-content-type-options"), "nosniff");
+  assert.equal(response.headers.get("x-frame-options"), "SAMEORIGIN");
+  assert.match(response.headers.get("referrer-policy") || "", /strict-origin-when-cross-origin/);
+  assert.match(response.headers.get("permissions-policy") || "", /camera=\(\)/);
+});
+
+test("admin product input is sanitized before storage", async () => {
+  const response = await fetch(`${baseUrl}/api/admin/products`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`
+    },
+    body: JSON.stringify({
+      id: "xss-product<script>",
+      name: "Produto <img src=x onerror=bad()> Seguro",
+      category: "Categoria <svg onload=bad()>",
+      description: "Descricao <script>bad()</script> javascript:alert(1)",
+      price: 10,
+      stock: 2,
+      image: "javascript:alert(1)",
+      badge: "<iframe src=x></iframe>",
+      sizes: "P, <object data=x></object>",
+      colors: [{
+        name: "Azul <img onerror=bad()>",
+        hex: "javascript:alert(1)",
+        images: ["javascript:alert(1)"]
+      }]
+    })
+  });
+
+  assert.equal(response.status, 201);
+  const product = await response.json();
+  assert.equal(product.image, "");
+  assert.equal(product.colors[0].hex, "#888888");
+  assert.equal(product.colors[0].images.length, 0);
+  assertNoXssValues(product);
+});
+
+test("admin can manage coupons and checkout applies product discounts", async () => {
+  const createCouponResponse = await fetch(`${baseUrl}/api/admin/coupons`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`
+    },
+    body: JSON.stringify({
+      code: "TESTE15",
+      type: "percent",
+      target: "products",
+      value: 15,
+      active: true,
+      minOrderValue: 100
+    })
+  });
+
+  assert.equal(createCouponResponse.status, 201);
+  const coupon = await createCouponResponse.json();
+  assert.equal(coupon.code, "TESTE15");
+  assert.equal(coupon.target, "products");
+
+  const publicCouponsResponse = await fetch(`${baseUrl}/api/coupons`);
+  const publicCoupons = await publicCouponsResponse.json();
+  assert.ok(publicCoupons.some((item) => item.code === "TESTE15"));
+
+  const checkoutResponse = await fetch(`${baseUrl}/api/checkout/session`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      couponCode: "TESTE15",
+      customer: {
+        name: "Cupom Cliente",
+        email: "cupom@teste.com",
+        phone: "5583986494691"
+      },
+      address: {
+        cep: "60000000",
+        city: "Fortaleza",
+        state: "CE"
+      },
+      deliveryMethod: "retirada",
+      items: [{ id: "moletom-classic", quantity: 1 }]
+    })
+  });
+
+  assert.equal(checkoutResponse.status, 200);
+  const checkout = await checkoutResponse.json();
+  assert.equal(checkout.coupon.code, "TESTE15");
+  assert.ok(checkout.productDiscountAmount > 0);
+  assert.equal(checkout.shippingDiscountAmount, 0);
+  assert.ok(checkout.amountTotal < checkout.amountSubtotal);
+});
+
+test("checkout applies shipping coupons only to freight", async () => {
+  const couponResponse = await fetch(`${baseUrl}/api/admin/coupons`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`
+    },
+    body: JSON.stringify({
+      code: "FRETEGRATIS",
+      type: "fixed",
+      target: "shipping",
+      value: 999,
+      active: true,
+      minOrderValue: 0
+    })
+  });
+  assert.equal(couponResponse.status, 201);
+
+  const checkoutResponse = await fetch(`${baseUrl}/api/checkout/session`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      couponCode: "FRETEGRATIS",
+      customer: {
+        name: "Frete Cliente",
+        email: "frete@teste.com",
+        phone: "5583986494691"
+      },
+      address: {
+        cep: "60000000",
+        street: "Rua Teste",
+        city: "Fortaleza",
+        state: "CE"
+      },
+      deliveryMethod: "national",
+      items: [{ id: "moletom-classic", quantity: 1 }]
+    })
+  });
+
+  assert.equal(checkoutResponse.status, 200);
+  const checkout = await checkoutResponse.json();
+  assert.equal(checkout.coupon.code, "FRETEGRATIS");
+  assert.equal(checkout.productDiscountAmount, 0);
+  assert.ok(checkout.shippingDiscountAmount > 0);
+  assert.equal(checkout.shippingAmount, 0);
+  assert.equal(checkout.amountTotal, checkout.amountSubtotal);
+});
+
+test("order and checkout customer input is sanitized before storage", async () => {
+  const manualResponse = await fetch(`${baseUrl}/api/admin/orders/manual`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`
+    },
+    body: JSON.stringify({
+      status: "pending",
+      customer: {
+        name: "Cliente <img src=x onerror=bad()>",
+        email: "pedido@teste.com",
+        phone: "5583986494691"
+      },
+      address: {
+        street: "Rua <script>bad()</script>",
+        complement: "javascript:alert(1)"
+      },
+      trackingUrl: "javascript:alert(1)",
+      items: [{
+        id: createdProductId,
+        name: "Item <svg onload=bad()>",
+        price: 10,
+        quantity: 1,
+        image: "javascript:alert(1)",
+        size: "G <iframe></iframe>"
+      }]
+    })
+  });
+
+  assert.equal(manualResponse.status, 201);
+  const manualOrder = await manualResponse.json();
+  assert.notEqual(manualOrder.trackingUrl, "javascript:alert(1)");
+  assert.equal(manualOrder.items[0].image, "");
+  assertNoXssValues(manualOrder);
+
+  const checkoutResponse = await fetch(`${baseUrl}/api/checkout/session`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      customer: {
+        name: "Checkout <script>bad()</script>",
+        email: "checkout-xss@teste.com",
+        phone: "5583986494691"
+      },
+      address: {
+        cep: "60000000",
+        city: "Fortaleza <img onerror=bad()>",
+        state: "CE"
+      },
+      deliveryMethod: "retirada",
+      items: [{ id: "moletom-classic", quantity: 1 }]
+    })
+  });
+
+  assert.equal(checkoutResponse.status, 200);
+  const checkout = await checkoutResponse.json();
+  const orderResponse = await fetch(`${baseUrl}/api/admin/orders/${checkout.orderId}`, {
+    headers: { Authorization: `Bearer ${token}` }
+  });
+  const checkoutOrder = await orderResponse.json();
+  assertNoXssValues(checkoutOrder);
 });

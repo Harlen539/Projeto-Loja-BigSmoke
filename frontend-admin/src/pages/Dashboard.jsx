@@ -1,10 +1,11 @@
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 import logo from "../assets/logo_sem_fundo.png";
 import { OrderStatusBadge } from "../components/orders/OrderStatusBadge.jsx";
 import { useOrders } from "../hooks/useOrders.js";
 import { useProducts } from "../hooks/useProducts.js";
+import { ChartsPanel } from "./Charts.jsx";
 
 function money(value) {
   return Number(value || 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
@@ -45,6 +46,7 @@ export function Dashboard() {
   const { products } = useProducts();
   const { orders } = useOrders();
   const [range, setRange] = useState("7");
+  const chartsRef = useRef(null);
 
   const filteredOrders = useMemo(() => filterByRange(orders, range), [orders, range]);
   const paid = filteredOrders.filter((order) => ["paid", "processing", "shipped", "delivered"].includes(order.status));
@@ -55,7 +57,8 @@ export function Dashboard() {
   const latestOrders = filteredOrders.slice(0, 5);
   const topProducts = products.slice(0, 4);
   const lowStock = products.filter((product) => Number(product.stock || 0) <= 6).slice(0, 3);
-  const rangeLabel = range === "0" ? "Todo periodo" : `Ultimos ${range} dias`;
+  const rangeLabel = range === "0" ? "Todo período" : `Últimos ${range} dias`;
+  const scrollToCharts = () => chartsRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
 
   return (
     <main className="page soc-dashboard">
@@ -66,24 +69,28 @@ export function Dashboard() {
             <path d="M16 2v4M8 2v4M3 10h18" />
           </svg>
           <select value={range} onChange={(event) => setRange(event.target.value)} aria-label="Periodo do dashboard">
-            <option value="7">Ultimos 7 dias</option>
-            <option value="15">Ultimos 15 dias</option>
-            <option value="30">Ultimos 30 dias</option>
-            <option value="0">Todo periodo</option>
+            <option value="7">Últimos 7 dias</option>
+            <option value="15">Últimos 15 dias</option>
+            <option value="30">Últimos 30 dias</option>
+            <option value="0">Todo período</option>
           </select>
         </label>
       </section>
 
       <section className="soc-kpi-grid">
-        <KpiCard icon="$" label="Receita bruta" value={money(revenue)} delta={rangeLabel} onClick={() => navigate("/graficos")} />
+        <KpiCard icon="$" label="Receita bruta" value={money(revenue)} delta={rangeLabel} onClick={scrollToCharts} />
         <KpiCard icon="+" label="Pedidos pagos" value={paid.length} delta="Abrir pedidos" onClick={() => navigate("/pedidos")} />
-        <KpiCard icon="R$" label="Ticket medio" value={money(paid.length ? revenue / paid.length : 0)} delta="Calculado por pedido pago" onClick={() => navigate("/pedidos")} />
-        <KpiCard icon="%" label="Conversao" value={filteredOrders.length ? `${((paid.length / filteredOrders.length) * 100).toFixed(2)}%` : "0,00%"} delta="Pedidos pagos / total" onClick={() => navigate("/graficos")} />
-        <KpiCard icon="P" label="Produtos" value={products.length} delta="Ver catalogo" tone="neutral" onClick={() => navigate("/produtos")} />
+        <KpiCard icon="R$" label="Ticket médio" value={money(paid.length ? revenue / paid.length : 0)} delta="Calculado por pedido pago" onClick={() => navigate("/pedidos")} />
+        <KpiCard icon="%" label="Conversão" value={filteredOrders.length ? `${((paid.length / filteredOrders.length) * 100).toFixed(2)}%` : "0,00%"} delta="Pedidos pagos / total" onClick={scrollToCharts} />
+        <KpiCard icon="P" label="Produtos" value={products.length} delta="Ver catálogo" tone="neutral" onClick={() => navigate("/produtos")} />
         <KpiCard icon="OK" label="Ativos" value={activeProducts.length} delta="Produtos publicados" onClick={() => navigate("/produtos")} />
         <KpiCard icon="*" label="Em destaque" value={featuredProducts.length} delta="Destaques da loja" tone="neutral" onClick={() => navigate("/produtos")} />
         <KpiCard icon="#" label="Estoque total" value={stockTotal.toLocaleString("pt-BR")} delta="Rastrear estoque" onClick={() => navigate("/produtos")} />
       </section>
+
+      <div ref={chartsRef}>
+        <ChartsPanel className="dashboard-charts" />
+      </div>
 
       <section className="soc-grid">
         <article className="soc-panel soc-line-panel">
@@ -92,7 +99,7 @@ export function Dashboard() {
               <span>Vendas</span>
               <strong>{money(revenue)} <em>{rangeLabel}</em></strong>
             </div>
-            <button onClick={() => navigate("/graficos")} type="button">Ver graficos</button>
+            <button onClick={scrollToCharts} type="button">Ver gráficos</button>
           </div>
           <div className="soc-line-chart" aria-hidden="true">
             {[78, 56, 53, 31, 44, 39, 15].map((y, index) => <span key={index} style={{ "--x": `${index * 16.66}%`, "--y": `${y}%` }} />)}
@@ -116,7 +123,7 @@ export function Dashboard() {
 
         <article className="soc-panel soc-orders-panel">
           <div className="soc-panel-head">
-            <span>Ultimos pedidos</span>
+            <span>Últimos pedidos</span>
             <button onClick={() => navigate("/pedidos")} type="button">Ver todos</button>
           </div>
           <table className="soc-orders-table">
@@ -168,10 +175,10 @@ export function Dashboard() {
         </article>
 
         <article className="soc-panel soc-stripe-panel">
-          <div className="soc-panel-head"><span>Status da integracao</span></div>
+          <div className="soc-panel-head"><span>Status da integração</span></div>
           <div className="soc-stripe-box">
             <div className="soc-stripe-title"><strong>stripe</strong><i /><span>Stripe Live <small>Ativo</small></span></div>
-            <p>Pagamentos reais estaveis e funcionando.</p>
+            <p>Pagamentos reais estáveis e funcionando.</p>
             <button onClick={() => window.open("https://dashboard.stripe.com/", "_blank", "noreferrer")} type="button">Abrir painel do Stripe</button>
           </div>
         </article>

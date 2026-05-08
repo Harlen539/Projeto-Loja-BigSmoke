@@ -1,10 +1,10 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Meu Perfil | BigSmoke</title>
-  <meta name="description" content="Seu perfil BigSmoke â€” pedidos, histÃ³rico e configuraÃ§Ãµes.">
+  <meta name="description" content="Seu perfil BigSmoke — pedidos, histórico e configurações.">
   <link rel="stylesheet" href="/src/Style.css">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -15,7 +15,7 @@
       color-scheme: dark;
     }
 
-    /* â”€â”€ PAGE BODY â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+    /* PAGE BODY */
     body {
       background:
         radial-gradient(circle at top left, rgba(245, 240, 232, 0.09), transparent 24%),
@@ -32,7 +32,7 @@
       gap: 2rem;
     }
 
-    /* â”€â”€ PROFILE HERO CARD â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+    /* PROFILE HERO CARD */
     .profile-hero {
       display: grid;
       grid-template-columns: auto 1fr auto;
@@ -160,7 +160,7 @@
       z-index: 1;
     }
 
-    /* â”€â”€ STATS BAR â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+    /* STATS BAR */
     .stats-bar {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
@@ -197,7 +197,7 @@
       color: var(--text-secondary);
     }
 
-    /* â”€â”€ SECTION TITLES â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+    /* SECTION TITLES */
     .section-head {
       display: flex;
       align-items: center;
@@ -223,7 +223,7 @@
       margin-bottom: 0.2rem;
     }
 
-    /* â”€â”€ TABS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+    /* TABS */
     .tabs {
       display: flex;
       gap: 0.35rem;
@@ -407,7 +407,7 @@
       to { opacity: 1; transform: translateY(0); }
     }
 
-    /* â”€â”€ ORDER CARDS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+    /* ORDER CARDS */
     .order-card {
       display: grid;
       gap: 1rem;
@@ -821,7 +821,7 @@
 
     .delivery-banner span { font-size: 0.85rem; }
 
-    /* â”€â”€ HISTORY CARD (delivered) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+    /* HISTORY CARD (delivered) */
     .history-card {
       display: grid;
       grid-template-columns: 64px 1fr auto;
@@ -887,7 +887,7 @@
       color: var(--accent-color);
     }
 
-    /* â”€â”€ EMPTY STATE â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+    /* EMPTY STATE */
     .empty-state {
       padding: 2.5rem 1.5rem;
       text-align: center;
@@ -911,7 +911,7 @@
       max-width: 38ch;
     }
 
-    /* â”€â”€ LOADING SKELETON â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+    /* LOADING SKELETON */
     .skeleton { position: relative; overflow: hidden; background: rgba(245,240,232,0.05); border-radius: 10px; }
     .skeleton::after {
       content: '';
@@ -929,7 +929,7 @@
       100% { transform: scale(1);    box-shadow: 0 0 0 0   rgba(245,240,232,0.12); }
     }
 
-    /* â”€â”€ FOOTER â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+    /* FOOTER */
     .site-footer {
       width: 100%;
       max-width: 1180px;
@@ -944,7 +944,7 @@
     .site-footer strong, .site-footer a { color: var(--text-primary); }
     .site-footer-col { display: grid; gap: 0.35rem; }
 
-    /* â”€â”€ RESPONSIVE â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+    /* RESPONSIVE */
     @media (max-width: 960px) {
       .content-grid { grid-template-columns: 1fr; }
     }
@@ -984,14 +984,14 @@
 <body>
 
 <!-- TICKER -->
-<div class="top-ticker" aria-label="InformaÃ§Ãµes da loja">
+<div class="top-ticker" aria-label="Informações da loja">
   <div class="ticker-track">
     <span>Frete para todo o Brasil</span>
-    <span>CartÃ£o via Stripe</span>
+    <span>Cartão via Stripe</span>
     <span>Streetwear autoral BigSmoke</span>
     <span>Atendimento direto pelo WhatsApp</span>
     <span>Frete para todo o Brasil</span>
-    <span>CartÃ£o via Stripe</span>
+    <span>Cartão via Stripe</span>
     <span>Streetwear autoral BigSmoke</span>
     <span>Atendimento direto pelo WhatsApp</span>
   </div>
@@ -1002,7 +1002,7 @@
   <a class="brand" href="/loja/" aria-label="Voltar para a loja BigSmoke">
     <img src="/src/imagens/logo_sem_fundo.png" class="logo-img" alt="Logo BigSmoke">
   </a>
-  <nav class="nav-links" aria-label="NavegaÃ§Ã£o principal">
+  <nav class="nav-links" aria-label="Navegação principal">
     <a href="/loja/">Loja</a>
     <a href="/src/pedidos.html">Rastrear</a>
   </nav>
@@ -1014,7 +1014,7 @@
       </button>
       <div class="profile-menu" id="profile-menu" role="menu" hidden>
         <a role="menuitem" href="https://wa.me/5583986494691" target="_blank" rel="noopener">WhatsApp</a>
-        <a role="menuitem" href="/loja/">Ver catálogo</a>
+        <a role="menuitem" href="/loja/">Ver catélogo</a>
         <button role="menuitem" type="button" id="switch-account">Trocar conta</button>
         <button role="menuitem" type="button" id="logout-account">Sair</button>
       </div>
@@ -1034,7 +1034,7 @@
 <main class="profile-page">
 
   <!-- PROFILE HERO -->
-  <section class="profile-hero" aria-label="Perfil do usuÃ¡rio">
+  <section class="profile-hero" aria-label="Perfil do usuário">
     <div class="profile-avatar-wrap">
       <!-- BigSmoke icon SVG inline (user icon with BigSmoke brand) -->
       <svg class="profile-avatar" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" aria-label="Avatar BigSmoke" style="background:#0a0a0a;border-radius:50%;">
@@ -1049,8 +1049,8 @@
     </div>
 
     <div class="profile-info">
-      <h1 class="profile-name" id="profile-name">Carregandoâ€¦</h1>
-      <p class="profile-email" id="profile-email">â€”</p>
+      <h1 class="profile-name" id="profile-name">Carregando⬦</h1>
+      <p class="profile-email" id="profile-email">—</p>
       <div class="profile-badges">
         <span class="badge badge-gold" id="gold-badge" style="display:none">
           <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
@@ -1065,17 +1065,17 @@
   <div class="stats-bar" id="stats-bar">
     <div class="stat-card">
       <p class="stat-label">Pedidos</p>
-      <p class="stat-value" id="stat-orders">â€”</p>
+      <p class="stat-value" id="stat-orders">—</p>
       <p class="stat-sub">no total</p>
     </div>
     <div class="stat-card">
       <p class="stat-label">Entregues</p>
-      <p class="stat-value" id="stat-delivered">â€”</p>
+      <p class="stat-value" id="stat-delivered">—</p>
       <p class="stat-sub">com sucesso</p>
     </div>
     <div class="stat-card">
       <p class="stat-label">Total gasto</p>
-      <p class="stat-value" id="stat-spent">â€”</p>
+      <p class="stat-value" id="stat-spent">—</p>
       <p class="stat-sub">em compras</p>
     </div>
   </div>
@@ -1095,7 +1095,7 @@
       <h2 class="section-title">Meus Pedidos</h2>
     </div>
 
-    <div class="tabs" role="tablist" aria-label="Pedidos e histÃ³rico" style="margin: 0.85rem 0 0;">
+    <div class="tabs" role="tablist" aria-label="Pedidos e histórico" style="margin: 0.85rem 0 0;">
       <button class="tab-btn active" role="tab" aria-selected="true" aria-controls="tab-active" id="tab-active-btn">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>
         Em andamento
@@ -1103,7 +1103,7 @@
       </button>
       <button class="tab-btn" role="tab" aria-selected="false" aria-controls="tab-history" id="tab-history-btn">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-        HistÃ³rico
+        Histórico
         <span class="tab-count" id="tab-history-count">0</span>
       </button>
     </div>
@@ -1138,7 +1138,7 @@
     </div>
     <div class="account-info-card">
       <div class="profile-photo-tools">
-        <div class="profile-photo-mini" id="profile-photo-mini">—</div>
+        <div class="profile-photo-mini" id="profile-photo-mini">?</div>
         <div class="profile-photo-actions">
           <label class="btn btn-outline" style="font-size:0.84rem;padding:0.65rem 1.1rem;">
             Alterar foto
@@ -1148,8 +1148,8 @@
         </div>
       </div>
       <div class="detail-grid">
-        <div class="info-row"><span class="lbl">Nome</span><span class="val" id="account-profile-name">—</span></div>
-        <div class="info-row"><span class="lbl">E-mail</span><span class="val" id="account-profile-email">—</span></div>
+        <div class="info-row"><span class="lbl">Nome</span><span class="val" id="account-profile-name">?</span></div>
+        <div class="info-row"><span class="lbl">E-mail</span><span class="val" id="account-profile-email">?</span></div>
         <div class="info-row"><span class="lbl">Status</span><span class="val" id="account-profile-status">Conta ativa</span></div>
       </div>
     </div>
@@ -1163,17 +1163,17 @@
     <div class="account-info-card" id="account-address-card">
       <div class="empty-state" style="padding:1.5rem 1rem;">
         <p>Nenhum endereço salvo ainda. Ele aparecerá aqui depois do primeiro pedido.</p>
-        <a href="/loja/" class="btn btn-primary" style="margin-top:0.5rem;font-size:0.85rem;">Ver catálogo</a>
+        <a href="/loja/" class="btn btn-primary" style="margin-top:0.5rem;font-size:0.85rem;">Ver catélogo</a>
       </div>
     </div>
   </div>
 
 </main>
 
-<footer class="site-footer" aria-label="RodapÃ©">
+<footer class="site-footer" aria-label="Rodapé">
   <div class="site-footer-col">
     <strong>BIGSMOKE</strong>
-    <span>Streetwear autÃªntico com estrutura pronta para crescer.</span>
+    <span>Streetwear autêntico com estrutura pronta para crescer.</span>
   </div>
   <div class="site-footer-col">
     <strong>Atalhos</strong>
@@ -1187,11 +1187,24 @@
 (() => {
   const API_BASE = window.location.protocol === 'file:' ? 'http://localhost:3000' : window.location.origin;
 
-  /* â”€â”€ helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+  /* helpers */
   function esc(v) {
     return String(v ?? '')
       .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
       .replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+  }
+
+  function safeImageUrl(v) {
+    const raw = String(v || '').trim();
+    if (!raw) return '';
+    if (/^\/(?!\/)/.test(raw)) return raw;
+    if (/^data:image\/(png|jpe?g|webp|gif);base64,/i.test(raw)) return raw;
+    try {
+      const url = new URL(raw, window.location.origin);
+      return url.protocol === 'http:' || url.protocol === 'https:' ? url.toString() : '';
+    } catch {
+      return '';
+    }
   }
 
   function fmt(v) {
@@ -1206,7 +1219,7 @@
   }
 
   function fmtDateShort(v) {
-    if (!v) return 'â€”';
+    if (!v) return '—';
     const d = new Date(v);
     if (isNaN(d)) return String(v);
     return new Intl.DateTimeFormat('pt-BR', { dateStyle:'short' }).format(d);
@@ -1278,22 +1291,25 @@
 
     if (profileLink && customer) {
       const initial = String(customer.firstName?.[0] || customer.email?.[0] || 'B').toUpperCase();
+      const photoUrl = safeImageUrl(customer.photo);
       profileLink.classList.add('profile-authenticated');
-      profileLink.innerHTML = customer.photo
-        ? `<img class="profile-photo-thumb" src="${customer.photo}" alt=""><span class="sr-only">Abrir menu do perfil</span>`
-        : `${initial}<span class="sr-only">Abrir menu do perfil</span>`;
+      profileLink.innerHTML = photoUrl
+        ? `<img class="profile-photo-thumb" src="${esc(photoUrl)}" alt=""><span class="sr-only">Abrir menu do perfil</span>`
+        : `${esc(initial)}<span class="sr-only">Abrir menu do perfil</span>`;
       profileLink.setAttribute('aria-label', `Perfil de ${name}`);
       profileLink.setAttribute('title', email);
     }
 
     if (avatarPhoto) {
-      avatarPhoto.hidden = !customer?.photo;
-      if (customer?.photo) avatarPhoto.src = customer.photo;
+      const photoUrl = safeImageUrl(customer?.photo);
+      avatarPhoto.hidden = !photoUrl;
+      if (photoUrl) avatarPhoto.src = photoUrl;
     }
 
     if (photoMini) {
       const initial = String(customer?.firstName?.[0] || customer?.email?.[0] || 'B').toUpperCase();
-      photoMini.innerHTML = customer?.photo ? `<img src="${customer.photo}" alt="">` : initial;
+      const photoUrl = safeImageUrl(customer?.photo);
+      photoMini.innerHTML = photoUrl ? `<img src="${esc(photoUrl)}" alt="">` : esc(initial);
     }
 
     if (removePhoto) removePhoto.hidden = !customer?.photo;
@@ -1339,16 +1355,16 @@
     if (!firstAddress) {
       addressCard.innerHTML = `<div class="empty-state" style="padding:1.5rem 1rem;">
         <p>Nenhum endereço salvo ainda. Ele aparecerá aqui depois do primeiro pedido.</p>
-        <a href="/loja/" class="btn btn-primary" style="margin-top:0.5rem;font-size:0.85rem;">Ver catálogo</a>
+        <a href="/loja/" class="btn btn-primary" style="margin-top:0.5rem;font-size:0.85rem;">Ver catélogo</a>
       </div>`;
       return;
     }
 
     addressCard.innerHTML = `<div class="detail-grid">
-      <div class="info-row"><span class="lbl">Rua</span><span class="val">${esc(firstAddress.street || '—')}, ${esc(firstAddress.number || '—')}</span></div>
-      <div class="info-row"><span class="lbl">Complemento</span><span class="val">${esc(firstAddress.complement || '—')}</span></div>
-      <div class="info-row"><span class="lbl">Cidade</span><span class="val">${esc(firstAddress.city || '—')} - ${esc(firstAddress.state || '—')}</span></div>
-      <div class="info-row"><span class="lbl">CEP</span><span class="val">${esc(firstAddress.cep || '—')}</span></div>
+      <div class="info-row"><span class="lbl">Rua</span><span class="val">${esc(firstAddress.street || '?')}, ${esc(firstAddress.number || '?')}</span></div>
+      <div class="info-row"><span class="lbl">Complemento</span><span class="val">${esc(firstAddress.complement || '?')}</span></div>
+      <div class="info-row"><span class="lbl">Cidade</span><span class="val">${esc(firstAddress.city || '?')} - ${esc(firstAddress.state || '?')}</span></div>
+      <div class="info-row"><span class="lbl">CEP</span><span class="val">${esc(firstAddress.cep || '?')}</span></div>
     </div>`;
   }
 
@@ -1410,17 +1426,17 @@
     });
   }
 
-  /* â”€â”€ status helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+  /* helpers */
   const FLOW = ['pending','paid','processing','shipped','delivered'];
   const STATUS_META = {
     pending:    { label:'Pendente',      cls:'status-pending',    pulse:false },
     paid:       { label:'Pago',          cls:'status-paid',       pulse:true  },
-    processing: { label:'Em separaÃ§Ã£o',  cls:'status-processing', pulse:true  },
+    processing: { label:'Em separação',  cls:'status-processing', pulse:true  },
     shipped:    { label:'Enviado',       cls:'status-shipped',    pulse:true  },
     delivered:  { label:'Entregue',      cls:'status-delivered',  pulse:false },
     canceled:   { label:'Cancelado',     cls:'status-canceled',   pulse:false },
   };
-  const STATUS_PT = { pending:'Pendente', paid:'Pago', processing:'Em separaÃ§Ã£o', shipped:'Enviado', delivered:'Entregue', canceled:'Cancelado' };
+  const STATUS_PT = { pending:'Pendente', paid:'Pago', processing:'Em separação', shipped:'Enviado', delivered:'Entregue', canceled:'Cancelado' };
   const ACTIVE_STATUSES = ['pending','paid','processing','shipped'];
 
   function statusMeta(s) { return STATUS_META[String(s||'pending').toLowerCase()] || STATUS_META.pending; }
@@ -1430,7 +1446,7 @@
     return ACTIVE_STATUSES.includes(s);
   }
 
-  /* â”€â”€ timeline events â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+  /* timeline events */
   function getEvents(order) {
     const evs = Array.isArray(order?.events) ? order.events.slice() : [];
     const seeded = [];
@@ -1449,12 +1465,12 @@
         details: [
           e.status ? `Status: ${STATUS_PT[e.status]||e.status}` : '',
           e.trackingCode ? `Rastreio: ${e.trackingCode}` : '',
-        ].filter(Boolean).join(' Â· ')
+        ].filter(Boolean).join(' · ')
       }))
       .sort((a,b) => new Date(a.created||0) - new Date(b.created||0));
   }
 
-  /* â”€â”€ render progress bar â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+  /* render progress bar */
   function renderProgress(status) {
     const s = String(status||'pending').toLowerCase();
     const ci = s === 'canceled' ? -1 : FLOW.indexOf(s);
@@ -1470,7 +1486,7 @@
     return `<div class="order-progress" aria-label="Progresso do pedido">${steps.join('')}</div>`;
   }
 
-  /* â”€â”€ render items â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+  /* render items */
   function renderItems(items) {
     const list = Array.isArray(items) ? items : [];
     if (!list.length) return `<p style="color:var(--text-muted);font-size:0.84rem;">Nenhum item registrado.</p>`;
@@ -1482,14 +1498,14 @@
         <div class="item-thumb"><img src="${esc(img)}" alt="${esc(item?.name||'Item')}" loading="lazy" onerror="this.src='/src/imagens/logo_sem_fundo.png'"></div>
         <div class="item-meta">
           <strong>${esc(item?.name||'Item do pedido')}</strong>
-          <small>Tam: ${esc(item?.size||'Ãšnico')} Â· Qtd: ${qty}</small>
+          <small>Tam: ${esc(item?.size||'Único')} · Qtd: ${qty}</small>
         </div>
         <div class="item-price">${fmt(price*qty)}</div>
       </div>`;
     }).join('')}</div>`;
   }
 
-  /* â”€â”€ render timeline â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+  /* render timeline */
   function renderTimeline(order) {
     const evs = getEvents(order);
     if (!evs.length) return `<p style="color:var(--text-muted);font-size:0.84rem;">Sem eventos registrados ainda.</p>`;
@@ -1498,12 +1514,12 @@
         <div class="tl-dot" aria-hidden="true"></div>
         <div class="tl-content">
           <strong>${esc(e.title)}</strong>
-          <span>${esc(fmtDate(e.created))}${e.details ? ' Â· '+esc(e.details) : ''}</span>
+          <span>${esc(fmtDate(e.created))}${e.details ? ' · '+esc(e.details) : ''}</span>
         </div>
       </div>`).join('')}</div>`;
   }
 
-  /* â”€â”€ render address + payment panel â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+  /* render address + payment panel */
   function renderDetails(order) {
     const addr = order?.address || {};
     const subtotal = Number(order?.amountSubtotal)||0;
@@ -1511,18 +1527,18 @@
     const discount = Number(order?.discountAmount||order?.couponDiscount||order?.discount||0)||0;
     const total = Number(order?.amountTotal)||(subtotal+ship);
     const shipLabel = ship <= 0
-      ? `<span class="val val-green">Frete grÃ¡tis</span>`
+      ? `<span class="val val-green">Frete grátis</span>`
       : `<span class="val">${fmt(ship)}</span>`;
 
     return `
       <div class="detail-grid">
-        <div class="info-row"><span class="lbl">Nome</span><span class="val">${esc(order?.customer?.name||'â€”')}</span></div>
-        <div class="info-row"><span class="lbl">Rua</span><span class="val">${esc(addr.street||'â€”')}, ${esc(addr.number||'â€”')}</span></div>
-        <div class="info-row"><span class="lbl">Cidade</span><span class="val">${esc(addr.city||'â€”')} â€“ ${esc(addr.state||'â€”')}</span></div>
-        <div class="info-row"><span class="lbl">CEP</span><span class="val">${esc(addr.cep||'â€”')}</span></div>
+        <div class="info-row"><span class="lbl">Nome</span><span class="val">${esc(order?.customer?.name||'—')}</span></div>
+        <div class="info-row"><span class="lbl">Rua</span><span class="val">${esc(addr.street||'—')}, ${esc(addr.number||'—')}</span></div>
+        <div class="info-row"><span class="lbl">Cidade</span><span class="val">${esc(addr.city||'—')} – ${esc(addr.state||'—')}</span></div>
+        <div class="info-row"><span class="lbl">CEP</span><span class="val">${esc(addr.cep||'—')}</span></div>
       </div>
       <div class="detail-grid" style="margin-top:0.75rem">
-        <div class="info-row"><span class="lbl">MÃ©todo</span><span class="val">${esc(order?.paymentMethod||'Stripe')}</span></div>
+        <div class="info-row"><span class="lbl">Método</span><span class="val">${esc(order?.paymentMethod||'Stripe')}</span></div>
         <div class="info-row"><span class="lbl">Subtotal</span><span class="val">${fmt(subtotal)}</span></div>
         <div class="info-row"><span class="lbl">Frete</span>${shipLabel}</div>
         ${discount > 0 ? `<div class="info-row"><span class="lbl">Desconto</span><span class="val">-${fmt(discount)}</span></div>` : ''}
@@ -1530,22 +1546,22 @@
       </div>`;
   }
 
-  /* â”€â”€ render carrier â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+  /* render carrier */
   function renderCarrier(order) {
     const trackUrl = order?.trackingUrl || order?.trackingLink || '';
     const trackCode = order?.trackingCode || order?.orderAccessCode || order?.orderNumberFormatted || '';
     const ext = /^https?:\/\//i.test(trackUrl);
     const linkEl = trackUrl
       ? `<a class="val" href="${esc(trackUrl)}"${ext?' target="_blank" rel="noopener"':''} style="color:var(--accent-color);text-decoration:underline;text-underline-offset:0.15em;">Ver rastreio</a>`
-      : `<span class="val" style="color:var(--text-muted);">Aguardando cÃ³digo</span>`;
+      : `<span class="val" style="color:var(--text-muted);">Aguardando código</span>`;
     return `<div class="detail-grid">
       <div class="info-row"><span class="lbl">Transportadora</span><span class="val">${esc(order?.carrier||order?.shippingLabel||'A definir')}</span></div>
-      <div class="info-row"><span class="lbl">CÃ³digo</span><span class="val">${esc(trackCode||'â€”')}</span></div>
+      <div class="info-row"><span class="lbl">Código</span><span class="val">${esc(trackCode||'—')}</span></div>
       <div class="info-row"><span class="lbl">Link</span>${linkEl}</div>
     </div>`;
   }
 
-  /* â”€â”€ render one active order card â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+  /* render one active order card */
   function renderActiveOrder(order) {
     const code  = order?.orderAccessCode || order?.orderNumberFormatted || order?.id || '';
     const num   = order?.orderNumberFormatted || order?.orderNumber || code;
@@ -1553,7 +1569,7 @@
     const meta  = statusMeta(s);
     const date  = fmtDateShort(order?.createdAt || order?.paidAt);
     const del   = order?.deliveryEstimate?.text || order?.deliveryEstimate?.label || order?.deliveryEstimate || '';
-    const wurl  = `https://wa.me/5583986494691?text=${encodeURIComponent(`OlÃ¡ BigSmoke, quero acompanhar meu pedido ${code}.`)}`;
+    const wurl  = `https://wa.me/5583986494691?text=${encodeURIComponent(`Olá BigSmoke, quero acompanhar meu pedido ${code}.`)}`;
     const trackUrl = order?.trackingUrl || order?.trackingLink || '';
     const cardId   = `order-card-${esc(order.id||code)}`;
 
@@ -1561,7 +1577,7 @@
       <article class="order-card expanded" id="${cardId}" aria-label="Pedido ${esc(num)}">
         <div class="order-card-head">
           <div class="order-card-left">
-            <p class="order-meta">Pedido Â· ${esc(date)}</p>
+            <p class="order-meta">Pedido · ${esc(date)}</p>
             <h2 class="order-number">${esc(num)}</h2>
           </div>
           <div class="order-card-right">
@@ -1576,7 +1592,7 @@
         <div class="order-card-body">
           ${del ? `<div class="delivery-banner">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h18"/><path d="m14 5 7 7-7 7"/></svg>
-            <div><strong>PrevisÃ£o de entrega</strong><span>${esc(String(del))}</span></div>
+            <div><strong>Previsão de entrega</strong><span>${esc(String(del))}</span></div>
           </div>` : ''}
 
           ${renderProgress(s)}
@@ -1609,13 +1625,13 @@
               : `<button class="btn btn-outline" disabled aria-disabled="true">Rastrear envio</button>`
             }
             <a class="btn btn-primary" href="${esc(wurl)}" target="_blank" rel="noopener">WhatsApp</a>
-            <a class="btn btn-outline" href="/loja/">Ver catÃ¡logo</a>
+            <a class="btn btn-outline" href="/loja/">Ver catálogo</a>
           </div>
         </div>
       </article>`;
   }
 
-  /* â”€â”€ render history row â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+  /* render history row */
   function renderHistoryRow(order) {
     const code  = order?.orderAccessCode || order?.orderNumberFormatted || order?.id || '';
     const num   = order?.orderNumberFormatted || order?.orderNumber || code;
@@ -1625,16 +1641,16 @@
     const item  = Array.isArray(order?.items) && order.items[0];
     const img   = item?.image || item?.image_url || '/src/imagens/logo_sem_fundo.png';
     const total = Number(order?.amountTotal)||Number(order?.amountSubtotal)||0;
-    const wurl  = `https://wa.me/5583986494691?text=${encodeURIComponent(`OlÃ¡ BigSmoke, quero suporte para o pedido ${code}.`)}`;
+    const wurl  = `https://wa.me/5583986494691?text=${encodeURIComponent(`Olá BigSmoke, quero suporte para o pedido ${code}.`)}`;
 
     return `
-      <div class="history-card" aria-label="HistÃ³rico: pedido ${esc(num)}">
+      <div class="history-card" aria-label="Histórico: pedido ${esc(num)}">
         <div class="history-thumb">
           <img src="${esc(img)}" alt="${esc(item?.name||'Produto')}" loading="lazy" onerror="this.src='/src/imagens/logo_sem_fundo.png'">
         </div>
         <div class="history-info">
           <p class="history-name">${esc(num)}</p>
-          <p class="history-meta">${esc(date)} Â· ${Array.isArray(order?.items) ? order.items.length : 0} item(s)</p>
+          <p class="history-meta">${esc(date)} · ${Array.isArray(order?.items) ? order.items.length : 0} item(s)</p>
           <span class="status-pill ${meta.cls}" style="margin-top:0.35rem;font-size:0.68rem;padding:0.28rem 0.6rem;">${esc(meta.label)}</span>
         </div>
         <div class="history-actions">
@@ -1644,7 +1660,7 @@
       </div>`;
   }
 
-  /* â”€â”€ toggle card â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+  /* toggle card */
   window.toggleCard = function(id) {
     const card = document.getElementById(id);
     if (!card) return;
@@ -1657,7 +1673,7 @@
     }
   };
 
-  /* â”€â”€ tabs â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+  /* ———— tabs ———————————————————————————————————————————————————————————————————————————— */
   document.querySelectorAll('.tab-btn').forEach(btn => {
     btn.addEventListener('click', () => {
       document.querySelectorAll('.tab-btn').forEach(b => {
@@ -1684,7 +1700,7 @@
   setupProfilePhotoTools();
   setupAccountPanels();
 
-  /* â”€â”€ load data â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+  /* load data */
   async function loadProfile() {
     let orders = [];
     const customer = readStoredCustomer();
@@ -1736,7 +1752,7 @@
       activeContainer.innerHTML = `<div class="empty-state" style="margin-top:1rem;">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>
         <p>Nenhum pedido em andamento no momento.</p>
-        <a href="/loja/" class="btn btn-primary" style="margin-top:0.5rem;font-size:0.85rem;">Ver catÃ¡logo</a>
+        <a href="/loja/" class="btn btn-primary" style="margin-top:0.5rem;font-size:0.85rem;">Ver catálogo</a>
       </div>`;
     }
 
@@ -1753,13 +1769,13 @@
     } else {
       histContainer.innerHTML = `<div class="empty-state" style="margin-top:1rem;">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-        <p>Nenhum pedido entregue ainda. FaÃ§a sua primeira compra!</p>
+        <p>Nenhum pedido entregue ainda. Faça sua primeira compra!</p>
         <a href="/loja/" class="btn btn-primary" style="margin-top:0.5rem;font-size:0.85rem;">Comprar agora</a>
       </div>`;
     }
   }
 
-  /* â”€â”€ demo orders (shown when no API is available) â”€â”€ */
+  /* demo orders (shown when no API is available) */
   function getDemoOrders() {
     return [
       {
@@ -1783,7 +1799,7 @@
         events: [
           { type: 'order.created',   created: '2026-04-30T10:25:00Z', title: 'Pedido recebido' },
           { type: 'payment.paid',    created: '2026-04-30T10:29:00Z', title: 'Pagamento aprovado' },
-          { type: 'order.separated', created: '2026-04-30T10:30:00Z', title: 'Em separaÃ§Ã£o' },
+          { type: 'order.separated', created: '2026-04-30T10:30:00Z', title: 'Em separação' },
           { type: 'invoice.issued',  created: '2026-05-01T02:22:00Z', title: 'Nota fiscal emitida' },
           { type: 'order.shipped',   created: '2026-05-02T10:29:00Z', title: 'Pedido saiu para entrega!' },
         ]
@@ -1797,22 +1813,22 @@
         amountSubtotal: 89.90,
         amountTotal: 89.90,
         shippingAmount: 0,
-        paymentMethod: 'CartÃ£o de CrÃ©dito',
+        paymentMethod: 'Cartão de Crédito',
         createdAt: '2026-03-16T09:00:00Z',
         paidAt: '2026-03-16T09:05:00Z',
         updatedAt: '2026-03-20T14:00:00Z',
         carrier: 'Correios',
         trackingCode: 'BR123456789',
         customer: { name: 'BigSmoke Store', email: 'contato@bigsmoke.com.br' },
-        address: { street: 'Rua das Flores', number: '701', city: 'JoÃ£o Pessoa', state: 'PB', cep: '58046780' },
+        address: { street: 'Rua das Flores', number: '701', city: 'João Pessoa', state: 'PB', cep: '58046780' },
         items: [
-          { id: 'cap', name: 'Cap BigSmoke Streetwear', quantity: 1, price: 89.90, size: 'Ãšnico', image: '/src/imagens/logo_sem_fundo.png' }
+          { id: 'cap', name: 'Cap BigSmoke Streetwear', quantity: 1, price: 89.90, size: 'Único', image: '/src/imagens/logo_sem_fundo.png' }
         ],
         events: [
           { type: 'order.created',   created: '2026-03-16T09:00:00Z', title: 'Pedido recebido' },
           { type: 'payment.paid',    created: '2026-03-16T09:05:00Z', title: 'Pagamento aprovado' },
           { type: 'order.shipped',   created: '2026-03-18T08:00:00Z', title: 'Pedido enviado' },
-          { type: 'order.delivered', created: '2026-03-20T14:00:00Z', title: 'Pedido entregue âœ“' },
+          { type: 'order.delivered', created: '2026-03-20T14:00:00Z', title: 'Pedido entregue ✓' },
         ]
       },
       {
@@ -1835,7 +1851,7 @@
           { type: 'order.created',   created: '2026-02-10T11:00:00Z', title: 'Pedido recebido' },
           { type: 'payment.paid',    created: '2026-02-10T11:10:00Z', title: 'Pagamento aprovado' },
           { type: 'order.shipped',   created: '2026-02-12T09:00:00Z', title: 'Pedido enviado' },
-          { type: 'order.delivered', created: '2026-02-15T10:00:00Z', title: 'Pedido entregue âœ“' },
+          { type: 'order.delivered', created: '2026-02-15T10:00:00Z', title: 'Pedido entregue ✓' },
         ]
       }
     ];

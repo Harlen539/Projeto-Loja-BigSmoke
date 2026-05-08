@@ -39,15 +39,6 @@ const items = [
       </svg>
     ),
   },
-  {
-    to: "/graficos",
-    label: "Graficos",
-    icon: (
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
-        <path d="M18 20V10M12 20V4M6 20v-6" />
-      </svg>
-    ),
-  },
 ];
 
 export function Sidebar() {

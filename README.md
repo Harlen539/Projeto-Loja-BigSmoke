@@ -159,3 +159,13 @@ node -e "console.log(require('crypto').randomBytes(64).toString('hex'))"
 cd backend
 npm test
 ```
+
+## Prisma
+
+O backend usa Prisma automaticamente quando `DATABASE_URL` estiver definida. Sem `DATABASE_URL`, ele continua usando Supabase Client se estiver configurado; sem Supabase, usa os arquivos JSON locais.
+
+```bash
+cd backend
+npm run prisma:generate
+npm run prisma:migrate
+```

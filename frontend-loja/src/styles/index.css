@@ -80,7 +80,20 @@ button { cursor: pointer; }
 .cart-overlay.open { opacity: 1; pointer-events: all; }
 .cart-drawer { position: fixed; z-index: 31; top: 0; right: 0; width: min(460px, 100vw); height: 100vh; transform: translateX(100%); transition: transform .22s ease; background: #111; border-left: 1px solid var(--line); padding: 1rem; overflow: auto; }
 .cart-drawer.open { transform: translateX(0); }
-.cart-drawer header, .cart-summary { display: flex; justify-content: space-between; align-items: center; gap: 1rem; border-bottom: 1px solid var(--line); padding-bottom: 1rem; }
+.cart-drawer header { display: flex; justify-content: space-between; align-items: center; gap: 1rem; border-bottom: 1px solid var(--line); padding-bottom: 1rem; }
+.cart-summary { display: grid; gap: .5rem; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); padding: 1rem 0; margin: 1rem 0; }
+.cart-summary > div { display: flex; justify-content: space-between; align-items: center; gap: 1rem; }
+.cart-summary small { color: var(--muted); }
+.coupon-box { display: grid; gap: .55rem; border: 1px solid var(--line); border-radius: 8px; padding: .75rem; margin-top: 1rem; background: rgba(255,255,255,.03); }
+.coupon-box label { display: grid; gap: .4rem; }
+.coupon-box label > span { color: var(--muted); font-size: .78rem; text-transform: uppercase; }
+.coupon-box label > div { display: grid; grid-template-columns: 1fr auto; gap: .45rem; }
+.coupon-box input { min-width: 0; border: 1px solid var(--line); border-radius: 6px; background: #0d0d0d; color: var(--text); padding: .65rem .75rem; text-transform: uppercase; }
+.coupon-box button { border: 1px solid var(--line); border-radius: 6px; background: rgba(255,255,255,.06); color: var(--text); padding: .6rem .75rem; font-weight: 700; }
+.coupon-suggestions { display: flex; flex-wrap: wrap; gap: .4rem; }
+.coupon-suggestions button { font-size: .75rem; padding: .4rem .55rem; }
+.coupon-box small.success { color: #8ee6a6; }
+.coupon-box small.error { color: #ff9a9a; }
 .cart-list { list-style: none; padding: 0; display: grid; gap: .8rem; }
 .cart-item { display: grid; grid-template-columns: 64px 1fr auto; gap: .8rem; align-items: center; border: 1px solid var(--line); border-radius: 8px; padding: .65rem; }
 .cart-item img { width: 64px; height: 80px; object-fit: cover; border-radius: 6px; }

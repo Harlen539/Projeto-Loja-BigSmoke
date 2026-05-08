@@ -5,12 +5,17 @@
     "category": "Camisetas",
     "description": "Camiseta oversized com design minimalista na frente e estampa marcante nas costas, trazendo o nome BigSmoke em múltiplas tipografias envoltas em efeito smoke.",
     "price": 84.9,
-    "stock": 23,
+    "stock": 21,
     "image": "/uploads/1777901887119-cinza_1.webp",
     "image_url": "/uploads/1777901887119-cinza_1.webp",
     "images": [
       "/uploads/1777901887119-cinza_1.webp",
-      "/uploads/1777901903045-cinza_2.webp"
+      "/uploads/1777901903045-cinza_2.webp",
+      "/uploads/1777901923474-cinza_2.webp",
+      "/uploads/1777901954466-branca_1.webp",
+      "/uploads/1777901961086-branca_2.webp",
+      "/uploads/1777901992672-preta_1.webp",
+      "/uploads/1777901998845-preta_2.webp"
     ],
     "sizes": "P, M, G, GG, XG",
     "badge": "Drop atual",
@@ -44,7 +49,7 @@
       }
     ],
     "createdAt": "2026-05-04T13:40:29.469Z",
-    "updatedAt": "2026-05-06T13:27:17.462Z"
+    "updatedAt": "2026-05-08T10:20:39.514Z"
   },
   {
     "id": "moletom-classic",
@@ -52,7 +57,7 @@
     "category": "Moletons",
     "description": "Peça premium para dias frios, pronta para campanha e venda assistida.",
     "price": 249.9,
-    "stock": 16,
+    "stock": 18,
     "image": "/uploads/1777991004394-moletom_frente.webp",
     "image_url": "/uploads/1777991004394-moletom_frente.webp",
     "images": [
@@ -73,6 +78,6 @@
       }
     ],
     "createdAt": "2026-04-27T00:00:00.000Z",
-    "updatedAt": "2026-05-06T23:28:10.755Z"
+    "updatedAt": "2026-05-08T03:06:07.191Z"
   }
 ]

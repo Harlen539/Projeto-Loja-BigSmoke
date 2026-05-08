@@ -1761,6 +1761,16 @@ main {
   border-top: 1px solid rgba(245, 240, 232, 0.08);
 }
 
+.cart-coupon-panel {
+  margin-top: 0.9rem;
+}
+
+.cart-discount-row {
+  margin-top: 0.4rem;
+  padding: 0.55rem 0;
+  color: #8ee6a6;
+}
+
 .full-width {
   width: 100%;
 }
@@ -2145,6 +2155,74 @@ main {
   gap: 0.75rem;
   padding: 0.4rem 0;
   font-size: 0.9rem;
+}
+
+.coupon-panel {
+  display: grid;
+  gap: 0.55rem;
+  margin: 0.75rem 0;
+  padding: 0.75rem;
+  border: 1px solid rgba(245, 240, 232, 0.1);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.025);
+}
+
+.coupon-panel label {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.coupon-input-row {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 0.45rem;
+}
+
+.coupon-input-row input {
+  min-width: 0;
+  border: 1px solid rgba(245, 240, 232, 0.12);
+  border-radius: 6px;
+  background: rgba(0, 0, 0, 0.28);
+  color: var(--text-color);
+  padding: 0.72rem 0.8rem;
+  text-transform: uppercase;
+}
+
+.coupon-input-row button,
+.coupon-suggestions button {
+  border: 1px solid rgba(245, 240, 232, 0.14);
+  border-radius: 6px;
+  background: rgba(245, 240, 232, 0.08);
+  color: var(--text-color);
+  font-weight: 800;
+  padding: 0.62rem 0.75rem;
+  cursor: pointer;
+}
+
+.coupon-suggestions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.coupon-suggestions button {
+  font-size: 0.72rem;
+  padding: 0.42rem 0.55rem;
+}
+
+.coupon-message {
+  min-height: 1rem;
+  color: var(--text-muted);
+}
+
+.coupon-message.success {
+  color: #8ee6a6;
+}
+
+.coupon-message.error {
+  color: #ff9a9a;
 }
 
 .total-line {

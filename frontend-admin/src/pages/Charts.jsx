@@ -12,7 +12,7 @@ function statusLabel(status) {
   const labels = {
     pending: "Pendente",
     paid: "Pago",
-    processing: "Em separacao",
+    processing: "Em separação",
     shipped: "Enviado",
     delivered: "Entregue",
     canceled: "Cancelado",
@@ -23,7 +23,7 @@ function statusLabel(status) {
 const CATEGORY_COLORS = ["#00e5ff", "#42ff9e", "#f4c542", "#8b5cf6", "#ff4d6d", "#ff8a3d"];
 const STATUS_COLORS = ["#f4c542", "#42ff9e", "#00e5ff", "#8b5cf6", "#ff4d6d", "#ff8a3d"];
 
-export function Charts() {
+export function ChartsPanel({ className = "" }) {
   const { orders } = useOrders();
   const { products } = useProducts();
   const [metric, setMetric] = useState("revenue");
@@ -53,10 +53,10 @@ export function Charts() {
   const categoryTotal = categoryData.reduce((sum, item) => sum + item.value, 0);
 
   return (
-    <main className="page charts-page">
+    <section className={`charts-page ${className}`.trim()}>
       <div className="page-head">
         <div>
-          <p className="section-kicker">Analise</p>
+          <p className="section-kicker">Análise</p>
           <h2>Graficos</h2>
         </div>
         <div className="segmented-control">
@@ -154,6 +154,14 @@ export function Charts() {
           </ResponsiveContainer>
         </article>
       </section>
+    </section>
+  );
+}
+
+export function Charts() {
+  return (
+    <main className="page">
+      <ChartsPanel />
     </main>
   );
 }

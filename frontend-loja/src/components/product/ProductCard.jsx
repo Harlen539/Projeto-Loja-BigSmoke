@@ -25,7 +25,7 @@ export function ProductCard({ product }) {
     try {
       await startStripeCheckout([{ id: product.id, quantity: 1, size }]);
     } catch (error) {
-      alert(error.message || "Nao foi possivel abrir o Stripe Checkout.");
+      alert(error.message || "Não foi possível abrir o Stripe Checkout.");
       setLoading(false);
     }
   }

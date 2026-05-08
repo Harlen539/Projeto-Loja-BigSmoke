@@ -338,6 +338,8 @@ let searchTerm = "";
 let highlightedProductId = "";
 let shouldScrollToHighlight = false;
 let orderSuccessData = null;
+let availableCoupons = [];
+let appliedCoupon = null;
 const selectedProductSizes = new Map();
 let shippingState = {
   price: 0,
@@ -708,6 +710,32 @@ function sanitizeText(value) {
     .replace(/'/g, "&#39;");
 }
 
+function safeUrl(value, { allowDataImage = false } = {}) {
+  const raw = String(value || "").trim();
+  if (!raw) return "";
+  if (/^\/(?!\/)/.test(raw)) return raw;
+  if (allowDataImage && /^data:image\/(png|jpe?g|webp|gif);base64,/i.test(raw)) return raw;
+  try {
+    const url = new URL(raw, window.location.origin);
+    return url.protocol === "http:" || url.protocol === "https:" ? url.toString() : "";
+  } catch {
+    return "";
+  }
+}
+
+async function readApiJson(response) {
+  const text = await response.text();
+  if (!text) return null;
+  try {
+    return JSON.parse(text);
+  } catch {
+    if (!response.ok) {
+      throw new Error("A API não respondeu em JSON. Verifique se o backend está rodando na porta 3000.");
+    }
+    return null;
+  }
+}
+
 function getVisibleProducts() {
   return products
     .filter((product) => {
@@ -731,8 +759,36 @@ function getCartSubtotal() {
   return cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
 }
 
+function getCouponDiscountPreview() {
+  if (!appliedCoupon) return { productDiscount: 0, shippingDiscount: 0, totalDiscount: 0 };
+  const subtotal = getCartSubtotal();
+  const shipping = shippingState.price || 0;
+  const orderBase = subtotal + shipping;
+  if (orderBase < Number(appliedCoupon.minOrderValue || 0)) {
+    return { productDiscount: 0, shippingDiscount: 0, totalDiscount: 0 };
+  }
+  const target = appliedCoupon.target || "products";
+  const productBase = target === "shipping" ? 0 : subtotal;
+  const shippingBase = target === "products" ? 0 : shipping;
+  const discountBase = productBase + shippingBase;
+  const rawDiscount = appliedCoupon.type === "percent"
+    ? discountBase * (Number(appliedCoupon.value || 0) / 100)
+    : Number(appliedCoupon.value || 0);
+  const totalDiscount = Math.min(discountBase, Math.max(0, rawDiscount));
+  const productDiscount = discountBase > 0 ? Math.min(productBase, totalDiscount * (productBase / discountBase)) : 0;
+  return {
+    productDiscount,
+    shippingDiscount: Math.max(0, totalDiscount - productDiscount),
+    totalDiscount
+  };
+}
+
 function getCartTotal() {
-  return getCartSubtotal() + shippingState.price;
+  return Math.max(0, getCartSubtotal() + shippingState.price - getCouponDiscountPreview().totalDiscount);
+}
+
+function getCartDrawerTotal() {
+  return Math.max(0, getCartSubtotal() - getCouponDiscountPreview().productDiscount);
 }
 
 function getDeliveryMethodLabel(value) {
@@ -914,7 +970,7 @@ async function fetchOrderTracking(value) {
   if (!response.ok) {
     throw new Error("Pedido não encontrado.");
   }
-  return response.json();
+  return readApiJson(response);
 }
 
 function getTrackingQueryValue() {
@@ -926,9 +982,9 @@ function renderOrderTracker(order) {
   const status = normalizeOrderStatus(order?.status);
   const statusIndex = getOrderStatusIndex(status);
   const trackingLink = getOrderTrackingLink(order);
+  const safeTrackingLink = safeUrl(trackingLink);
   const isExternalTrackingLink = Boolean(
-    order?.trackingUrl ||
-    (order?.trackingCode && /^https?:\/\//i.test(order.trackingCode))
+    safeTrackingLink && /^https?:\/\//i.test(safeTrackingLink) && !isInternalTrackingUrl(safeTrackingLink)
   );
   const code = order?.orderAccessCode || order?.trackingCode || order?.orderNumberFormatted || order?.orderNumber || "";
 
@@ -956,7 +1012,7 @@ function renderOrderTracker(order) {
             <strong>${currentLocale === "en" ? "Tracking code" : currentLocale === "es" ? "Código de rastreo" : "Código de rastreio"}</strong>
             <div>${sanitizeText(code || (currentLocale === "en" ? "No code yet" : currentLocale === "es" ? "Sin código todavía" : "Sem código ainda"))}</div>
           </div>
-          ${trackingLink ? `<a class="tracking-link" href="${sanitizeText(trackingLink)}"${isExternalTrackingLink ? ' target="_blank" rel="noopener"' : ""}>${currentLocale === "en" ? "Open tracking link" : currentLocale === "es" ? "Abrir rastreo" : "Abrir rastreio"}</a>` : ""}
+          ${safeTrackingLink ? `<a class="tracking-link" href="${sanitizeText(safeTrackingLink)}"${isExternalTrackingLink ? ' target="_blank" rel="noopener"' : ""}>${currentLocale === "en" ? "Open tracking link" : currentLocale === "es" ? "Abrir rastreo" : "Abrir rastreio"}</a>` : ""}
         </div>
       </section>
     `;
@@ -989,7 +1045,7 @@ function renderOrderTracker(order) {
           <strong>${currentLocale === "en" ? "Tracking code" : currentLocale === "es" ? "Código de rastreo" : "Código de rastreio"}</strong>
           <div>${sanitizeText(order?.orderAccessCode || code || (currentLocale === "en" ? "Waiting for code" : currentLocale === "es" ? "Esperando código" : "Aguardando código"))}</div>
         </div>
-        ${trackingLink ? `<a class="tracking-link" href="${sanitizeText(trackingLink)}"${isExternalTrackingLink ? ' target="_blank" rel="noopener"' : ""}>${currentLocale === "en" ? "Open tracking link" : currentLocale === "es" ? "Abrir rastreo" : "Abrir rastreio"}</a>` : ""}
+        ${safeTrackingLink ? `<a class="tracking-link" href="${sanitizeText(safeTrackingLink)}"${isExternalTrackingLink ? ' target="_blank" rel="noopener"' : ""}>${currentLocale === "en" ? "Open tracking link" : currentLocale === "es" ? "Abrir rastreo" : "Abrir rastreio"}</a>` : ""}
       </div>
     </section>
   `;
@@ -1114,6 +1170,7 @@ function renderProducts() {
     card.classList.toggle("is-highlighted", product.id === previewProductId);
     const productPagePath = window.location.port === "5173" ? "/src/produto.html" : "/loja/produto.html";
     const productLink = `${productPagePath}?id=${encodeURIComponent(product.id)}`;
+    const productImage = safeUrl(product.image || product.image_url || (Array.isArray(product.images) ? product.images[0] : "") || PLACEHOLDER_IMAGE, { allowDataImage: true }) || PLACEHOLDER_IMAGE;
 
     const priceLabel = product.price > 0 ? formatCurrency(product.price) : t("priceTbd");
     const isOutOfStock = typeof product.stock === "number" && product.stock === 0;
@@ -1134,7 +1191,7 @@ function renderProducts() {
           <div class="catalog-color-swatches">
             ${colorSwatches.map((color) => `
               <a class="catalog-color-swatch" href="${productLink}" title="${sanitizeText(color.name)}" aria-label="${sanitizeText(color.name)}" style="--swatch-color:${sanitizeText(color.hex)}">
-                ${color.hasImage ? `<img src="${sanitizeText(color.image)}" alt="" loading="lazy" onerror="this.remove()">` : ""}
+                ${color.hasImage ? `<img src="${sanitizeText(safeUrl(color.image, { allowDataImage: true }))}" alt="" loading="lazy" onerror="this.remove()">` : ""}
               </a>
             `).join("")}
           </div>
@@ -1155,7 +1212,7 @@ function renderProducts() {
     card.innerHTML = `
       <a class="card-media-link" href="${productLink}" aria-label="Ver ${sanitizeText(product.name)}">
         <div class="card-media">
-          <img src="${sanitizeText(product.image || product.image_url || (Array.isArray(product.images) ? product.images[0] : "") || PLACEHOLDER_IMAGE)}" alt="${sanitizeText(product.name)}" loading="lazy" onerror="this.onerror=null;this.src='${PLACEHOLDER_IMAGE}'">
+          <img src="${sanitizeText(productImage)}" alt="${sanitizeText(product.name)}" loading="lazy" onerror="this.onerror=null;this.src='${PLACEHOLDER_IMAGE}'">
           ${stockBadge}
         </div>
       </a>
@@ -1289,6 +1346,8 @@ function updateCartUI() {
   const countEl = document.getElementById("cart-count");
   const whatsappBtn = document.getElementById("whatsapp");
   const emptyState = document.getElementById("empty-cart");
+  const cartDiscountRow = document.getElementById("cart-discount-row");
+  const cartDiscountEl = document.getElementById("cart-discount");
 
   if (!cartItems || !totalEl || !countEl || !whatsappBtn || !emptyState) return;
 
@@ -1339,7 +1398,12 @@ function updateCartUI() {
     cartItems.appendChild(li);
   });
 
-  totalEl.textContent = getCartSubtotal().toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  const discount = getCouponDiscountPreview();
+  if (cartDiscountRow && cartDiscountEl) {
+    cartDiscountRow.hidden = discount.productDiscount <= 0;
+    cartDiscountEl.textContent = discount.productDiscount.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  }
+  totalEl.textContent = getCartDrawerTotal().toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   countEl.textContent = String(itemCount);
   emptyState.style.display = cart.length ? "none" : "block";
   emptyState.textContent = t("cartEmpty");
@@ -1393,6 +1457,8 @@ function updateCheckoutSummary() {
   const list = document.getElementById("checkout-items");
   const subtotalEl = document.getElementById("checkout-subtotal");
   const shippingEl = document.getElementById("checkout-shipping");
+  const discountRow = document.getElementById("checkout-discount-row");
+  const discountEl = document.getElementById("checkout-discount");
   const totalEl = document.getElementById("checkout-total");
   const noteEl = document.getElementById("checkout-note");
   if (!list || !subtotalEl || !shippingEl || !totalEl || !noteEl) return;
@@ -1411,12 +1477,87 @@ function updateCheckoutSummary() {
     list.appendChild(li);
   });
 
+  const discount = getCouponDiscountPreview();
   subtotalEl.textContent = formatCurrency(getCartSubtotal());
-  shippingEl.textContent = formatCurrency(shippingState.price);
+  shippingEl.textContent = formatCurrency(Math.max(0, shippingState.price - discount.shippingDiscount));
+  if (discountRow && discountEl) {
+    discountRow.hidden = discount.totalDiscount <= 0;
+    discountEl.textContent = `- ${formatCurrency(discount.totalDiscount)}`;
+  }
   totalEl.textContent = formatCurrency(getCartTotal());
   noteEl.textContent = appConfig.stripeConfigured
     ? t("checkoutNoteReady")
     : t("checkoutNoteConfig");
+}
+
+function updateCouponMessage(message = "", tone = "") {
+  ["coupon-message", "cart-coupon-message"].forEach((id) => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.textContent = message;
+    el.className = tone ? `coupon-message ${tone}` : "coupon-message";
+  });
+}
+
+function renderCouponSuggestions() {
+  ["coupon-suggestions", "cart-coupon-suggestions"].forEach((rootId) => {
+    const root = document.getElementById(rootId);
+    if (!root) return;
+    root.innerHTML = "";
+    availableCoupons.slice(0, 3).forEach((coupon) => {
+      const button = document.createElement("button");
+      button.type = "button";
+      button.textContent = coupon.code;
+      button.addEventListener("click", () => {
+        document.getElementById("coupon-code")?.setAttribute("value", coupon.code);
+        document.getElementById("cart-coupon-code")?.setAttribute("value", coupon.code);
+        const checkoutInput = document.getElementById("coupon-code");
+        const cartInput = document.getElementById("cart-coupon-code");
+        if (checkoutInput) checkoutInput.value = coupon.code;
+        if (cartInput) cartInput.value = coupon.code;
+        appliedCoupon = coupon;
+        updateCouponMessage("Cupom aplicado.", "success");
+        updateCartUI();
+        updateCheckoutSummary();
+      });
+      root.appendChild(button);
+    });
+  });
+}
+
+function applyCouponCode(source = "checkout") {
+  const input = document.getElementById(source === "cart" ? "cart-coupon-code" : "coupon-code") || document.getElementById("coupon-code") || document.getElementById("cart-coupon-code");
+  const code = String(input?.value || "").trim().toUpperCase();
+  const checkoutInput = document.getElementById("coupon-code");
+  const cartInput = document.getElementById("cart-coupon-code");
+  if (checkoutInput) checkoutInput.value = code;
+  if (cartInput) cartInput.value = code;
+  if (!code) {
+    appliedCoupon = null;
+    updateCouponMessage("");
+    updateCartUI();
+    updateCheckoutSummary();
+    return;
+  }
+  const coupon = availableCoupons.find((item) => item.code === code && item.active !== false);
+  if (!coupon) {
+    appliedCoupon = null;
+    updateCouponMessage("Cupom não encontrado ou inativo.", "error");
+    updateCartUI();
+    updateCheckoutSummary();
+    return;
+  }
+  if (getCartSubtotal() + shippingState.price < Number(coupon.minOrderValue || 0)) {
+    appliedCoupon = null;
+    updateCouponMessage(`Pedido mínimo de ${formatCurrency(coupon.minOrderValue)}.`, "error");
+    updateCartUI();
+    updateCheckoutSummary();
+    return;
+  }
+  appliedCoupon = coupon;
+  updateCouponMessage("Cupom aplicado.", "success");
+  updateCartUI();
+  updateCheckoutSummary();
 }
 
 function renderOrderSuccess(order) {
@@ -1426,6 +1567,8 @@ function renderOrderSuccess(order) {
   const displayId = displayNumber || sanitizeText(order.id).slice(0, 16);
   const trackingCode = order.orderAccessCode || order.trackingCode || "";
   const trackingLink = getOrderTrackingLink(order);
+  const safeTrackingLink = safeUrl(trackingLink);
+  const whatsAppUrl = safeUrl(getWhatsAppUrl(message));
   const section = document.createElement("section");
   section.className = "section-shell payment-success";
   section.innerHTML = `
@@ -1434,7 +1577,7 @@ function renderOrderSuccess(order) {
       <h2>${t("orderSuccessTitle")}</h2>
       <p>${t("orderSuccessText")}</p>
       <div class="success-actions">
-        <a class="btn btn-primary" target="_blank" rel="noopener" href="${getWhatsAppUrl(message)}">${t("orderSuccessBtn")}</a>
+        <a class="btn btn-primary" target="_blank" rel="noopener" href="${sanitizeText(whatsAppUrl)}">${t("orderSuccessBtn")}</a>
         <a class="btn btn-outline" href="#products">${t("orderSuccessBack")}</a>
       </div>
       <div class="success-details">
@@ -1443,7 +1586,7 @@ function renderOrderSuccess(order) {
         </strong>
         ${trackingCode ? `<span class="order-code-pill">Código ${sanitizeText(trackingCode)}</span>` : ""}
         <span>${t("orderSuccessTotal")} ${formatCurrency(order.amountTotal || 0)}</span>
-        ${trackingLink ? `<a class="tracking-link" href="${sanitizeText(trackingLink)}"${/^https?:\/\//i.test(trackingLink) ? ' target="_blank" rel="noopener"' : ""}>Abrir rastreio</a>` : ""}
+        ${safeTrackingLink ? `<a class="tracking-link" href="${sanitizeText(safeTrackingLink)}"${/^https?:\/\//i.test(safeTrackingLink) ? ' target="_blank" rel="noopener"' : ""}>Abrir rastreio</a>` : ""}
         <small class="order-tracking-hint">Guarde o código e o número para acompanhar seu pedido</small>
       </div>
     </div>
@@ -1497,7 +1640,7 @@ function startOrderTrackingPolling(sessionId) {
     try {
       const response = await fetch(buildApiUrl(`/api/orders/public/${encodeURIComponent(sessionId)}`));
       if (!response.ok) return;
-      const latest = await response.json();
+      const latest = await readApiJson(response);
       const signature = getTrackedOrderSignature(latest);
       if (signature === lastTrackedOrderSignature) return;
       lastTrackedOrderSignature = signature;
@@ -1569,7 +1712,7 @@ async function lookupCep() {
 
   try {
     const response = await fetch(`https://viacep.com.br/ws/${cep}/json/`);
-    const data = await response.json();
+    const data = await readApiJson(response);
     if (data.erro) throw new Error("CEP não encontrado");
 
     shippingState.cepData = data;
@@ -1755,6 +1898,7 @@ async function handleCheckoutSubmit() {
     customer: data.customer,
     address: data.address,
     deliveryMethod: data.deliveryMethod,
+    couponCode: appliedCoupon?.code || "",
     items: cart.map((item) => ({
       id: item.productId || item.id,
       quantity: item.quantity,
@@ -1776,9 +1920,9 @@ async function handleCheckoutSubmit() {
       body: JSON.stringify(payload)
     });
 
-    const result = await response.json();
+    const result = await readApiJson(response);
     if (!response.ok || !result.url) {
-      throw new Error(result.error || (currentLocale === "en" ? "Could not start payment." : currentLocale === "es" ? "No fue posible iniciar el pago." : "Não foi possível iniciar o pagamento."));
+      throw new Error(result?.error || (currentLocale === "en" ? "Could not start payment." : currentLocale === "es" ? "No fue posible iniciar el pago." : "Não foi possível iniciar o pagamento."));
     }
 
     localStorage.setItem("bigsmoke-last-order-session", result.id);
@@ -1803,6 +1947,7 @@ async function redirectCartToStripe(button = null) {
 
   const payload = {
     deliveryMethod: "stripe_checkout",
+    couponCode: appliedCoupon?.code || "",
     items: cart.map((item) => ({
       id: item.productId || item.id,
       quantity: item.quantity,
@@ -1823,9 +1968,9 @@ async function redirectCartToStripe(button = null) {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload)
     });
-    const result = await response.json();
+    const result = await readApiJson(response);
     if (!response.ok || !result.url) {
-      throw new Error(result.error || "Nao foi possivel iniciar o pagamento.");
+      throw new Error(result?.error || "Não foi possível iniciar o pagamento.");
     }
     if (result.id) {
       localStorage.setItem("bigsmoke-last-order-session", result.id);
@@ -1837,7 +1982,7 @@ async function redirectCartToStripe(button = null) {
       button.disabled = false;
       button.textContent = originalText;
     }
-    alert(error.message || "Nao foi possivel abrir o Stripe Checkout agora.");
+    alert(error.message || "Não foi possível abrir o Stripe Checkout agora.");
   }
 }
 
@@ -1845,7 +1990,7 @@ async function loadRuntimeConfig() {
   try {
     const response = await fetch(buildApiUrl("/api/config"));
     if (!response.ok) throw new Error("config");
-    const result = await response.json();
+    const result = await readApiJson(response);
     appConfig = {
       ...DEFAULT_CONFIG,
       ...result,
@@ -1865,12 +2010,24 @@ async function loadProducts() {
     const response = await fetch(buildApiUrl("/api/products"));
     if (!response.ok) throw new Error("products");
     // API disponível é a fonte de verdade; o cache local fica só para fallback offline.
-    products = mergeProducts(await response.json(), []);
+    products = mergeProducts(await readApiJson(response), []);
   } catch {
     products = mergeProducts(FALLBACK_PRODUCTS, loadLocalProducts());
   }
 
   syncHighlightedProductFromUrl();
+}
+
+async function loadCoupons() {
+  try {
+    const response = await fetch(buildApiUrl("/api/coupons"));
+    if (!response.ok) throw new Error("coupons");
+    const result = await readApiJson(response);
+    availableCoupons = Array.isArray(result) ? result : [];
+  } catch {
+    availableCoupons = [];
+  }
+  renderCouponSuggestions();
 }
 
 async function handlePaymentReturn() {
@@ -1885,7 +2042,7 @@ async function handlePaymentReturn() {
   try {
     const response = await fetch(buildApiUrl(`/api/orders/public/${encodeURIComponent(sessionId)}`));
     if (!response.ok) throw new Error("Pedido não encontrado.");
-    orderSuccessData = await response.json();
+    orderSuccessData = await readApiJson(response);
     renderOrderSuccess(orderSuccessData);
     clearCartAfterSuccess();
   } catch {
@@ -1941,7 +2098,7 @@ async function loadStoredOrderTracker() {
   try {
     const response = await fetch(buildApiUrl(`/api/orders/public/${encodeURIComponent(initialValue)}`));
     if (!response.ok) return;
-    const order = await response.json();
+    const order = await readApiJson(response);
     renderStoredOrderTracker(order);
     startOrderTrackingPolling(order.stripeSessionId || initialValue);
   } catch {
@@ -2207,6 +2364,20 @@ function setupPaymentSuccessStyles() {
 function setupCheckout() {
   document.getElementById("checkout-button")?.addEventListener("click", (event) => redirectCartToStripe(event.currentTarget));
   document.getElementById("confirm-checkout")?.addEventListener("click", handleCheckoutSubmit);
+  document.getElementById("apply-coupon")?.addEventListener("click", applyCouponCode);
+  document.getElementById("apply-cart-coupon")?.addEventListener("click", () => applyCouponCode("cart"));
+  document.getElementById("coupon-code")?.addEventListener("keydown", (event) => {
+    if (event.key === "Enter") {
+      event.preventDefault();
+      applyCouponCode();
+    }
+  });
+  document.getElementById("cart-coupon-code")?.addEventListener("keydown", (event) => {
+    if (event.key === "Enter") {
+      event.preventDefault();
+      applyCouponCode("cart");
+    }
+  });
   document.getElementById("lookup-cep")?.addEventListener("click", lookupCep);
   document.getElementById("use-location")?.addEventListener("click", useCurrentLocation);
   document.getElementById("customer-cep")?.addEventListener("blur", () => {
@@ -2410,10 +2581,11 @@ function updateAuthProfileButton() {
   }
 
   const initial = String(user.firstName?.[0] || user.email?.[0] || "B").toUpperCase();
+  const photoUrl = safeUrl(user.photo, { allowDataImage: true });
   profileLink.classList.add("profile-authenticated");
-  profileLink.innerHTML = user.photo
-    ? `<img class="profile-photo-thumb" src="${user.photo}" alt="">`
-    : initial;
+  profileLink.innerHTML = photoUrl
+    ? `<img class="profile-photo-thumb" src="${sanitizeText(photoUrl)}" alt="">`
+    : sanitizeText(initial);
   profileLink.setAttribute("aria-label", "Perfil");
   profileLink.setAttribute("title", "Perfil");
 }
@@ -2491,7 +2663,8 @@ async function handleAuthSubmit(event) {
 function updateAuthPhotoPreview(src) {
   const preview = document.getElementById("auth-photo-preview");
   if (!preview) return;
-  preview.innerHTML = src ? `<img src="${src}" alt="">` : "+";
+  const photoUrl = safeUrl(src, { allowDataImage: true });
+  preview.innerHTML = photoUrl ? `<img src="${sanitizeText(photoUrl)}" alt="">` : "+";
 }
 
 function getGoogleClientId() {
@@ -2680,6 +2853,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   await detectApiBase();
   await loadRuntimeConfig();
   await loadProducts();
+  await loadCoupons();
   setupCatalogNavigation();
   setupCheckout();
   setupOrderTrackingLookup();
@@ -2741,4 +2915,13 @@ document.addEventListener("DOMContentLoaded", async () => {
     redirectCartToStripe();
   };
 })();
+
+Object.assign(window, {
+  addToCart,
+  toggleCart,
+  openCheckout,
+  closeCheckout,
+  scrollToProducts,
+  focusSearch
+});
 

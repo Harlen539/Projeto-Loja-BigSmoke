@@ -1,14 +1,152 @@
 [
   {
+    "id": "order_831b6007-e785-42de-ba66-f3d34287110e",
+    "orderNumber": "36",
+    "orderNumberFormatted": "#00036",
+    "orderAccessCode": "#1a50ba88",
+    "hiddenInAdmin": false,
+    "stripeSessionId": "cs_test_b1gntKXGAOJcTpphY64HDQgIosPN0FhCvnjqIaZuIjW44paV0b6LfLssv4",
+    "paymentIntentId": "",
+    "stripeEventId": "",
+    "status": "paid",
+    "currency": "brl",
+    "amountSubtotal": 254.70000000000002,
+    "shippingAmount": 28,
+    "amountTotal": 282.70000000000005,
+    "paymentConfirmed": false,
+    "inventoryDebitedAt": "2026-05-08T10:20:39.506Z",
+    "customer": {
+      "name": "Cliente Stripe",
+      "email": "",
+      "phone": ""
+    },
+    "address": {
+      "cep": "",
+      "street": "",
+      "number": "",
+      "neighborhood": "",
+      "city": "",
+      "state": "",
+      "complement": ""
+    },
+    "deliveryMethod": "stripe_checkout",
+    "shippingLabel": "Envio nacional",
+    "discountAmount": 0,
+    "productDiscountAmount": 0,
+    "shippingDiscountAmount": 0,
+    "coupon": null,
+    "trackingCode": "#ac485d9e",
+    "trackingUrl": "http://localhost:3000/loja/pedidos.html?tracking=%231a50ba88",
+    "items": [
+      {
+        "id": "preview-1777902029458",
+        "name": "Camiseta BigSmoke Smoke Identity",
+        "quantity": 3,
+        "price": 84.9,
+        "category": "Camisetas",
+        "image": "/uploads/1777901887119-cinza_1.webp",
+        "size": "P",
+        "color": ""
+      }
+    ],
+    "events": [
+      {
+        "type": "admin.order.updated",
+        "id": "dc1a7459-f85a-41de-afa9-d761142e4179",
+        "created": "2026-05-08T10:20:39.523Z",
+        "status": "paid",
+        "trackingCode": "#ac485d9e",
+        "trackingUrl": "http://localhost:3000/loja/pedidos.html?tracking=%231a50ba88"
+      }
+    ],
+    "sessionUrl": "https://checkout.stripe.com/c/pay/cs_test_b1gntKXGAOJcTpphY64HDQgIosPN0FhCvnjqIaZuIjW44paV0b6LfLssv4#fidnandhYHdWcXxpYCc%2FJ2FgY2RwaXEnKSdpamZkaWAnPyd1cShHVycpJ2JwZGZkaGppYFNkd2xka3EnPydmamtxd2ppJyknZHVsTmB8Jz8ndW5acWB2cVowNFFUZnVCQXN%2FY0N9aWJqd3ZpfGlfMVBCclVfSF1ja1F%2FbktoYjxNUkJrQFZLNTB9dHNqUzJraH1rfGFLZmFMR012QDwxbTYydF1ybDV%2FNlxJcWZMNDY8MDU1PEFASzF9UW4nKSdjd2poVmB3c2B3Jz9xd3BgKSdnZGZuYndqcGthRmppancnPycmY2NjY2NjJyknaWR8anBxUXx1YCc%2FJ2hwaXFsWmxxYGgnKSdga2RnaWBVaWRmYG1qaWFgd3YnP3F3cGB4JSUl",
+    "paidAt": "2026-05-08T10:20:39.528Z",
+    "canceledAt": "",
+    "createdAt": "2026-05-08T03:32:35.145Z",
+    "updatedAt": "2026-05-08T10:20:39.528Z"
+  },
+  {
+    "id": "order_871b1a54-d52e-4ef9-a3d8-2619e30da965",
+    "orderNumber": "30",
+    "orderNumberFormatted": "#00030",
+    "orderAccessCode": "#d87c6790",
+    "hiddenInAdmin": false,
+    "stripeSessionId": "cs_test_b1GY5ZBZQ4BqZ40rT1x4zCkRYg43xOrieGZH5uv9TD4rEnxryoQonysaLq",
+    "paymentIntentId": "",
+    "stripeEventId": "",
+    "status": "canceled",
+    "currency": "brl",
+    "amountSubtotal": 334.8,
+    "shippingAmount": 28,
+    "amountTotal": 362.8,
+    "paymentConfirmed": false,
+    "inventoryDebitedAt": "",
+    "customer": {
+      "name": "johann2007",
+      "email": "johann@gmail.com",
+      "phone": "+5583000000000"
+    },
+    "address": {
+      "cep": "",
+      "street": "",
+      "number": "",
+      "neighborhood": "",
+      "city": "",
+      "state": "",
+      "complement": ""
+    },
+    "deliveryMethod": "stripe_checkout",
+    "shippingLabel": "Envio nacional",
+    "trackingCode": "#1f55f17a",
+    "trackingUrl": "http://localhost:3000/loja/pedidos.html?tracking=%23d87c6790",
+    "items": [
+      {
+        "id": "moletom-classic",
+        "name": "Moletom Classic BigSmoke",
+        "quantity": 1,
+        "price": 249.9,
+        "category": "Moletons",
+        "image": "/uploads/1777991004394-moletom_frente.webp",
+        "size": "M",
+        "color": ""
+      },
+      {
+        "id": "preview-1777902029458",
+        "name": "Camiseta BigSmoke Smoke Identity",
+        "quantity": 1,
+        "price": 84.9,
+        "category": "Camisetas",
+        "image": "/uploads/1777901887119-cinza_1.webp",
+        "size": "M",
+        "color": ""
+      }
+    ],
+    "events": [
+      {
+        "type": "admin.order.updated",
+        "id": "a0e8a61e-7afe-43bc-84d9-90942ec183dc",
+        "created": "2026-05-08T03:04:52.627Z",
+        "status": "canceled",
+        "trackingCode": "#1f55f17a",
+        "trackingUrl": "http://localhost:3000/loja/pedidos.html?tracking=%23d87c6790"
+      }
+    ],
+    "sessionUrl": "https://checkout.stripe.com/c/pay/cs_test_b1GY5ZBZQ4BqZ40rT1x4zCkRYg43xOrieGZH5uv9TD4rEnxryoQonysaLq#fidnandhYHdWcXxpYCc%2FJ2FgY2RwaXEnKSdpamZkaWAnPyd1cShHVycpJ2JwZGZkaGppYFNkd2xka3EnPydmamtxd2ppJyknZHVsTmB8Jz8ndW5acWB2cVowNFFUZnVCQXN%2FY0N9aWJqd3ZpfGlfMVBCclVfSF1ja1F%2FbktoYjxNUkJrQFZLNTB9dHNqUzJraH1rfGFLZmFMR012QDwxbTYydF1ybDV%2FNlxJcWZMNDY8MDU1PEFASzF9UW4nKSdjd2poVmB3c2B3Jz9xd3BgKSdnZGZuYndqcGthRmppancnPycmY2NjY2NjJyknaWR8anBxUXx1YCc%2FJ2hwaXFsWmxxYGgnKSdga2RnaWBVaWRmYG1qaWFgd3YnP3F3cGB4JSUl",
+    "paidAt": "",
+    "canceledAt": "2026-05-08T03:04:52.629Z",
+    "createdAt": "2026-05-07T22:58:48.211Z",
+    "updatedAt": "2026-05-08T03:04:52.629Z"
+  },
+  {
     "id": "order_ea3b5991-8d97-45a0-866b-d44c1cd9cfea",
-    "orderNumber": 29,
+    "orderNumber": "29",
     "orderNumberFormatted": "#00029",
     "orderAccessCode": "#b89bec2a",
     "hiddenInAdmin": false,
     "stripeSessionId": "cs_test_b1HjFHeleGFvqTLBi020UXhi2Etfb1O1zwzhaWUATwowakrcY47obKMB6V",
     "paymentIntentId": "",
     "stripeEventId": "",
-    "status": "pending",
+    "status": "canceled",
     "currency": "brl",
     "amountSubtotal": 249.9,
     "shippingAmount": 28,
@@ -41,26 +179,36 @@
         "price": 249.9,
         "category": "Moletons",
         "image": "/uploads/1777991004394-moletom_frente.webp",
-        "size": "M"
+        "size": "M",
+        "color": ""
       }
     ],
-    "events": [],
+    "events": [
+      {
+        "type": "admin.order.updated",
+        "id": "05e05371-c9ac-4d66-8754-53d747774478",
+        "created": "2026-05-08T03:04:53.720Z",
+        "status": "canceled",
+        "trackingCode": "#bc9d355f",
+        "trackingUrl": "http://localhost:3000/loja/pedidos.html?tracking=%23b89bec2a"
+      }
+    ],
     "sessionUrl": "https://checkout.stripe.com/c/pay/cs_test_b1HjFHeleGFvqTLBi020UXhi2Etfb1O1zwzhaWUATwowakrcY47obKMB6V#fidnandhYHdWcXxpYCc%2FJ2FgY2RwaXEnKSdpamZkaWAnPyd1cShHVycpJ2JwZGZkaGppYFNkd2xka3EnPydmamtxd2ppJyknZHVsTmB8Jz8ndW5acWB2cVowNFFUZnVCQXN%2FY0N9aWJqd3ZpfGlfMVBCclVfSF1ja1F%2FbktoYjxNUkJrQFZLNTB9dHNqUzJraH1rfGFLZmFMR012QDwxbTYydF1ybDV%2FNlxJcWZMNDY8MDU1PEFASzF9UW4nKSdjd2poVmB3c2B3Jz9xd3BgKSdnZGZuYndqcGthRmppancnPycmY2NjY2NjJyknaWR8anBxUXx1YCc%2FJ2hwaXFsWmxxYGgnKSdga2RnaWBVaWRmYG1qaWFgd3YnP3F3cGB4JSUl",
     "paidAt": "",
-    "canceledAt": "",
+    "canceledAt": "2026-05-08T03:04:53.724Z",
     "createdAt": "2026-05-07T03:48:22.906Z",
-    "updatedAt": "2026-05-07T03:48:23.898Z"
+    "updatedAt": "2026-05-08T03:04:53.724Z"
   },
   {
     "id": "order_1ebd64a9-e369-4503-a27e-2aaded7b1d48",
-    "orderNumber": 28,
+    "orderNumber": "28",
     "orderNumberFormatted": "#00028",
     "orderAccessCode": "#6b3a06f7",
     "hiddenInAdmin": false,
     "stripeSessionId": "cs_test_b139c5xVI4qQiACSXG8Iv9e0hfJ51XKYvfzPbWtYTcEGwSTdcWwcuaIKU6",
     "paymentIntentId": "",
     "stripeEventId": "",
-    "status": "delivered",
+    "status": "canceled",
     "currency": "brl",
     "amountSubtotal": 249.9,
     "shippingAmount": 28,
@@ -93,7 +241,8 @@
         "price": 249.9,
         "category": "Moletons",
         "image": "/uploads/1777991004394-moletom_frente.webp",
-        "size": "M"
+        "size": "M",
+        "color": ""
       }
     ],
     "events": [
@@ -112,24 +261,32 @@
         "status": "delivered",
         "trackingCode": "#14f7377e",
         "trackingUrl": "http://localhost:3000/loja/pedidos.html?tracking=%236b3a06f7"
+      },
+      {
+        "type": "admin.order.updated",
+        "id": "ef34e361-74eb-4ef2-aa44-e19bd8015921",
+        "created": "2026-05-08T03:04:55.254Z",
+        "status": "canceled",
+        "trackingCode": "#14f7377e",
+        "trackingUrl": "http://localhost:3000/loja/pedidos.html?tracking=%236b3a06f7"
       }
     ],
     "sessionUrl": "https://checkout.stripe.com/c/pay/cs_test_b139c5xVI4qQiACSXG8Iv9e0hfJ51XKYvfzPbWtYTcEGwSTdcWwcuaIKU6#fidnandhYHdWcXxpYCc%2FJ2FgY2RwaXEnKSdpamZkaWAnPyd1cShHVycpJ2JwZGZkaGppYFNkd2xka3EnPydmamtxd2ppJyknZHVsTmB8Jz8ndW5acWB2cVowNFFUZnVCQXN%2FY0N9aWJqd3ZpfGlfMVBCclVfSF1ja1F%2FbktoYjxNUkJrQFZLNTB9dHNqUzJraH1rfGFLZmFMR012QDwxbTYydF1ybDV%2FNlxJcWZMNDY8MDU1PEFASzF9UW4nKSdjd2poVmB3c2B3Jz9xd3BgKSdnZGZuYndqcGthRmppancnPycmY2NjY2NjJyknaWR8anBxUXx1YCc%2FJ2hwaXFsWmxxYGgnKSdga2RnaWBVaWRmYG1qaWFgd3YnP3F3cGB4JSUl",
     "paidAt": "2026-05-06T23:28:10.760Z",
-    "canceledAt": "",
+    "canceledAt": "2026-05-08T03:04:55.255Z",
     "createdAt": "2026-05-06T23:17:37.516Z",
-    "updatedAt": "2026-05-07T03:47:41.804Z"
+    "updatedAt": "2026-05-08T03:04:55.255Z"
   },
   {
     "id": "order_9d10c295-f77d-41c2-814d-c754a4f047f5",
-    "orderNumber": 27,
+    "orderNumber": "27",
     "orderNumberFormatted": "#00027",
     "orderAccessCode": "#6d566eae",
     "hiddenInAdmin": false,
     "stripeSessionId": "cs_test_b1FO7opHsnzAw991gfPC6e96LGi0ILbgs3KcAwvLMb7mNKFxfUfcvIqjvF",
     "paymentIntentId": "",
     "stripeEventId": "",
-    "status": "delivered",
+    "status": "canceled",
     "currency": "brl",
     "amountSubtotal": 249.9,
     "shippingAmount": 28,
@@ -162,7 +319,8 @@
         "price": 249.9,
         "category": "Moletons",
         "image": "/uploads/1777991004394-moletom_frente.webp",
-        "size": "M"
+        "size": "M",
+        "color": ""
       }
     ],
     "events": [
@@ -253,24 +411,32 @@
         "status": "delivered",
         "trackingCode": "#e16ee177",
         "trackingUrl": "http://localhost:3000/loja/pedidos.html?tracking=%236d566eae"
+      },
+      {
+        "type": "admin.order.updated",
+        "id": "38161f67-84c7-4c3d-b788-1b04d53bb036",
+        "created": "2026-05-08T03:06:07.194Z",
+        "status": "canceled",
+        "trackingCode": "#e16ee177",
+        "trackingUrl": "http://localhost:3000/loja/pedidos.html?tracking=%236d566eae"
       }
     ],
     "sessionUrl": "https://checkout.stripe.com/c/pay/cs_test_b1FO7opHsnzAw991gfPC6e96LGi0ILbgs3KcAwvLMb7mNKFxfUfcvIqjvF#fidnandhYHdWcXxpYCc%2FJ2FgY2RwaXEnKSdpamZkaWAnPyd1cShHVycpJ2JwZGZkaGppYFNkd2xka3EnPydmamtxd2ppJyknZHVsTmB8Jz8ndW5acWB2cVowNFFUZnVCQXN%2FY0N9aWJqd3ZpfGlfMVBCclVfSF1ja1F%2FbktoYjxNUkJrQFZLNTB9dHNqUzJraH1rfGFLZmFMR012QDwxbTYydF1ybDV%2FNlxJcWZMNDY8MDU1PEFASzF9UW4nKSdjd2poVmB3c2B3Jz9xd3BgKSdnZGZuYndqcGthRmppancnPycmY2NjY2NjJyknaWR8anBxUXx1YCc%2FJ2hwaXFsWmxxYGgnKSdga2RnaWBVaWRmYG1qaWFgd3YnP3F3cGB4JSUl",
     "paidAt": "2026-05-06T22:52:26.496Z",
-    "canceledAt": "",
+    "canceledAt": "2026-05-08T03:06:07.195Z",
     "createdAt": "2026-05-06T22:16:19.690Z",
-    "updatedAt": "2026-05-06T22:59:29.642Z"
+    "updatedAt": "2026-05-08T03:06:07.195Z"
   },
   {
     "id": "order_b2e9dc8c-d86a-474d-8a98-54ce7c7d3dcb",
-    "orderNumber": 26,
+    "orderNumber": "26",
     "orderNumberFormatted": "#00026",
     "orderAccessCode": "#c1755476",
     "hiddenInAdmin": false,
     "stripeSessionId": "cs_test_b1rsgwQ0U6qcuFgvSZ3mKcComfGSCkHMnloqj8H9y7Ha7lIHqhlEZ8jMoN",
     "paymentIntentId": "",
     "stripeEventId": "",
-    "status": "pending",
+    "status": "canceled",
     "currency": "brl",
     "amountSubtotal": 249.9,
     "shippingAmount": 28,
@@ -303,26 +469,36 @@
         "price": 249.9,
         "category": "Moletons",
         "image": "/uploads/1777991004394-moletom_frente.webp",
-        "size": "M"
+        "size": "M",
+        "color": ""
       }
     ],
-    "events": [],
+    "events": [
+      {
+        "type": "admin.order.updated",
+        "id": "a62898f8-c4f3-4011-8d99-b73293384383",
+        "created": "2026-05-08T03:04:57.108Z",
+        "status": "canceled",
+        "trackingCode": "#955eac5a",
+        "trackingUrl": "http://localhost:3000/loja/pedidos.html?tracking=%23c1755476"
+      }
+    ],
     "sessionUrl": "https://checkout.stripe.com/c/pay/cs_test_b1rsgwQ0U6qcuFgvSZ3mKcComfGSCkHMnloqj8H9y7Ha7lIHqhlEZ8jMoN#fidnandhYHdWcXxpYCc%2FJ2FgY2RwaXEnKSdpamZkaWAnPyd1cShHVycpJ2JwZGZkaGppYFNkd2xka3EnPydmamtxd2ppJyknZHVsTmB8Jz8ndW5acWB2cVowNFFUZnVCQXN%2FY0N9aWJqd3ZpfGlfMVBCclVfSF1ja1F%2FbktoYjxNUkJrQFZLNTB9dHNqUzJraH1rfGFLZmFMR012QDwxbTYydF1ybDV%2FNlxJcWZMNDY8MDU1PEFASzF9UW4nKSdjd2poVmB3c2B3Jz9xd3BgKSdnZGZuYndqcGthRmppancnPycmY2NjY2NjJyknaWR8anBxUXx1YCc%2FJ2hwaXFsWmxxYGgnKSdga2RnaWBVaWRmYG1qaWFgd3YnP3F3cGB4JSUl",
     "paidAt": "",
-    "canceledAt": "",
+    "canceledAt": "2026-05-08T03:04:57.110Z",
     "createdAt": "2026-05-06T21:06:18.483Z",
-    "updatedAt": "2026-05-06T21:06:20.047Z"
+    "updatedAt": "2026-05-08T03:04:57.110Z"
   },
   {
     "id": "order_6abf4da5-7adf-4118-bdef-468e2e593d92",
-    "orderNumber": 25,
+    "orderNumber": "25",
     "orderNumberFormatted": "#00025",
     "orderAccessCode": "#5f02e9a7",
     "hiddenInAdmin": false,
     "stripeSessionId": "cs_test_b14e5j3YUd45PRReIaerJt9sJi4a6rQLS8xuAieIQMWTpNCL5Z4IyGn1Nu",
     "paymentIntentId": "",
     "stripeEventId": "",
-    "status": "paid",
+    "status": "canceled",
     "currency": "brl",
     "amountSubtotal": 84.9,
     "shippingAmount": 28,
@@ -355,7 +531,8 @@
         "price": 84.9,
         "category": "Camisetas",
         "image": "/uploads/1777901887119-cinza_1.webp",
-        "size": ""
+        "size": "",
+        "color": ""
       }
     ],
     "events": [
@@ -366,24 +543,32 @@
         "status": "paid",
         "trackingCode": "#b1938a63",
         "trackingUrl": "http://localhost:3000/loja/pedidos.html?tracking=%235f02e9a7"
+      },
+      {
+        "type": "admin.order.updated",
+        "id": "b8915397-5cc5-4ab4-91dc-c7971fa1c0d9",
+        "created": "2026-05-08T03:04:58.026Z",
+        "status": "canceled",
+        "trackingCode": "#b1938a63",
+        "trackingUrl": "http://localhost:3000/loja/pedidos.html?tracking=%235f02e9a7"
       }
     ],
     "sessionUrl": "https://checkout.stripe.com/c/pay/cs_test_b14e5j3YUd45PRReIaerJt9sJi4a6rQLS8xuAieIQMWTpNCL5Z4IyGn1Nu#fidnandhYHdWcXxpYCc%2FJ2FgY2RwaXEnKSdpamZkaWAnPyd1cShHVycpJ2JwZGZkaGppYFNkd2xka3EnPydmamtxd2ppJyknZHVsTmB8Jz8ndW5acWB2cVowNFFUZnVCQXN%2FY0N9aWJqd3ZpfGlfMVBCclVfSF1ja1F%2FbktoYjxNUkJrQFZLNTB9dHNqUzJraH1rfGFLZmFMR012QDwxbTYydF1ybDV%2FNlxJcWZMNDY8MDU1PEFASzF9UW4nKSdjd2poVmB3c2B3Jz9xd3BgKSdnZGZuYndqcGthRmppancnPycmY2NjY2NjJyknaWR8anBxUXx1YCc%2FJ2hwaXFsWmxxYGgnKSdga2RnaWBVaWRmYG1qaWFgd3YnP3F3cGB4JSUl",
     "paidAt": "2026-05-06T13:27:17.473Z",
-    "canceledAt": "",
+    "canceledAt": "2026-05-08T03:04:58.027Z",
     "createdAt": "2026-05-06T13:12:37.987Z",
-    "updatedAt": "2026-05-06T13:27:17.473Z"
+    "updatedAt": "2026-05-08T03:04:58.027Z"
   },
   {
     "id": "order_2ecc2b6c-0235-4f67-ab62-a5d038ed3302",
-    "orderNumber": 24,
+    "orderNumber": "24",
     "orderNumberFormatted": "#00024",
     "orderAccessCode": "#8878e06f",
     "hiddenInAdmin": false,
     "stripeSessionId": "cs_test_b1klJDU6eyClqEP8olk1wLaDBqwt8C7XAVgFKaipZtH8hyEnc8v7TQQ9yh",
     "paymentIntentId": "",
     "stripeEventId": "",
-    "status": "processing",
+    "status": "canceled",
     "currency": "brl",
     "amountSubtotal": 84.9,
     "shippingAmount": 28,
@@ -416,7 +601,8 @@
         "price": 84.9,
         "category": "Camisetas",
         "image": "/uploads/1777901887119-cinza_1.webp",
-        "size": "P"
+        "size": "P",
+        "color": ""
       }
     ],
     "events": [
@@ -435,30 +621,38 @@
         "status": "processing",
         "trackingCode": "#b73be6ba",
         "trackingUrl": "http://localhost:3000/loja/pedidos.html?tracking=%238878e06f"
+      },
+      {
+        "type": "admin.order.updated",
+        "id": "e50f602c-6d32-4fd6-b97d-23abdea0fff1",
+        "created": "2026-05-08T03:04:59.259Z",
+        "status": "canceled",
+        "trackingCode": "#b73be6ba",
+        "trackingUrl": "http://localhost:3000/loja/pedidos.html?tracking=%238878e06f"
       }
     ],
     "sessionUrl": "https://checkout.stripe.com/c/pay/cs_test_b1klJDU6eyClqEP8olk1wLaDBqwt8C7XAVgFKaipZtH8hyEnc8v7TQQ9yh#fidnandhYHdWcXxpYCc%2FJ2FgY2RwaXEnKSdpamZkaWAnPyd1cShHVycpJ2JwZGZkaGppYFNkd2xka3EnPydmamtxd2ppJyknZHVsTmB8Jz8ndW5acWB2cVowNFFUZnVCQXN%2FY0N9aWJqd3ZpfGlfMVBCclVfSF1ja1F%2FbktoYjxNUkJrQFZLNTB9dHNqUzJraH1rfGFLZmFMR012QDwxbTYydF1ybDV%2FNlxJcWZMNDY8MDU1PEFASzF9UW4nKSdjd2poVmB3c2B3Jz9xd3BgKSdnZGZuYndqcGthRmppancnPycmY2NjY2NjJyknaWR8anBxUXx1YCc%2FJ2hwaXFsWmxxYGgnKSdga2RnaWBVaWRmYG1qaWFgd3YnP3F3cGB4JSUl",
     "paidAt": "2026-05-06T13:09:37.728Z",
-    "canceledAt": "",
+    "canceledAt": "2026-05-08T03:04:59.260Z",
     "createdAt": "2026-05-06T13:04:40.032Z",
-    "updatedAt": "2026-05-06T13:11:39.282Z"
+    "updatedAt": "2026-05-08T03:04:59.260Z"
   },
   {
     "id": "order_a181f613-5a6a-4eaf-b569-581e00d43e7a",
-    "orderNumber": 23,
+    "orderNumber": "23",
     "orderNumberFormatted": "#00023",
     "orderAccessCode": "#f24ab410",
     "hiddenInAdmin": false,
     "stripeSessionId": "cs_test_b1Dcrf8lJXV7CPEaP49kWquPf99oOVVXOeCMmbLf8wUMQXd2T562OTDd9e",
     "paymentIntentId": "",
     "stripeEventId": "",
-    "status": "pending",
+    "status": "delivered",
     "currency": "brl",
     "amountSubtotal": 84.9,
     "shippingAmount": 28,
     "amountTotal": 112.9,
     "paymentConfirmed": false,
-    "inventoryDebitedAt": "",
+    "inventoryDebitedAt": "2026-05-08T03:05:53.275Z",
     "customer": {
       "name": "Cliente Stripe",
       "email": "",
@@ -485,26 +679,36 @@
         "price": 84.9,
         "category": "Camisetas",
         "image": "/uploads/1777901887119-cinza_1.webp",
-        "size": ""
+        "size": "",
+        "color": ""
       }
     ],
-    "events": [],
+    "events": [
+      {
+        "type": "admin.order.updated",
+        "id": "a64b7a85-6238-488b-aba1-0078060c4068",
+        "created": "2026-05-08T03:05:53.280Z",
+        "status": "delivered",
+        "trackingCode": "#f48f2bce",
+        "trackingUrl": "http://localhost:3000/loja/pedidos.html?tracking=%23f24ab410"
+      }
+    ],
     "sessionUrl": "https://checkout.stripe.com/c/pay/cs_test_b1Dcrf8lJXV7CPEaP49kWquPf99oOVVXOeCMmbLf8wUMQXd2T562OTDd9e#fidnandhYHdWcXxpYCc%2FJ2FgY2RwaXEnKSdpamZkaWAnPyd1cShHVycpJ2JwZGZkaGppYFNkd2xka3EnPydmamtxd2ppJyknZHVsTmB8Jz8ndW5acWB2cVowNFFUZnVCQXN%2FY0N9aWJqd3ZpfGlfMVBCclVfSF1ja1F%2FbktoYjxNUkJrQFZLNTB9dHNqUzJraH1rfGFLZmFMR012QDwxbTYydF1ybDV%2FNlxJcWZMNDY8MDU1PEFASzF9UW4nKSdjd2poVmB3c2B3Jz9xd3BgKSdnZGZuYndqcGthRmppancnPycmY2NjY2NjJyknaWR8anBxUXx1YCc%2FJ2hwaXFsWmxxYGgnKSdga2RnaWBVaWRmYG1qaWFgd3YnP3F3cGB4JSUl",
-    "paidAt": "",
+    "paidAt": "2026-05-08T03:05:53.281Z",
     "canceledAt": "",
     "createdAt": "2026-05-06T13:03:45.454Z",
-    "updatedAt": "2026-05-06T13:03:46.328Z"
+    "updatedAt": "2026-05-08T03:05:53.281Z"
   },
   {
     "id": "order_34d8373c-cdf7-4af0-b6e6-fcf857fcfa86",
-    "orderNumber": 20,
+    "orderNumber": "20",
     "orderNumberFormatted": "#00020",
     "orderAccessCode": "#0c07b318",
     "hiddenInAdmin": false,
     "stripeSessionId": "cs_test_f0070fc5-d0e4-4ce6-a533-70ef6abca88d",
     "paymentIntentId": "",
     "stripeEventId": "",
-    "status": "pending",
+    "status": "canceled",
     "currency": "brl",
     "amountSubtotal": 84.9,
     "shippingAmount": 28,
@@ -537,26 +741,36 @@
         "price": 84.9,
         "category": "Camisetas",
         "image": "/uploads/1777901887119-cinza_1.webp",
-        "size": "P"
+        "size": "P",
+        "color": ""
       }
     ],
-    "events": [],
+    "events": [
+      {
+        "type": "admin.order.updated",
+        "id": "1ccac5e1-6cb6-4247-9cd0-e7ff59c561bd",
+        "created": "2026-05-08T03:05:01.907Z",
+        "status": "canceled",
+        "trackingCode": "#aa9405d6",
+        "trackingUrl": "http://localhost:3000/loja/pedidos.html?tracking=%230c07b318"
+      }
+    ],
     "sessionUrl": "http://localhost:5173/loja/?mock_session=cs_test_f0070fc5-d0e4-4ce6-a533-70ef6abca88d",
     "paidAt": "",
-    "canceledAt": "",
+    "canceledAt": "2026-05-08T03:05:01.909Z",
     "createdAt": "2026-05-06T12:58:56.332Z",
-    "updatedAt": "2026-05-06T12:58:56.333Z"
+    "updatedAt": "2026-05-08T03:05:01.909Z"
   },
   {
     "id": "order_2437fa2c-781b-4759-889d-89e36598ecb0",
-    "orderNumber": 19,
+    "orderNumber": "19",
     "orderNumberFormatted": "#00019",
     "orderAccessCode": "#21cda79f",
     "hiddenInAdmin": false,
     "stripeSessionId": "cs_test_e13f4a16-8317-4e37-a2f3-4aa1819be1c2",
     "paymentIntentId": "",
     "stripeEventId": "",
-    "status": "pending",
+    "status": "canceled",
     "currency": "brl",
     "amountSubtotal": 84.9,
     "shippingAmount": 28,
@@ -589,26 +803,36 @@
         "price": 84.9,
         "category": "Camisetas",
         "image": "/uploads/1777901887119-cinza_1.webp",
-        "size": "P"
+        "size": "P",
+        "color": ""
       }
     ],
-    "events": [],
+    "events": [
+      {
+        "type": "admin.order.updated",
+        "id": "60d80eb9-1370-4a1a-8f68-02bf86b87262",
+        "created": "2026-05-08T03:05:06.123Z",
+        "status": "canceled",
+        "trackingCode": "#3ca35dab",
+        "trackingUrl": "http://localhost:3000/loja/pedidos.html?tracking=%2321cda79f"
+      }
+    ],
     "sessionUrl": "http://localhost:5173/loja/?mock_session=cs_test_e13f4a16-8317-4e37-a2f3-4aa1819be1c2",
     "paidAt": "",
-    "canceledAt": "",
+    "canceledAt": "2026-05-08T03:05:06.125Z",
     "createdAt": "2026-05-06T12:57:26.591Z",
-    "updatedAt": "2026-05-06T12:57:26.592Z"
+    "updatedAt": "2026-05-08T03:05:06.125Z"
   },
   {
     "id": "order_5f73a2c8-9042-47ba-b7d8-353a5cad72cc",
-    "orderNumber": 18,
+    "orderNumber": "18",
     "orderNumberFormatted": "#00018",
     "orderAccessCode": "#0b510378",
     "hiddenInAdmin": false,
     "stripeSessionId": "cs_test_248c77c4-cc80-46ca-bf6e-e0d3cd3f5ebb",
     "paymentIntentId": "",
     "stripeEventId": "",
-    "status": "pending",
+    "status": "canceled",
     "currency": "brl",
     "amountSubtotal": 84.9,
     "shippingAmount": 28,
@@ -641,26 +865,36 @@
         "price": 84.9,
         "category": "Camisetas",
         "image": "/uploads/1777901887119-cinza_1.webp",
-        "size": "P"
+        "size": "P",
+        "color": ""
       }
     ],
-    "events": [],
+    "events": [
+      {
+        "type": "admin.order.updated",
+        "id": "c5cb3d3f-46eb-4aaa-9255-498aa52a7a65",
+        "created": "2026-05-08T03:05:03.949Z",
+        "status": "canceled",
+        "trackingCode": "#39a5526c",
+        "trackingUrl": "http://localhost:3000/loja/pedidos.html?tracking=%230b510378"
+      }
+    ],
     "sessionUrl": "http://localhost:5173/loja/?mock_session=cs_test_248c77c4-cc80-46ca-bf6e-e0d3cd3f5ebb",
     "paidAt": "",
-    "canceledAt": "",
+    "canceledAt": "2026-05-08T03:05:03.951Z",
     "createdAt": "2026-05-06T12:57:11.626Z",
-    "updatedAt": "2026-05-06T12:57:11.631Z"
+    "updatedAt": "2026-05-08T03:05:03.951Z"
   },
   {
     "id": "order_279eae13-2722-4963-9be7-911801e481ba",
-    "orderNumber": 17,
+    "orderNumber": "17",
     "orderNumberFormatted": "#00017",
     "orderAccessCode": "#55665452",
     "hiddenInAdmin": false,
     "stripeSessionId": "cs_test_d42af17f-7987-4fc0-8d2b-0157f31f8246",
     "paymentIntentId": "",
     "stripeEventId": "",
-    "status": "pending",
+    "status": "canceled",
     "currency": "brl",
     "amountSubtotal": 84.9,
     "shippingAmount": 28,
@@ -693,26 +927,52 @@
         "price": 84.9,
         "category": "Camisetas",
         "image": "/uploads/1777901887119-cinza_1.webp",
-        "size": "P"
+        "size": "P",
+        "color": ""
       }
     ],
-    "events": [],
+    "events": [
+      {
+        "type": "admin.order.updated",
+        "id": "64487c4d-55f3-4c11-bb3d-56cef2b5a42a",
+        "created": "2026-05-08T03:05:07.170Z",
+        "status": "pending",
+        "trackingCode": "#514c4d45",
+        "trackingUrl": "http://localhost:3000/loja/pedidos.html?tracking=%2355665452"
+      },
+      {
+        "type": "admin.order.updated",
+        "id": "80c2a65c-c0f6-430f-aeca-82358d43828a",
+        "created": "2026-05-08T03:05:10.727Z",
+        "status": "pending",
+        "trackingCode": "#514c4d45",
+        "trackingUrl": "http://localhost:3000/loja/pedidos.html?tracking=%2355665452"
+      },
+      {
+        "type": "admin.order.updated",
+        "id": "e9cdc828-631b-4e0d-a035-0d4f0f61c6dc",
+        "created": "2026-05-08T03:05:19.367Z",
+        "status": "canceled",
+        "trackingCode": "#514c4d45",
+        "trackingUrl": "http://localhost:3000/loja/pedidos.html?tracking=%2355665452"
+      }
+    ],
     "sessionUrl": "http://localhost:5173/loja/?mock_session=cs_test_d42af17f-7987-4fc0-8d2b-0157f31f8246",
     "paidAt": "",
-    "canceledAt": "",
+    "canceledAt": "2026-05-08T03:05:19.369Z",
     "createdAt": "2026-05-06T12:55:08.697Z",
-    "updatedAt": "2026-05-06T12:55:08.700Z"
+    "updatedAt": "2026-05-08T03:05:19.369Z"
   },
   {
     "id": "order_a0bc839f-1dbd-44b5-95cb-9c545e7076c9",
-    "orderNumber": 16,
+    "orderNumber": "16",
     "orderNumberFormatted": "#00016",
     "orderAccessCode": "#d57e984c",
     "hiddenInAdmin": false,
     "stripeSessionId": "cs_test_71826c2e-4ecd-418c-aade-bc96d19a5e7e",
     "paymentIntentId": "",
     "stripeEventId": "",
-    "status": "pending",
+    "status": "canceled",
     "currency": "brl",
     "amountSubtotal": 84.9,
     "shippingAmount": 28,
@@ -745,26 +1005,36 @@
         "price": 84.9,
         "category": "Camisetas",
         "image": "/uploads/1777901887119-cinza_1.webp",
-        "size": "P"
+        "size": "P",
+        "color": ""
       }
     ],
-    "events": [],
+    "events": [
+      {
+        "type": "admin.order.updated",
+        "id": "e08422e4-b752-4635-906d-32050b1e8db2",
+        "created": "2026-05-08T03:05:20.505Z",
+        "status": "canceled",
+        "trackingCode": "#f7fdcd47",
+        "trackingUrl": "http://localhost:3000/loja/pedidos.html?tracking=%23d57e984c"
+      }
+    ],
     "sessionUrl": "http://localhost:5173/loja/?mock_session=cs_test_71826c2e-4ecd-418c-aade-bc96d19a5e7e",
     "paidAt": "",
-    "canceledAt": "",
+    "canceledAt": "2026-05-08T03:05:20.509Z",
     "createdAt": "2026-05-06T12:55:03.882Z",
-    "updatedAt": "2026-05-06T12:55:03.884Z"
+    "updatedAt": "2026-05-08T03:05:20.509Z"
   },
   {
     "id": "order_9b1e30c3-6a99-4a10-b95d-083f649c88c2",
-    "orderNumber": 15,
+    "orderNumber": "15",
     "orderNumberFormatted": "#00015",
     "orderAccessCode": "#974ad1de",
     "hiddenInAdmin": false,
     "stripeSessionId": "cs_test_8b57303b-8e70-4e6a-8fcc-2ba5ccd191e9",
     "paymentIntentId": "",
     "stripeEventId": "",
-    "status": "pending",
+    "status": "canceled",
     "currency": "brl",
     "amountSubtotal": 84.9,
     "shippingAmount": 28,
@@ -797,26 +1067,36 @@
         "price": 84.9,
         "category": "Camisetas",
         "image": "/uploads/1777901887119-cinza_1.webp",
-        "size": ""
+        "size": "",
+        "color": ""
       }
     ],
-    "events": [],
+    "events": [
+      {
+        "type": "admin.order.updated",
+        "id": "7d9228fa-7361-431b-bc57-a6b367c5c55e",
+        "created": "2026-05-08T03:05:21.885Z",
+        "status": "canceled",
+        "trackingCode": "#5cabfa52",
+        "trackingUrl": "http://localhost:3000/loja/pedidos.html?tracking=%23974ad1de"
+      }
+    ],
     "sessionUrl": "http://localhost:5173/loja/?mock_session=cs_test_8b57303b-8e70-4e6a-8fcc-2ba5ccd191e9",
     "paidAt": "",
-    "canceledAt": "",
+    "canceledAt": "2026-05-08T03:05:21.888Z",
     "createdAt": "2026-05-06T12:54:14.164Z",
-    "updatedAt": "2026-05-06T12:54:14.165Z"
+    "updatedAt": "2026-05-08T03:05:21.888Z"
   },
   {
     "id": "order_59a52f06-1b7b-4845-9014-b3d738590b43",
-    "orderNumber": 14,
+    "orderNumber": "14",
     "orderNumberFormatted": "#00014",
     "orderAccessCode": "#4596ecf7",
     "hiddenInAdmin": false,
     "stripeSessionId": "cs_test_f3f4957b-6a33-4874-9883-4cbd18ec5af2",
     "paymentIntentId": "",
     "stripeEventId": "",
-    "status": "pending",
+    "status": "canceled",
     "currency": "brl",
     "amountSubtotal": 84.9,
     "shippingAmount": 28,
@@ -849,26 +1129,36 @@
         "price": 84.9,
         "category": "Camisetas",
         "image": "/uploads/1777901887119-cinza_1.webp",
-        "size": ""
+        "size": "",
+        "color": ""
       }
     ],
-    "events": [],
+    "events": [
+      {
+        "type": "admin.order.updated",
+        "id": "809b3734-cc5a-4b07-b65e-b74552ba8e39",
+        "created": "2026-05-08T03:05:22.739Z",
+        "status": "canceled",
+        "trackingCode": "#cfc71a48",
+        "trackingUrl": "http://localhost:3000/loja/pedidos.html?tracking=%234596ecf7"
+      }
+    ],
     "sessionUrl": "http://localhost:3000/loja/?mock_session=cs_test_f3f4957b-6a33-4874-9883-4cbd18ec5af2",
     "paidAt": "",
-    "canceledAt": "",
+    "canceledAt": "2026-05-08T03:05:22.741Z",
     "createdAt": "2026-05-06T12:50:59.739Z",
-    "updatedAt": "2026-05-06T12:50:59.740Z"
+    "updatedAt": "2026-05-08T03:05:22.741Z"
   },
   {
     "id": "order_b25d1722-f542-413e-aa7d-fbfa6d5ff4b9",
-    "orderNumber": 13,
+    "orderNumber": "13",
     "orderNumberFormatted": "#00013",
     "orderAccessCode": "#4ec2cc2c",
     "hiddenInAdmin": false,
     "stripeSessionId": "cs_test_1d337895-18cf-44e5-9059-b6d3909fa901",
     "paymentIntentId": "",
     "stripeEventId": "",
-    "status": "pending",
+    "status": "canceled",
     "currency": "brl",
     "amountSubtotal": 84.9,
     "shippingAmount": 0,
@@ -901,26 +1191,36 @@
         "price": 84.9,
         "category": "Camisetas",
         "image": "/uploads/1777901887119-cinza_1.webp",
-        "size": "P"
+        "size": "P",
+        "color": ""
       }
     ],
-    "events": [],
+    "events": [
+      {
+        "type": "admin.order.updated",
+        "id": "ff78c570-80c9-414c-8c0f-14e868ba1141",
+        "created": "2026-05-08T03:05:25.218Z",
+        "status": "canceled",
+        "trackingCode": "#80e0c016",
+        "trackingUrl": "http://localhost:3000/loja/pedidos.html?tracking=%234ec2cc2c"
+      }
+    ],
     "sessionUrl": "http://localhost:3000/loja/?mock_session=cs_test_1d337895-18cf-44e5-9059-b6d3909fa901",
     "paidAt": "",
-    "canceledAt": "",
+    "canceledAt": "2026-05-08T03:05:25.221Z",
     "createdAt": "2026-05-06T12:41:05.607Z",
-    "updatedAt": "2026-05-06T12:41:05.607Z"
+    "updatedAt": "2026-05-08T03:05:25.221Z"
   },
   {
     "id": "order_39d07806-0011-4ee2-a7ee-462779064880",
-    "orderNumber": 12,
+    "orderNumber": "12",
     "orderNumberFormatted": "#00012",
     "orderAccessCode": "#3850f44a",
     "hiddenInAdmin": false,
     "stripeSessionId": "cs_test_e23cca60-0669-4289-9244-05a266b93db2",
     "paymentIntentId": "",
     "stripeEventId": "",
-    "status": "pending",
+    "status": "canceled",
     "currency": "brl",
     "amountSubtotal": 84.9,
     "shippingAmount": 0,
@@ -953,26 +1253,36 @@
         "price": 84.9,
         "category": "Camisetas",
         "image": "/uploads/1777901887119-cinza_1.webp",
-        "size": "P"
+        "size": "P",
+        "color": ""
       }
     ],
-    "events": [],
+    "events": [
+      {
+        "type": "admin.order.updated",
+        "id": "566d1609-ae70-4edc-97bc-66dbaaeea765",
+        "created": "2026-05-08T03:05:26.342Z",
+        "status": "canceled",
+        "trackingCode": "#200270cb",
+        "trackingUrl": "http://localhost:3000/loja/pedidos.html?tracking=%233850f44a"
+      }
+    ],
     "sessionUrl": "http://localhost:3000/loja/?mock_session=cs_test_e23cca60-0669-4289-9244-05a266b93db2",
     "paidAt": "",
-    "canceledAt": "",
+    "canceledAt": "2026-05-08T03:05:26.344Z",
     "createdAt": "2026-05-05T14:36:35.040Z",
-    "updatedAt": "2026-05-05T14:36:35.040Z"
+    "updatedAt": "2026-05-08T03:05:26.344Z"
   },
   {
     "id": "order_8c131e2e-5af5-41a0-880c-9b136cceeca7",
-    "orderNumber": 11,
+    "orderNumber": "11",
     "orderNumberFormatted": "#00011",
     "orderAccessCode": "#a4fd8ddf",
     "hiddenInAdmin": false,
     "stripeSessionId": "cs_test_1b9de658-fa55-4a04-b8d9-ec0b724b8e00",
     "paymentIntentId": "",
     "stripeEventId": "",
-    "status": "pending",
+    "status": "canceled",
     "currency": "brl",
     "amountSubtotal": 84.9,
     "shippingAmount": 0,
@@ -1005,15 +1315,25 @@
         "price": 84.9,
         "category": "Camisetas",
         "image": "/uploads/1777901887119-cinza_1.webp",
-        "size": "P"
+        "size": "P",
+        "color": ""
       }
     ],
-    "events": [],
+    "events": [
+      {
+        "type": "admin.order.updated",
+        "id": "a25fe7c9-bb5f-401a-85e5-33cae72850a7",
+        "created": "2026-05-08T03:05:28.209Z",
+        "status": "canceled",
+        "trackingCode": "#4a559507",
+        "trackingUrl": "http://localhost:3000/loja/pedidos.html?tracking=%23a4fd8ddf"
+      }
+    ],
     "sessionUrl": "http://localhost:3000/loja/?mock_session=cs_test_1b9de658-fa55-4a04-b8d9-ec0b724b8e00",
     "paidAt": "",
-    "canceledAt": "",
+    "canceledAt": "2026-05-08T03:05:28.212Z",
     "createdAt": "2026-05-05T14:36:05.058Z",
-    "updatedAt": "2026-05-05T14:36:05.058Z"
+    "updatedAt": "2026-05-08T03:05:28.212Z"
   },
   {
     "id": "order_fa00b219-4cb5-4a94-a725-c9c5047270f1",

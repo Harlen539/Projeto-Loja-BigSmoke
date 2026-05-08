@@ -1,7 +1,5 @@
--- Extensao para UUID
 create extension if not exists "pgcrypto";
 
--- Tabela de produtos
 create table if not exists public.products (
   id          text primary key,
   name        text not null default '',
@@ -14,12 +12,12 @@ create table if not exists public.products (
   badge       text not null default '',
   active      boolean not null default true,
   featured    boolean not null default false,
+  colors      jsonb not null default '[]'::jsonb,
   data        jsonb not null default '{}'::jsonb,
   created_at  timestamptz not null default now(),
   updated_at  timestamptz not null default now()
 );
 
--- Tabela de pedidos
 create table if not exists public.orders (
   id                 text primary key,
   order_number       text,
@@ -37,7 +35,6 @@ create table if not exists public.orders (
   updated_at         timestamptz not null default now()
 );
 
--- Contador usado pelo Prisma/backend para gerar números sequenciais de pedido
 create table if not exists public.order_counters (
   id         text primary key,
   next       integer not null default 1,
@@ -45,19 +42,15 @@ create table if not exists public.order_counters (
   updated_at timestamptz not null default now()
 );
 
--- Indices
-create index if not exists products_updated_at_idx  on public.products (updated_at desc);
-create index if not exists products_active_idx      on public.products (active) where active = true;
-create index if not exists products_category_idx    on public.products (category);
-create index if not exists orders_updated_at_idx    on public.orders (updated_at desc);
-create index if not exists orders_status_idx        on public.orders (status);
-create index if not exists orders_session_idx       on public.orders (stripe_session_id);
-create index if not exists orders_customer_idx      on public.orders (customer_email);
-create index if not exists orders_number_idx        on public.orders (order_number);
+create index if not exists products_updated_at_idx on public.products (updated_at desc);
+create index if not exists products_active_idx on public.products (active) where active = true;
+create index if not exists products_category_idx on public.products (category);
+create index if not exists orders_updated_at_idx on public.orders (updated_at desc);
+create index if not exists orders_status_idx on public.orders (status);
+create index if not exists orders_session_idx on public.orders (stripe_session_id);
+create index if not exists orders_customer_idx on public.orders (customer_email);
+create index if not exists orders_number_idx on public.orders (order_number);
 
--- Variações de cor por produto (migration)
-alter table if exists public.products
-  add column if not exists colors jsonb not null default '[]'::jsonb;
-
-comment on column public.products.colors is
-  'Array de variações de cor: [{name, hex, images: [], stock?}]';
+insert into public.order_counters (id, next)
+values ('orders', 1)
+on conflict (id) do nothing;

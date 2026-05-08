@@ -1,6 +1,6 @@
 import { apiFetch } from "./api.js";
 
-export async function startStripeCheckout(items) {
+export async function startStripeCheckout(items, couponCode = "") {
   const payloadItems = items
     .filter((item) => item?.id && Number(item.quantity || 0) > 0)
     .map((item) => ({
@@ -17,12 +17,13 @@ export async function startStripeCheckout(items) {
     method: "POST",
     body: JSON.stringify({
       deliveryMethod: "stripe_checkout",
+      couponCode,
       items: payloadItems,
     }),
   });
 
   if (!data?.url) {
-    throw new Error("Nao foi possivel iniciar o pagamento.");
+    throw new Error("Não foi possível iniciar o pagamento.");
   }
 
   if (data.id) {

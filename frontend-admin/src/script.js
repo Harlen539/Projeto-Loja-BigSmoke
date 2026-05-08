@@ -95,11 +95,25 @@ function escapeHtml(value) {
     .replace(/&/g, "&amp;")
     .replace(/</g, "&lt;")
     .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;");
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
+function safeUrl(value) {
+  const raw = String(value || "").trim();
+  if (!raw) return "";
+  if (/^\/(?!\/)/.test(raw)) return raw;
+  if (/^data:image\/(png|jpe?g|webp|gif);base64,/i.test(raw)) return raw;
+  try {
+    const url = new URL(raw, window.location.origin);
+    return url.protocol === "http:" || url.protocol === "https:" ? url.toString() : "";
+  } catch {
+    return "";
+  }
 }
 
 function getProductImage(product) {
-  return String(product?.image || product?.image_url || (Array.isArray(product?.images) ? product.images[0] : "") || PLACEHOLDER_IMAGE).trim();
+  return safeUrl(product?.image || product?.image_url || (Array.isArray(product?.images) ? product.images[0] : "") || PLACEHOLDER_IMAGE) || PLACEHOLDER_IMAGE;
 }
 
 function imageFallbackAttr() {
@@ -325,7 +339,7 @@ function renderPreviewGallery() {
 
   const images = previewGalleryImages.length ? previewGalleryImages : [PLACEHOLDER_IMAGE];
   const idx = Math.max(0, Math.min(previewGalleryIndex, images.length - 1));
-  img.src = images[idx];
+  img.src = safeUrl(images[idx]) || PLACEHOLDER_IMAGE;
 
   const multi = images.length > 1 && images[0] !== PLACEHOLDER_IMAGE;
 
@@ -347,7 +361,11 @@ function renderPreviewGallery() {
         const t = document.createElement("button");
         t.type = "button";
         t.className = `preview-thumb-item${i === idx ? " active" : ""}`;
-        t.innerHTML = `<img src="${url}" alt="foto ${i + 1}" loading="lazy">`;
+        const thumbImg = document.createElement("img");
+        thumbImg.src = safeUrl(url) || PLACEHOLDER_IMAGE;
+        thumbImg.alt = `foto ${i + 1}`;
+        thumbImg.loading = "lazy";
+        t.appendChild(thumbImg);
         t.addEventListener("click", () => { previewGalleryIndex = i; renderPreviewGallery(); });
         thumbsEl.appendChild(t);
       });
@@ -1198,8 +1216,8 @@ function updateFallbackChart(container, rows, formatter) {
     el.className = "bar-row";
     el.innerHTML = `
       <div class="label-line">
-        <span>${row.label || row.name}</span>
-        <strong>${formatter(row.value)}</strong>
+        <span>${escapeHtml(row.label || row.name)}</span>
+        <strong>${escapeHtml(formatter(row.value))}</strong>
       </div>
       <div class="bar-track">
         <div class="bar-fill" style="width: ${Math.max(5, ((row.value || 0) / max) * 100)}%"></div>
