@@ -5,6 +5,12 @@
 const DEFAULT_CONFIG = {
   stripeConfigured: false,
   whatsappNumber: "5583986494691",
+  publicStore: {
+    name: "BigSmoke",
+    whatsapp: "5583986494691",
+    instagram: "@bigsmokestyle",
+    email: "contato@bigsmoke.com.br"
+  },
   store: {
     city: "Fortaleza",
     state: "CE",
@@ -340,6 +346,7 @@ let shouldScrollToHighlight = false;
 let orderSuccessData = null;
 let availableCoupons = [];
 let appliedCoupon = null;
+const CATEGORY_VIEW_PRODUCT_LIMIT = 10;
 const selectedProductSizes = new Map();
 let shippingState = {
   price: 0,
@@ -509,17 +516,7 @@ function applyLocale(locale) {
 
   setAllText(".top-ticker span", copy.ticker);
 
-  const navLinks = document.querySelectorAll(".nav-links a");
-  if (isTrackingPage()) {
-    const trackingNav = currentLocale === "en"
-      ? ["Store", "My orders", "Privacy"]
-      : currentLocale === "es"
-        ? ["Tienda", "Mis pedidos", "Privacidad"]
-        : ["Loja", "Meus pedidos", "Privacidade"];
-    setAllText(".nav-links a", trackingNav);
-  } else {
-    setAllText(".nav-links a", copy.nav);
-  }
+  setAllText(".nav-links a", copy.nav);
   setText(".hero .eyebrow", copy.heroEyebrow);
   setText(".hero h1", copy.heroTitle);
   setText(".hero-subtitle", copy.heroSubtitle);
@@ -739,7 +736,7 @@ async function readApiJson(response) {
 function getVisibleProducts() {
   return products
     .filter((product) => {
-      const matchesCategory = activeCategory === "Todos" || product.category === activeCategory;
+      const matchesCategory = isAllCategory(activeCategory) || product.category === activeCategory;
       const haystack = `${product.name} ${product.category} ${product.description}`.toLowerCase();
       const matchesSearch = haystack.includes(searchTerm.toLowerCase());
       return matchesCategory && matchesSearch && product.active !== false;
@@ -753,6 +750,66 @@ function getVisibleProducts() {
       const bCreated = new Date(b.createdAt || 0).getTime();
       return bCreated - aCreated;
     });
+}
+
+function getAllCategoryLabel() {
+  return currentLocale === "en" ? "All" : "Todos";
+}
+
+function isAllCategory(category) {
+  return category === "Todos" || category === "All";
+}
+
+function getActiveProducts() {
+  return products.filter((product) => product.active !== false);
+}
+
+function getCategoryStats() {
+  const map = new Map();
+  getActiveProducts().forEach((product) => {
+    const category = String(product.category || "").trim();
+    if (!category) return;
+    const current = map.get(category) || { name: category, count: 0, image: "", sample: "" };
+    current.count += 1;
+    current.sample = current.sample || product.name || "";
+    current.image = current.image || product.image || product.image_url || (Array.isArray(product.images) ? product.images[0] : "");
+    map.set(category, current);
+  });
+  return [...map.values()].sort((a, b) => b.count - a.count || a.name.localeCompare(b.name));
+}
+
+function shouldShowCategoryOverview() {
+  return isAllCategory(activeCategory) && !searchTerm && getActiveProducts().length > CATEGORY_VIEW_PRODUCT_LIMIT;
+}
+
+function getCategoryUrl(category) {
+  const url = new URL(window.location.href);
+  url.searchParams.set("categoria", category);
+  url.hash = "products";
+  return url.toString();
+}
+
+function openCategory(category) {
+  activeCategory = category;
+  const opened = window.open(getCategoryUrl(category), "_blank", "noopener");
+  if (!opened) {
+    const url = new URL(window.location.href);
+    url.searchParams.set("categoria", category);
+    url.hash = "products";
+    window.history.pushState({}, "", url);
+    renderCategoryFilters();
+    renderProducts();
+    scrollToProducts();
+  }
+}
+
+function syncCategoryFromUrl() {
+  const params = new URLSearchParams(window.location.search);
+  const category = params.get("categoria") || params.get("category");
+  if (!category) return;
+
+  const match = getCategoryStats().find((item) => item.name.toLowerCase() === category.toLowerCase());
+  activeCategory = match?.name || category;
 }
 
 function getCartSubtotal() {
@@ -798,8 +855,51 @@ function getDeliveryMethodLabel(value) {
 }
 
 function getWhatsAppUrl(text) {
-  const number = String(appConfig.whatsappNumber || DEFAULT_CONFIG.whatsappNumber).replace(/\D/g, "");
+  const number = String(appConfig.publicStore?.whatsapp || appConfig.whatsappNumber || DEFAULT_CONFIG.whatsappNumber).replace(/\D/g, "");
   return `https://wa.me/${number}?text=${text}`;
+}
+
+function getInstagramUrl(value) {
+  const raw = String(value || DEFAULT_CONFIG.publicStore.instagram).trim();
+  if (/^https?:\/\//i.test(raw)) return raw;
+  return `https://www.instagram.com/${raw.replace(/^@/, "")}`;
+}
+
+function applyPublicStoreSettings() {
+  const store = {
+    ...DEFAULT_CONFIG.publicStore,
+    ...(appConfig.publicStore || {})
+  };
+  const whatsapp = String(store.whatsapp || DEFAULT_CONFIG.publicStore.whatsapp).replace(/\D/g, "");
+  const instagram = store.instagram || DEFAULT_CONFIG.publicStore.instagram;
+  const email = store.email || DEFAULT_CONFIG.publicStore.email;
+  const name = store.name || DEFAULT_CONFIG.publicStore.name;
+
+  setText(".site-footer-brand strong", name.toUpperCase());
+  setAllText(".footer-email", email);
+  document.querySelectorAll(".footer-email").forEach((link) => {
+    link.setAttribute("href", `mailto:${email}`);
+  });
+
+  document.querySelectorAll('a[href^="mailto:"], .contact-link[href^="mailto:"]').forEach((link) => {
+    link.setAttribute("href", `mailto:${email}`);
+    if (link.classList.contains("contact-link") || link.classList.contains("footer-email")) {
+      link.textContent = email;
+    }
+  });
+
+  document.querySelectorAll('a[href*="instagram.com"], a[aria-label*="Instagram"], a[title*="Instagram"]').forEach((link) => {
+    link.setAttribute("href", getInstagramUrl(instagram));
+    if (link.classList.contains("contact-link")) {
+      link.textContent = `Instagram: ${instagram.startsWith("@") ? instagram : `@${instagram}`}`;
+    }
+  });
+
+  document.querySelectorAll('a[href*="wa.me"], a[aria-label*="WhatsApp"], a[title*="WhatsApp"], #whatsapp').forEach((link) => {
+    const existing = new URL(link.getAttribute("href") || `https://wa.me/${whatsapp}`, window.location.origin);
+    const text = existing.searchParams.get("text") || "Olá BigSmoke, vim pelo site";
+    link.setAttribute("href", `https://wa.me/${whatsapp}?text=${encodeURIComponent(text)}`);
+  });
 }
 
 function buildWhatsappMessage() {
@@ -908,7 +1008,7 @@ function getOrderTrackingLink(order) {
   if (order?.trackingCode && /^https?:\/\//i.test(order.trackingCode)) {
     return order.trackingCode;
   }
-  const identifier = order?.orderAccessCode || order?.trackingCode || order?.orderNumberFormatted || order?.orderNumber || order?.stripeSessionId || order?.id || localStorage.getItem("bigsmoke-last-order-session") || "";
+  const identifier = getPublicOrderIdentifier(order);
   if (!identifier) return "";
   const url = new URL("/loja/pedidos.html", window.location.origin);
   url.searchParams.set("tracking", identifier);
@@ -925,6 +1025,35 @@ function getTrackingPageUrl(identifier = "") {
 
 function isTrackingPage() {
   return window.location.pathname.endsWith("/pedidos.html");
+}
+
+function isPrivateCheckoutSession(value) {
+  return /^cs_(test|live)_/i.test(String(value || "").trim());
+}
+
+function getPublicOrderIdentifier(order) {
+  return order?.orderAccessCode || order?.trackingCode || order?.orderNumberFormatted || order?.orderNumber || order?.id || "";
+}
+
+function syncVisibleTrackingState(order) {
+  const publicIdentifier = getPublicOrderIdentifier(order);
+  const input = document.getElementById(TRACKING_INPUT_ID);
+  if (input) {
+    input.value = publicIdentifier || "";
+  }
+  if (isTrackingPage()) {
+    const url = new URL(window.location.href);
+    const currentTracking = url.searchParams.get("tracking") || url.searchParams.get("session_id") || "";
+    if (publicIdentifier && (isPrivateCheckoutSession(currentTracking) || currentTracking !== publicIdentifier)) {
+      url.searchParams.delete("session_id");
+      url.searchParams.set("tracking", publicIdentifier);
+      window.history.replaceState({}, "", url.toString());
+    } else if (isPrivateCheckoutSession(currentTracking)) {
+      url.searchParams.delete("tracking");
+      url.searchParams.delete("session_id");
+      window.history.replaceState({}, "", url.toString());
+    }
+  }
 }
 
 function ensureTrackingResultContainer() {
@@ -948,10 +1077,7 @@ function renderTrackingPlaceholder(message) {
 function renderTrackingOrder(order, { scrollIntoView = false } = {}) {
   const container = ensureTrackingResultContainer();
   if (!container) return;
-  const input = document.getElementById(TRACKING_INPUT_ID);
-  if (input && order) {
-    input.value = order.orderAccessCode || order.trackingCode || order.orderNumberFormatted || order.orderNumber || order.stripeSessionId || order.id || "";
-  }
+  if (order) syncVisibleTrackingState(order);
   container.innerHTML = renderOrderTracker(order);
   lastTrackedOrderSignature = getTrackedOrderSignature(order);
   const sessionKey = order?.stripeSessionId || order?.id || "";
@@ -965,7 +1091,7 @@ function renderTrackingOrder(order, { scrollIntoView = false } = {}) {
 
 async function fetchOrderTracking(value) {
   const query = String(value || "").trim();
-  if (!query) throw new Error("Informe o número do pedido ou o session id.");
+  if (!query) throw new Error("Informe o número ou código do pedido.");
   const response = await fetch(buildApiUrl(`/api/orders/public/${encodeURIComponent(query)}`));
   if (!response.ok) {
     throw new Error("Pedido não encontrado.");
@@ -1090,20 +1216,54 @@ function renderCategoryFilters() {
   const filterRoot = document.getElementById("category-filters");
   if (!filterRoot) return;
 
-  const categories = [currentLocale === "en" ? "All" : "Todos", ...new Set(products.map((product) => product.category).filter(Boolean))];
+  const categories = [getAllCategoryLabel(), ...getCategoryStats().map((item) => item.name)];
   filterRoot.innerHTML = "";
 
   categories.forEach((category) => {
     const button = document.createElement("button");
     button.type = "button";
-    button.className = `filter-chip${category === activeCategory ? " active" : ""}`;
+    button.className = `filter-chip${category === activeCategory || (isAllCategory(category) && isAllCategory(activeCategory)) ? " active" : ""}`;
     button.textContent = category;
     button.addEventListener("click", () => {
-      activeCategory = category;
+      if (!isAllCategory(category) && getActiveProducts().length > CATEGORY_VIEW_PRODUCT_LIMIT) {
+        openCategory(category);
+        return;
+      }
+      activeCategory = isAllCategory(category) ? getAllCategoryLabel() : category;
+      const url = new URL(window.location.href);
+      url.searchParams.delete("categoria");
+      url.searchParams.delete("category");
+      window.history.replaceState({}, "", url);
       renderCategoryFilters();
       renderProducts();
     });
     filterRoot.appendChild(button);
+  });
+}
+
+function renderCategoryOverview(grid) {
+  const stats = getCategoryStats();
+  grid.innerHTML = "";
+
+  stats.forEach((category) => {
+    const image = safeUrl(category.image || PLACEHOLDER_IMAGE, { allowDataImage: true }) || PLACEHOLDER_IMAGE;
+    const card = document.createElement("article");
+    card.className = "category-card";
+    card.innerHTML = `
+      <button type="button" aria-label="Abrir categoria ${sanitizeText(category.name)} em nova aba">
+        <span class="category-card-media">
+          <img src="${sanitizeText(image)}" alt="" loading="lazy" onerror="this.onerror=null;this.src='${PLACEHOLDER_IMAGE}'">
+        </span>
+        <span class="category-card-content">
+          <span class="section-kicker">Categoria</span>
+          <strong>${sanitizeText(category.name)}</strong>
+          <small>${category.count} produto${category.count === 1 ? "" : "s"} dispon${category.count === 1 ? "ível" : "íveis"}</small>
+          ${category.sample ? `<em>${sanitizeText(category.sample)}</em>` : ""}
+        </span>
+      </button>
+    `;
+    card.querySelector("button").addEventListener("click", () => openCategory(category.name));
+    grid.appendChild(card);
   });
 }
 
@@ -1150,6 +1310,12 @@ function renderProducts() {
 
   const visibleProducts = getVisibleProducts();
   const previewProductId = highlightedProductId;
+
+  if (shouldShowCategoryOverview()) {
+    renderCategoryOverview(grid);
+    return;
+  }
+
   if (!visibleProducts.length) {
     grid.innerHTML = `
       <article class="card">
@@ -1683,6 +1849,10 @@ function setupCatalogNavigation() {
 
   searchInput.addEventListener("input", (event) => {
     searchTerm = event.target.value.trim();
+    if (searchTerm) {
+      activeCategory = getAllCategoryLabel();
+      renderCategoryFilters();
+    }
     renderProducts();
   });
 }
@@ -1995,6 +2165,10 @@ async function loadRuntimeConfig() {
       ...DEFAULT_CONFIG,
       ...result,
       whatsappNumber: result.whatsappNumber || DEFAULT_CONFIG.whatsappNumber,
+      publicStore: {
+        ...DEFAULT_CONFIG.publicStore,
+        ...(result.publicStore || {})
+      },
       store: {
         ...DEFAULT_CONFIG.store,
         ...(result.store || {})
@@ -2111,23 +2285,27 @@ function setupOrderTrackingLookup() {
   const input = document.getElementById(TRACKING_INPUT_ID);
   if (!form || !input) return;
 
-  const initialValue = getTrackingQueryValue() || getTrackedOrderSessionId();
-  if (initialValue) {
+  const initialValue = getTrackingQueryValue();
+  if (initialValue && !isPrivateCheckoutSession(initialValue)) {
     input.value = initialValue;
+  } else if (isPrivateCheckoutSession(initialValue)) {
+    input.value = "";
   }
 
   form.addEventListener("submit", async (event) => {
     event.preventDefault();
     const value = input.value.trim();
     if (!value) {
-      renderTrackingPlaceholder("Digite um código de pedido, número ou session id válido.");
+      renderTrackingPlaceholder("Digite um código ou número de pedido válido.");
       return;
     }
 
   try {
       const order = await fetchOrderTracking(value);
       const url = new URL(window.location.href);
-      url.searchParams.set("tracking", order.orderAccessCode || order.trackingCode || order.orderNumberFormatted || order.orderNumber || order.stripeSessionId || order.id || value);
+      const publicIdentifier = getPublicOrderIdentifier(order) || value;
+      url.searchParams.set("tracking", publicIdentifier);
+      url.searchParams.delete("session_id");
       window.history.replaceState({}, "", url.toString());
       renderTrackingOrder(order, { scrollIntoView: true });
     } catch (error) {
@@ -2853,6 +3031,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   await detectApiBase();
   await loadRuntimeConfig();
   await loadProducts();
+  syncCategoryFromUrl();
   await loadCoupons();
   setupCatalogNavigation();
   setupCheckout();
@@ -2863,6 +3042,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   setupGlobalInteractions();
   window.addEventListener("beforeunload", stopOrderTrackingPolling);
   applyLocale(currentLocale);
+  applyPublicStoreSettings();
   updateShippingEstimate();
   updateCartUI();
   await handlePaymentReturn();
@@ -2871,6 +3051,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   document.querySelectorAll("[data-locale-option]").forEach((button) => {
     button.addEventListener("click", () => {
       applyLocale(button.dataset.localeOption);
+      applyPublicStoreSettings();
       closeLanguageMenu();
     });
   });

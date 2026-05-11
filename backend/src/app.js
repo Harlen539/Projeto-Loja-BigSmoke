@@ -28,6 +28,7 @@ const productsFile = path.join(dataDir, "products.json");
 const ordersFile = path.join(dataDir, "orders.json");
 const orderCounterFile = path.join(dataDir, "order_counter.json");
 const couponsFile = path.join(dataDir, "coupons.json");
+const settingsFile = path.join(dataDir, "settings.json");
 const PRODUCT_TABLE = process.env.SUPABASE_PRODUCTS_TABLE || "products";
 const ORDER_TABLE = process.env.SUPABASE_ORDERS_TABLE || "orders";
 const JWT_SECRET = process.env.JWT_SECRET || "";
@@ -61,6 +62,14 @@ const ORDER_STATUS_LABELS = {
   canceled: "Cancelado"
 };
 const DEFAULT_WHATSAPP = process.env.WHATSAPP_NUMBER || "5583986494691";
+const DEFAULT_PUBLIC_SETTINGS = {
+  store: {
+    name: process.env.STORE_NAME || "BigSmoke",
+    whatsapp: DEFAULT_WHATSAPP,
+    instagram: process.env.STORE_INSTAGRAM || "@bigsmokestyle",
+    email: process.env.STORE_EMAIL || "contato@bigsmoke.com.br"
+  }
+};
 const LEGACY_PRODUCT_ALIASES = {
   "camiseta-oversized": "moletom-classic"
 };
@@ -732,6 +741,12 @@ async function ensureDataFiles() {
     await fs.writeFile(couponsFile, JSON.stringify(defaultCoupons, null, 2), "utf8");
   }
 
+  try {
+    await fs.access(settingsFile);
+  } catch {
+    await fs.writeFile(settingsFile, JSON.stringify(DEFAULT_PUBLIC_SETTINGS, null, 2), "utf8");
+  }
+
   if (useSupabase) return;
 
   try {
@@ -774,6 +789,46 @@ async function readJsonFile(file, fallback) {
 
 async function writeJsonFile(file, value) {
   await fs.writeFile(file, JSON.stringify(value, null, 2), "utf8");
+}
+
+async function readJsonValue(file, fallback) {
+  try {
+    const raw = await fs.readFile(file, "utf8");
+    const parsed = JSON.parse(raw);
+    return parsed && typeof parsed === "object" && !Array.isArray(parsed) ? parsed : fallback;
+  } catch {
+    return fallback;
+  }
+}
+
+function normalizeStoreSettings(store = {}) {
+  const instagram = sanitizePlainText(store.instagram || DEFAULT_PUBLIC_SETTINGS.store.instagram, 80);
+  return {
+    name: sanitizePlainText(store.name || DEFAULT_PUBLIC_SETTINGS.store.name, 120),
+    whatsapp: sanitizePlainText(store.whatsapp || DEFAULT_PUBLIC_SETTINGS.store.whatsapp, 30).replace(/[^\d+]/g, ""),
+    instagram: instagram ? (instagram.startsWith("@") ? instagram : `@${instagram}`) : "",
+    email: sanitizePlainText(store.email || DEFAULT_PUBLIC_SETTINGS.store.email, 180).toLowerCase()
+  };
+}
+
+async function readPublicSettings() {
+  const saved = await readJsonValue(settingsFile, DEFAULT_PUBLIC_SETTINGS);
+  return {
+    ...DEFAULT_PUBLIC_SETTINGS,
+    ...saved,
+    store: normalizeStoreSettings({ ...DEFAULT_PUBLIC_SETTINGS.store, ...(saved.store || {}) })
+  };
+}
+
+async function writePublicSettings(settings) {
+  const current = await readPublicSettings();
+  const next = {
+    ...current,
+    ...settings,
+    store: normalizeStoreSettings({ ...current.store, ...(settings.store || {}) })
+  };
+  await writeJsonFile(settingsFile, next);
+  return next;
 }
 
 async function readCoupons({ activeOnly = false } = {}) {
@@ -2169,10 +2224,12 @@ app.get(/^\/admin\/(produtos|pedidos|graficos|login)\/?.*/, (_req, res) => {
   sendAdminApp(res);
 });
 
-app.get("/api/config", (_req, res) => {
+app.get("/api/config", async (_req, res) => {
+  const publicSettings = await readPublicSettings();
   res.json({
     store: DEFAULT_STORE,
-    whatsappNumber: DEFAULT_WHATSAPP,
+    publicStore: publicSettings.store,
+    whatsappNumber: publicSettings.store.whatsapp || DEFAULT_WHATSAPP,
     paymentProvider: "stripe",
     stripeConfigured: Boolean(process.env.STRIPE_SECRET_KEY),
     paymentMetricsEnabled: STRIPE_LIVE_MODE,
@@ -2186,6 +2243,15 @@ app.get("/api/config", (_req, res) => {
     prismaConfigured: usePrisma,
     dataMode: usePrisma ? "prisma" : useSupabase ? "supabase" : "local"
   });
+});
+
+app.get("/api/admin/settings", authMiddleware, async (_req, res) => {
+  res.json(await readPublicSettings());
+});
+
+app.put("/api/admin/settings", authMiddleware, async (req, res) => {
+  const next = await writePublicSettings({ store: req.body?.store || {} });
+  res.json(next);
 });
 
 app.post("/api/auth/login", loginLimiter, async (req, res) => {

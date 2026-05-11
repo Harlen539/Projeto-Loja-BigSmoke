@@ -179,6 +179,19 @@ export function Settings() {
       .catch(() => {});
   }, [auth?.token]);
 
+  useEffect(() => {
+    if (!auth?.token) return;
+    apiFetch("/api/admin/settings", { headers: { Authorization: `Bearer ${auth.token}` } })
+      .then((data) => {
+        if (data?.store) {
+          const next = { ...settings, store: { ...settings.store, ...data.store } };
+          setSettings(next);
+          saveSettings(next);
+        }
+      })
+      .catch(() => {});
+  }, [auth?.token]);
+
   function showToast(message, type = "success") {
     clearTimeout(toastTimer.current);
     setToast({ message, type });
@@ -310,8 +323,22 @@ export function Settings() {
       return;
     }
     const nextInstagram = form.instagram?.startsWith("@") ? form.instagram : `@${form.instagram || ""}`;
-    simulateSave(() => {
-      updateSettingsSection("store", { ...form, instagram: nextInstagram }, "Dados da loja atualizados com sucesso");
+    simulateSave(async () => {
+      const store = { ...form, instagram: nextInstagram };
+      let nextStore = store;
+      if (auth?.token) {
+        try {
+          const saved = await apiFetch("/api/admin/settings", {
+            method: "PUT",
+            headers: { Authorization: `Bearer ${auth.token}` },
+            body: JSON.stringify({ store })
+          });
+          nextStore = saved?.store || store;
+        } catch {
+          showToast("Dados salvos localmente, mas não foi possível publicar na loja.", "error");
+        }
+      }
+      updateSettingsSection("store", nextStore, "Dados da loja atualizados com sucesso");
       closeModal();
     });
   }
@@ -470,8 +497,8 @@ export function Settings() {
 
   function simulateSave(callback) {
     setSaving(true);
-    setTimeout(() => {
-      callback();
+    setTimeout(async () => {
+      await callback();
       setSaving(false);
     }, 280);
   }

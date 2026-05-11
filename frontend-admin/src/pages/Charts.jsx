@@ -22,6 +22,15 @@ function statusLabel(status) {
 
 const CATEGORY_COLORS = ["#00e5ff", "#42ff9e", "#f4c542", "#8b5cf6", "#ff4d6d", "#ff8a3d"];
 const STATUS_COLORS = ["#f4c542", "#42ff9e", "#00e5ff", "#8b5cf6", "#ff4d6d", "#ff8a3d"];
+const TOOLTIP_STYLE = {
+  background: "#f5f0e8",
+  border: "1px solid rgba(245,240,232,.55)",
+  borderRadius: "8px",
+  color: "#090909",
+  boxShadow: "0 12px 28px rgba(0,0,0,.32)",
+};
+const TOOLTIP_LABEL_STYLE = { color: "#090909", fontWeight: 800 };
+const TOOLTIP_ITEM_STYLE = { color: "#090909", fontWeight: 700 };
 
 export function ChartsPanel({ className = "" }) {
   const { orders } = useOrders();
@@ -79,7 +88,7 @@ export function ChartsPanel({ className = "" }) {
               <CartesianGrid stroke="rgba(180,245,255,.08)" vertical={false} />
               <XAxis dataKey="name" stroke="#8aa4ad" />
               <YAxis stroke="#8aa4ad" />
-              <Tooltip contentStyle={{ background: "#071116", border: "1px solid rgba(0,229,255,.25)", color: "#fff" }} />
+              <Tooltip contentStyle={TOOLTIP_STYLE} itemStyle={TOOLTIP_ITEM_STYLE} labelStyle={TOOLTIP_LABEL_STYLE} />
               <Area dataKey={metric === "revenue" ? "receita" : "pedidos"} stroke="#00e5ff" strokeWidth={3} fill="url(#cyanArea)" />
             </AreaChart>
           </ResponsiveContainer>
@@ -92,7 +101,7 @@ export function ChartsPanel({ className = "" }) {
               <Pie data={statusData} dataKey="value" nameKey="name" innerRadius={64} outerRadius={106} paddingAngle={4}>
                 {statusData.map((entry, index) => <Cell fill={STATUS_COLORS[index % STATUS_COLORS.length]} key={entry.name} />)}
               </Pie>
-              <Tooltip contentStyle={{ background: "#071116", border: "1px solid rgba(0,229,255,.25)", color: "#fff" }} formatter={(value) => [`${value} pedido${value === 1 ? "" : "s"}`, "Total"]} />
+              <Tooltip contentStyle={TOOLTIP_STYLE} formatter={(value) => [`${value} pedido${value === 1 ? "" : "s"}`, "Total"]} itemStyle={TOOLTIP_ITEM_STYLE} labelStyle={TOOLTIP_LABEL_STYLE} />
             </PieChart>
           </ResponsiveContainer>
         </article>
@@ -115,7 +124,7 @@ export function ChartsPanel({ className = "" }) {
                   >
                     {categoryData.map((entry, index) => <Cell fill={CATEGORY_COLORS[index % CATEGORY_COLORS.length]} key={entry.name} />)}
                   </Pie>
-                  <Tooltip contentStyle={{ background: "#071116", border: "1px solid rgba(0,229,255,.25)", color: "#fff" }} formatter={(value) => [`${value} produto${value === 1 ? "" : "s"}`, "Categoria"]} />
+                  <Tooltip contentStyle={TOOLTIP_STYLE} formatter={(value) => [`${value} produto${value === 1 ? "" : "s"}`, "Categoria"]} itemStyle={TOOLTIP_ITEM_STYLE} labelStyle={TOOLTIP_LABEL_STYLE} />
                 </PieChart>
               </ResponsiveContainer>
               <div className="chart-legend">
@@ -146,7 +155,7 @@ export function ChartsPanel({ className = "" }) {
               <CartesianGrid horizontal={false} stroke="rgba(180,245,255,.08)" />
               <XAxis allowDecimals={false} stroke="#8aa4ad" type="number" />
               <YAxis axisLine={false} dataKey="name" stroke="#c5d8de" tickLine={false} type="category" width={124} />
-              <Tooltip contentStyle={{ background: "#071116", border: "1px solid rgba(0,229,255,.25)", color: "#fff" }} formatter={(value) => [`${value} unidade${value === 1 ? "" : "s"}`, "Estoque"]} />
+              <Tooltip contentStyle={TOOLTIP_STYLE} formatter={(value) => [`${value} unidade${value === 1 ? "" : "s"}`, "Estoque"]} itemStyle={TOOLTIP_ITEM_STYLE} labelStyle={TOOLTIP_LABEL_STYLE} />
               <Bar barSize={22} dataKey="estoque" fill="url(#stockBar)" radius={[0, 8, 8, 0]}>
                 <LabelList dataKey="estoque" fill="#f4fbff" fontSize={12} position="right" />
               </Bar>

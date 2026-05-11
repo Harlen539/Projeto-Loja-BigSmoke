@@ -6,13 +6,8 @@ import { useAuth } from "../../hooks/useAuth.js";
 const storeUrl = import.meta.env.VITE_STORE_URL || "http://localhost:5173";
 
 export function Topbar() {
-  const { user, logout } = useAuth();
+  const { user } = useAuth();
   const navigate = useNavigate();
-
-  function exit() {
-    logout();
-    navigate("/login");
-  }
 
   return (
     <header className="topbar soc-topbar">
@@ -37,7 +32,6 @@ export function Topbar() {
         </button>
         <a className="soc-store-btn" href={storeUrl} target="_blank" rel="noreferrer">Abrir loja</a>
         <button className="soc-new-btn" onClick={() => navigate("/produtos")} type="button">+ Novo produto</button>
-        <button className="soc-logout-btn" onClick={exit} type="button">Sair</button>
       </div>
     </header>
   );

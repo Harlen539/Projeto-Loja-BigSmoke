@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Meus pedidos — BigSmoke</title>
-  <meta name="description" content="Acompanhe seu pedido BigSmoke por código, número do pedido ou session id.">
+  <meta name="description" content="Acompanhe seu pedido BigSmoke por código ou número do pedido.">
   <link rel="canonical" href="/src/pedidos.html">
   <link rel="stylesheet" href="/src/Style.css">
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -30,8 +30,10 @@
     <img src="/src/imagens/logo_sem_fundo.png" class="logo-img" alt="Logo BigSmoke">
   </a>
   <nav class="nav-links" aria-label="Navegação principal">
-    <a href="/loja/">Loja</a>
-    <a href="/src/pedidos.html">Meus pedidos</a>
+    <a href="/loja/#products">Drops</a>
+    <a href="/loja/#about">Marca</a>
+    <a href="/src/pedidos.html" aria-current="page">Meus pedidos</a>
+    <a href="/loja/#contact">Contato</a>
     <a href="/src/politica.html">Privacidade</a>
   </nav>
 </header>
@@ -44,11 +46,11 @@
           <p class="section-kicker">Meus pedidos</p>
           <h1>Acompanhe seu pedido</h1>
         </div>
-        <p>Digite o código do pedido no formato <strong>#befbf8e6</strong>, o número <strong>#00001</strong> ou o session id para ver o status e o rastreio.</p>
+        <p>Digite o código do pedido no formato <strong>#befbf8e6</strong> ou o número <strong>#00001</strong> para ver o status e o rastreio.</p>
       </div>
 
       <form id="order-tracking-form" class="tracking-search">
-        <input id="order-tracking-input" type="text" placeholder="Ex: #befbf8e6, #00001 ou session_id" autocomplete="off">
+        <input id="order-tracking-input" type="text" placeholder="Ex: #befbf8e6 ou #00001" autocomplete="off">
         <button type="submit" class="btn btn-primary">Buscar pedido</button>
       </form>
 
