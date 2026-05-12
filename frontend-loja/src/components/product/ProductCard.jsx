@@ -4,7 +4,6 @@ import { Link } from "react-router-dom";
 import logo from "../../assets/logo_sem_fundo.png";
 import { useCart } from "../../hooks/useCart.js";
 import { useLocale } from "../../hooks/useLocale.js";
-import { startPaymentCheckout } from "../../services/checkout.js";
 import { Badge } from "../ui/Badge.jsx";
 
 function parseSizes(value) {
@@ -17,18 +16,9 @@ export function ProductCard({ product }) {
   const { copy } = useLocale();
   const sizes = parseSizes(product.sizes);
   const [size, setSize] = useState(sizes[0] || "Unico");
-  const [loading, setLoading] = useState(false);
 
-  async function buyNow() {
-    setLoading(true);
+  function addSelectedProductToCart() {
     cart.add(product, size);
-    try {
-      await startPaymentCheckout([{ id: product.id, quantity: 1, size }]);
-    } catch (error) {
-      alert(error.message || "Nao foi possivel gerar o pagamento PIX.");
-    } finally {
-      setLoading(false);
-    }
   }
 
   return (
@@ -47,8 +37,8 @@ export function ProductCard({ product }) {
             <button className={option === size ? "active" : ""} key={option} onClick={() => setSize(option)} type="button">{option}</button>
           ))}
         </div>
-        <button className="btn btn-primary" disabled={loading} onClick={buyNow} type="button">
-          {loading ? "Gerando PIX..." : copy.addToCart}
+        <button className="btn btn-primary" onClick={addSelectedProductToCart} type="button">
+          {copy.addToCart}
         </button>
       </div>
     </article>

@@ -35,8 +35,11 @@ export function showPixPayment(data) {
   document.body.appendChild(overlay);
 }
 
-export async function startPaymentCheckout(items, couponCode = "", paymentMethod = "pix") {
-  const method = paymentMethod === "card" ? "card" : "pix";
+export async function startPaymentCheckout(items, couponCode = "", paymentMethod = "") {
+  const method = paymentMethod === "card" ? "card" : paymentMethod === "pix" ? "pix" : "";
+  if (!method) {
+    throw new Error("Escolha PIX ou cartao de credito antes de finalizar.");
+  }
   const payloadItems = items
     .filter((item) => item?.id && Number(item.quantity || 0) > 0)
     .map((item) => ({

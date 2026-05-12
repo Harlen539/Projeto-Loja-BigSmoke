@@ -3,6 +3,8 @@ import { useEffect, useMemo, useState } from "react";
 import { useCart } from "../../hooks/useCart.js";
 import { apiFetch } from "../../services/api.js";
 import { startPaymentCheckout } from "../../services/checkout.js";
+import cardIcon from "../../assets/icone_cartao_credito.png";
+import pixIcon from "../../assets/icone_Pix.png";
 import { CartItem } from "./CartItem.jsx";
 import { CartSummary } from "./CartSummary.jsx";
 
@@ -13,7 +15,8 @@ export function CartDrawer() {
   const [couponInput, setCouponInput] = useState("");
   const [appliedCoupon, setAppliedCoupon] = useState(null);
   const [couponMessage, setCouponMessage] = useState("");
-  const [paymentMethod, setPaymentMethod] = useState("pix");
+  const [paymentMethod, setPaymentMethod] = useState("");
+  const [paymentMessage, setPaymentMessage] = useState("");
 
   useEffect(() => {
     apiFetch("/api/coupons")
@@ -44,6 +47,8 @@ export function CartDrawer() {
       totalDiscount
     };
   }, [appliedCoupon, cart.total]);
+  const whatsappMessage = encodeURIComponent(`Ola BigSmoke, quero finalizar minha compra.\n${cart.items.map((item) => `- ${item.name} (Tam: ${item.size}) x${item.quantity}`).join("\n")}\nTotal: R$ ${Math.max(0, Number(cart.total || 0) - Number(discountPreview.totalDiscount || 0)).toFixed(2).replace(".", ",")}`);
+  const whatsappUrl = `https://wa.me/${import.meta.env.VITE_WHATSAPP_NUMBER || "5583986494691"}?text=${whatsappMessage}`;
 
   function applyCoupon() {
     const code = couponInput.trim().toUpperCase();
@@ -68,6 +73,11 @@ export function CartDrawer() {
   }
 
   async function goToPayment() {
+    if (!paymentMethod) {
+      setPaymentMessage("Escolha PIX ou cartão de crédito antes de finalizar.");
+      return;
+    }
+    setPaymentMessage("");
     setLoading(true);
     try {
       await startPaymentCheckout(cart.items, appliedCoupon?.code || "", paymentMethod);
@@ -84,10 +94,10 @@ export function CartDrawer() {
       <aside className={`cart-drawer ${cart.open ? "open" : ""}`} aria-hidden={!cart.open}>
         <header>
           <div>
-            <span>Carrinho BigSmoke</span>
-            <h2>{cart.count} item(ns)</h2>
+            <span>PEDIDO</span>
+            <h2>CARRINHO BIGSMOKE</h2>
           </div>
-          <button onClick={() => cart.setOpen(false)} type="button">Fechar</button>
+          <button className="cart-close" onClick={() => cart.setOpen(false)} type="button" aria-label="Fechar carrinho">×</button>
         </header>
         {cart.items.length ? (
           <ul className="cart-list">
@@ -122,16 +132,20 @@ export function CartDrawer() {
         </div>
         <CartSummary discount={discountPreview.totalDiscount} shippingDiscount={discountPreview.shippingDiscount} subtotal={cart.total} />
         <div className="payment-method-picker" aria-label="Forma de pagamento">
-          <button className={paymentMethod === "pix" ? "active" : ""} onClick={() => setPaymentMethod("pix")} type="button">
-            PIX
+          <button aria-label="PIX" className={paymentMethod === "pix" ? "active" : ""} onClick={() => { setPaymentMethod("pix"); setPaymentMessage(""); }} type="button">
+            <img className="payment-method-icon" src={pixIcon} alt="" aria-hidden="true" />
+            <span className="sr-only">PIX</span>
           </button>
-          <button className={paymentMethod === "card" ? "active" : ""} onClick={() => setPaymentMethod("card")} type="button">
-            Cartao de credito
+          <button aria-label="Cartão de crédito" className={paymentMethod === "card" ? "active" : ""} onClick={() => { setPaymentMethod("card"); setPaymentMessage(""); }} type="button">
+            <img className="payment-method-icon" src={cardIcon} alt="" aria-hidden="true" />
+            <span className="sr-only">Cartão de crédito</span>
           </button>
         </div>
+        <small className="payment-method-message">{paymentMessage || "Escolha PIX ou cartão de crédito antes de finalizar."}</small>
         <button className="btn btn-primary full-width" disabled={!cart.items.length || loading} onClick={goToPayment} type="button">
-          {loading ? (paymentMethod === "card" ? "Abrindo cartao..." : "Gerando PIX...") : (paymentMethod === "card" ? "Pagar com cartao" : "Pagar com PIX")}
+          {loading ? (paymentMethod === "card" ? "Abrindo cartão..." : "Gerando PIX...") : "FINALIZAR COMPRA"}
         </button>
+        <a className="btn btn-outline full-width cart-secondary-link" href={whatsappUrl} target="_blank" rel="noreferrer">WHATSAPP</a>
       </aside>
     </>
   );

@@ -349,7 +349,7 @@ let shouldScrollToHighlight = false;
 let orderSuccessData = null;
 let availableCoupons = [];
 let appliedCoupon = null;
-let selectedPaymentMethod = "pix";
+let selectedPaymentMethod = "";
 const CATEGORY_VIEW_PRODUCT_LIMIT = 10;
 const selectedProductSizes = new Map();
 let shippingState = {
@@ -1529,13 +1529,17 @@ function updateCartUI() {
     itemCount += item.quantity;
     const product = resolveProductById(item.productId) || {};
     const sizeOptions = parseProductSizes(product);
+    const productImage = safeUrl(item.image || product.image || product.image_url || (Array.isArray(product.images) ? product.images[0] : "") || PLACEHOLDER_IMAGE, { allowDataImage: true }) || PLACEHOLDER_IMAGE;
 
     const li = document.createElement("li");
     li.className = "cart-item";
     li.innerHTML = `
+      <div class="cart-item-media">
+        <img src="${sanitizeText(productImage)}" alt="${sanitizeText(item.name)}" loading="lazy" onerror="this.onerror=null;this.src='${PLACEHOLDER_IMAGE}'">
+      </div>
       <div class="cart-item-main">
         <strong>${sanitizeText(item.name)}</strong>
-        <span>${sanitizeText(item.category)}</span>
+        <span class="cart-item-category">${sanitizeText(item.category)}</span>
         <div class="cart-item-size-row">
           <span class="cart-item-size-label">Tamanho</span>
           <select class="cart-item-size-select" aria-label="Selecionar tamanho">
@@ -1547,13 +1551,13 @@ function updateCartUI() {
         ${item.color ? `<div class="cart-item-color-row"><span class="cart-item-color-label">Cor</span><span class="cart-item-color-value">${sanitizeText(item.color)}</span></div>` : ""}
       </div>
       <div class="cart-item-controls">
-        <span class="cart-item-price">${formatCurrency(item.price * item.quantity)}</span>
         <div class="qty-controls">
           <button type="button" aria-label="${currentLocale === "en" ? "Decrease quantity" : currentLocale === "es" ? "Disminuir cantidad" : "Diminuir quantidade"}">−</button>
           <span class="qty-value">${item.quantity}</span>
           <button type="button" aria-label="${currentLocale === "en" ? "Increase quantity" : currentLocale === "es" ? "Aumentar cantidad" : "Aumentar quantidade"}">+</button>
         </div>
         <button class="remove-item" type="button" aria-label="${currentLocale === "en" ? "Remove item" : currentLocale === "es" ? "Eliminar artículo" : "Remover item"}">×</button>
+        <span class="cart-item-price">${formatCurrency(item.price * item.quantity)}</span>
       </div>
     `;
 
@@ -1570,7 +1574,7 @@ function updateCartUI() {
 
   const discount = getCouponDiscountPreview();
   if (cartDiscountRow && cartDiscountEl) {
-    cartDiscountRow.hidden = discount.productDiscount <= 0;
+    cartDiscountRow.hidden = false;
     cartDiscountEl.textContent = discount.productDiscount.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   }
   totalEl.textContent = getCartDrawerTotal().toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -1593,6 +1597,7 @@ function toggleCart(forceState) {
 
   cartElement.classList.toggle("active", nextState);
   overlay.classList.toggle("active", nextState);
+  document.body.classList.toggle("cart-is-open", nextState);
   document.body.style.overflow = nextState ? "hidden" : "";
 }
 
@@ -2102,14 +2107,29 @@ function showPixPayment(data) {
   document.body.appendChild(overlay);
 }
 
-function setPaymentMethod(method = "pix") {
-  selectedPaymentMethod = method === "card" ? "card" : "pix";
+function setPaymentMethod(method = "") {
+  selectedPaymentMethod = method === "card" ? "card" : method === "pix" ? "pix" : "";
   document.querySelectorAll("[data-payment-method]").forEach((button) => {
     button.classList.toggle("active", button.dataset.paymentMethod === selectedPaymentMethod);
+  });
+  setPaymentMethodMessage("");
+}
+
+function setPaymentMethodMessage(message = "") {
+  ["cart-payment-message", "checkout-payment-message"].forEach((id) => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.textContent = message;
+    el.hidden = !message;
   });
 }
 
 async function handleCheckoutSubmit() {
+  if (!selectedPaymentMethod) {
+    setPaymentMethodMessage(currentLocale === "en" ? "Choose PIX or credit card before finishing." : currentLocale === "es" ? "Elige PIX o tarjeta antes de finalizar." : "Escolha PIX ou cartão de crédito antes de finalizar.");
+    return;
+  }
+
   const data = collectCheckoutData();
   if (!validateCheckout(data)) return;
 
@@ -2170,6 +2190,10 @@ async function redirectCartToStripe(button = null) {
     alert(currentLocale === "en" ? "Your cart is empty." : currentLocale === "es" ? "Tu carrito esta vacio." : "Seu carrinho esta vazio.");
     return;
   }
+  if (!selectedPaymentMethod) {
+    setPaymentMethodMessage(currentLocale === "en" ? "Choose PIX or credit card before finishing." : currentLocale === "es" ? "Elige PIX o tarjeta antes de finalizar." : "Escolha PIX ou cartão de crédito antes de finalizar.");
+    return;
+  }
 
   const payload = {
     deliveryMethod: selectedPaymentMethod === "card" ? "card_checkout" : "pix_checkout",
@@ -2187,7 +2211,7 @@ async function redirectCartToStripe(button = null) {
   if (button) {
     button.disabled = true;
     button.textContent = selectedPaymentMethod === "card"
-      ? (currentLocale === "en" ? "Opening card..." : currentLocale === "es" ? "Abriendo tarjeta..." : "Abrindo cartao...")
+      ? (currentLocale === "en" ? "Opening card..." : currentLocale === "es" ? "Abriendo tarjeta..." : "Abrindo cartão...")
       : (currentLocale === "en" ? "Generating PIX..." : currentLocale === "es" ? "Generando PIX..." : "Gerando PIX...");
   }
 
@@ -3230,7 +3254,6 @@ document.addEventListener("DOMContentLoaded", async () => {
     persistCart();
     updateCartUI();
     toggleCart(true);
-    redirectCartToStripe();
   };
 })();
 
