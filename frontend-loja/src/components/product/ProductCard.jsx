@@ -4,7 +4,7 @@ import { Link } from "react-router-dom";
 import logo from "../../assets/logo_sem_fundo.png";
 import { useCart } from "../../hooks/useCart.js";
 import { useLocale } from "../../hooks/useLocale.js";
-import { startStripeCheckout } from "../../services/checkout.js";
+import { startPaymentCheckout } from "../../services/checkout.js";
 import { Badge } from "../ui/Badge.jsx";
 
 function parseSizes(value) {
@@ -23,9 +23,10 @@ export function ProductCard({ product }) {
     setLoading(true);
     cart.add(product, size);
     try {
-      await startStripeCheckout([{ id: product.id, quantity: 1, size }]);
+      await startPaymentCheckout([{ id: product.id, quantity: 1, size }]);
     } catch (error) {
-      alert(error.message || "Não foi possível abrir o Stripe Checkout.");
+      alert(error.message || "Nao foi possivel gerar o pagamento PIX.");
+    } finally {
       setLoading(false);
     }
   }
@@ -47,7 +48,7 @@ export function ProductCard({ product }) {
           ))}
         </div>
         <button className="btn btn-primary" disabled={loading} onClick={buyNow} type="button">
-          {loading ? "Abrindo Stripe..." : copy.addToCart}
+          {loading ? "Gerando PIX..." : copy.addToCart}
         </button>
       </div>
     </article>

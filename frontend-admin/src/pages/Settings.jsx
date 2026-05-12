@@ -4,7 +4,7 @@ import { AuthContext } from "../context/AuthContext.jsx";
 import { apiFetch } from "../services/api.js";
 import { getCoupons, getSettings, saveCoupons, saveSettings } from "../services/settingsStorage.js";
 
-const tabs = ["Geral", "Loja", "Pagamentos", "Entrega", "Notificações", "Checkout", "Segurança"];
+const tabs = ["Geral", "Loja", "Entrega", "Notificações", "Checkout"];
 const emptyCoupon = { id: "", code: "", type: "percent", target: "products", value: "", active: true, minOrderValue: "", usageLimit: "" };
 const money = (value) => Number(value || 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 
@@ -268,48 +268,18 @@ export function Settings() {
   }
 
   function getInitialForm(type) {
-    const { payments, delivery, notifications, checkout, security, store, coupons: couponSettings } = settings;
+    const { delivery, notifications, checkout, store, coupons: couponSettings } = settings;
     const map = {
-      password: { currentPassword: "", newPassword: "", confirmPassword: "" },
       store: { ...store },
-      stripe: { ...payments.stripeConfig },
-      pix: { ...payments.pixConfig },
-      boleto: { ...payments.boletoConfig },
-      cash: { ...payments.cashConfig },
-      payments: { stripe: payments.stripe, pix: payments.pix, boleto: payments.boleto, cashOnDelivery: payments.cashOnDelivery },
       correios: { ...delivery.correiosConfig, result: "" },
       localDelivery: { ...delivery.localConfig },
       pickup: { ...delivery.pickupConfig },
       delivery: { freeShippingValue: delivery.freeShippingValue, regions: delivery.regions },
       notifications: { ...notifications },
       checkout: { ...checkout },
-      security: { twoFactorEnabled: security.twoFactorEnabled, sessions: security.sessions },
-      accessHistory: {},
       coupons: { coupon: emptyCoupon, editingId: "", activePromotions: couponSettings.activePromotions, pixDiscount: couponSettings.pixDiscount, freeShippingValue: couponSettings.freeShippingValue },
     };
     return map[type] || {};
-  }
-
-  function validatePassword() {
-    const errors = {};
-    if (!form.currentPassword) errors.currentPassword = "Informe a senha atual.";
-    if (!form.newPassword) errors.newPassword = "Informe a nova senha.";
-    if (form.newPassword && form.newPassword.length < 6) errors.newPassword = "Use no mínimo 6 caracteres.";
-    if (form.newPassword !== form.confirmPassword) errors.confirmPassword = "As senhas precisam ser iguais.";
-    return errors;
-  }
-
-  function savePassword() {
-    const errors = validatePassword();
-    if (Object.keys(errors).length) {
-      setFormErrors(errors);
-      showToast("Erro: preencha os campos obrigatórios", "error");
-      return;
-    }
-    simulateSave(() => {
-      showToast("Senha alterada com sucesso");
-      closeModal();
-    });
   }
 
   function saveStore() {
@@ -341,30 +311,6 @@ export function Settings() {
       updateSettingsSection("store", nextStore, "Dados da loja atualizados com sucesso");
       closeModal();
     });
-  }
-
-  function savePaymentConfig(type) {
-    const key = `${type}Config`;
-    simulateSave(() => {
-      updateSettingsSection("payments", { [type === "cash" ? "cashOnDelivery" : type]: true, [key]: form }, "Pagamento salvo com sucesso");
-      closeModal();
-    });
-  }
-
-  function activatePayment(key, label) {
-    updateSettingsSection("payments", { [key]: true }, `${label} ativado com sucesso`);
-  }
-
-  function savePaymentManager() {
-    simulateSave(() => {
-      updateSettingsSection("payments", form, "Métodos de pagamento atualizados");
-      closeModal();
-    });
-  }
-
-  function testStripeConnection() {
-    const ok = form.publicKey && form.secretKey && form.webhookSecret;
-    showToast(ok ? "Conexão Stripe simulada com sucesso" : "Erro: preencha as chaves da Stripe", ok ? "success" : "error");
   }
 
   function saveDeliveryConfig(type) {
@@ -408,32 +354,6 @@ export function Settings() {
 
   function quickToggleCheckout(key) {
     updateSettingsSection("checkout", { [key]: !settings.checkout[key] }, "Checkout atualizado");
-  }
-
-  function saveSecurity() {
-    simulateSave(() => {
-      const sessions = form.sessions || [];
-      updateSettingsSection("security", { twoFactorEnabled: form.twoFactorEnabled, sessions, activeSessions: sessions.length }, "Segurança atualizada com sucesso");
-      closeModal();
-    });
-  }
-
-  function endSession(id) {
-    requestConfirm("Encerrar sessão", "Deseja encerrar esta sessão ativa?", () => {
-      const nextSessions = settings.security.sessions.filter((session) => session.id !== id);
-      updateSettingsSection("security", { sessions: nextSessions, activeSessions: nextSessions.length }, "Sessão encerrada");
-      if (modal?.type === "security") setForm((current) => ({ ...current, sessions: nextSessions }));
-      setConfirmDialog(null);
-    });
-  }
-
-  function endOtherSessions() {
-    requestConfirm("Encerrar outras sessões", "Todas as outras sessões serão removidas da lista.", () => {
-      const nextSessions = settings.security.sessions.slice(0, 1);
-      updateSettingsSection("security", { sessions: nextSessions, activeSessions: nextSessions.length }, "Outras sessões encerradas");
-      if (modal?.type === "security") setForm((current) => ({ ...current, sessions: nextSessions }));
-      setConfirmDialog(null);
-    });
   }
 
   function saveCoupon() {
@@ -503,13 +423,6 @@ export function Settings() {
     }, 280);
   }
 
-  const payments = [
-    ["Stripe", settings.payments.stripe, () => openModal("stripe"), "stripe"],
-    ["PIX", settings.payments.pix, () => openModal("pix"), "pix"],
-    ["Boleto", settings.payments.boleto, () => settings.payments.boleto ? openModal("boleto") : activatePayment("boleto", "Boleto"), "boleto"],
-    ["Dinheiro na entrega", settings.payments.cashOnDelivery, () => settings.payments.cashOnDelivery ? openModal("cash") : activatePayment("cashOnDelivery", "Dinheiro na entrega"), "cashOnDelivery"],
-  ];
-
   const delivery = [
     ["Correios", settings.delivery.correios, "Configurar", () => openModal("correios")],
     ["Entrega local", settings.delivery.localDelivery, "Configurar", () => openModal("localDelivery")],
@@ -553,16 +466,6 @@ export function Settings() {
           </SettingsCard>
         </div>
 
-        <div ref={(node) => { sectionRefs.current.Pagamentos = node; }}>
-          <SettingsCard action="Gerenciar pagamentos" description="Configure os métodos de pagamento da sua loja." icon={icons.card} id="settings-payments" onAction={() => openModal("payments", { wide: true })} title="Pagamentos">
-            {payments.map(([label, active, action, key]) => (
-              <SettingsRow action={active ? "Configurar" : "Ativar"} key={key} label={label} onAction={action}>
-                <StatusBadge status={active ? "Ativo" : "Pendente"} />
-              </SettingsRow>
-            ))}
-          </SettingsCard>
-        </div>
-
         <div ref={(node) => { sectionRefs.current.Entrega = node; }}>
           <SettingsCard action="Gerenciar entregas" description="Configure as opções de entrega e cálculo do frete." icon={icons.truck} id="settings-delivery" onAction={() => openModal("delivery")} title="Entrega e Frete">
             {delivery.map(([label, value, action, onAction]) => (
@@ -589,15 +492,6 @@ export function Settings() {
           </SettingsCard>
         </div>
 
-        <div ref={(node) => { sectionRefs.current.Segurança = node; }}>
-          <SettingsCard action="Gerenciar segurança" description="Proteja sua conta e gerencie o acesso ao painel." icon={icons.shield} id="settings-security" onAction={() => openModal("security", { wide: true })} title="Segurança">
-            <SettingsRow action="Alterar" label="Senha" onAction={() => openModal("password")} value="" />
-            <SettingsRow label="Autenticação 2FA"><StatusBadge onClick={() => openModal("security", { wide: true })} status={settings.security.twoFactorEnabled ? "Ativo" : "Pendente"} /></SettingsRow>
-            <SettingsRow label="Sessões ativas" onClick={() => openModal("security", { wide: true })} value={`${settings.security.activeSessions} sessões`} />
-            <SettingsRow label="Histórico de acessos" onClick={() => openModal("accessHistory", { wide: true })} value="›" />
-          </SettingsCard>
-        </div>
-
         <SettingsCard action="Gerenciar cupons" description="Gerencie cupons de desconto e promoções da loja." icon={icons.ticket} id="settings-coupons" onAction={() => openModal("coupons", { wide: true })} title="Cupons e Promoções">
           <SettingsRow label="Cupons ativos" value={settings.coupons.activeCoupons} />
           <SettingsRow label="Promoções ativas" value={settings.coupons.activePromotions} />
@@ -621,52 +515,26 @@ export function Settings() {
 
   function renderModal() {
     const modalProps = {
-      password: ["Alterar senha", "Atualize sua senha de acesso ao painel."],
       store: ["Editar dados da loja", "Atualize as informações exibidas no painel."],
-      stripe: ["Configurar Stripe", "Salve as chaves e simule uma conexão."],
-      pix: ["Configurar PIX", "Defina chave, recebedor e desconto."],
-      boleto: ["Configurar Boleto", "Defina provedor, vencimento e instruções."],
-      cash: ["Configurar dinheiro na entrega", "Ajuste regras para pagamento presencial."],
-      payments: ["Gerenciar pagamentos", "Ative ou desative os métodos disponíveis."],
       correios: ["Configurar Correios", "Configure origem, contrato e teste de cálculo."],
       localDelivery: ["Configurar entrega local", "Defina valor, prazo e regiões."],
       pickup: ["Configurar retirada na loja", "Defina local, horários e instruções."],
       delivery: ["Gerenciar entregas", "Atualize frete grátis e regiões atendidas."],
       notifications: ["Configurar notificações", "Personalize canais, mensagens e alerta sonoro."],
       checkout: ["Configurar checkout", "Controle as regras de finalização de compra."],
-      security: ["Gerenciar segurança", "Controle 2FA e sessões ativas."],
-      accessHistory: ["Histórico de acessos", "Revise os acessos recentes ao painel."],
       coupons: ["Gerenciar cupons", "Crie, edite e acompanhe promoções."],
     };
     const [title, description] = modalProps[modal.type] || ["Configurações", ""];
     return (
-      <Modal description={description} onClose={closeModal} title={title} wide={modal.wide || ["payments", "security", "accessHistory", "coupons"].includes(modal.type)}>
+      <Modal description={description} onClose={closeModal} title={title} wide={modal.wide || ["coupons"].includes(modal.type)}>
         {renderModalBody()}
       </Modal>
     );
   }
 
   function renderModalBody() {
-    if (modal.type === "password") {
-      return <div className="settings-form"><Field error={formErrors.currentPassword} label="Senha atual" type="password" value={form.currentPassword || ""} onChange={(e) => setForm({ ...form, currentPassword: e.target.value })} /><Field error={formErrors.newPassword} label="Nova senha" type="password" value={form.newPassword || ""} onChange={(e) => setForm({ ...form, newPassword: e.target.value })} /><Field error={formErrors.confirmPassword} label="Confirmar nova senha" type="password" value={form.confirmPassword || ""} onChange={(e) => setForm({ ...form, confirmPassword: e.target.value })} /><ModalActions busy={saving} onCancel={closeModal} onSave={savePassword} saveLabel="Salvar senha" /></div>;
-    }
     if (modal.type === "store") {
       return <div className="settings-form"><Field error={formErrors.name} label="Nome da loja" value={form.name || ""} onChange={(e) => setForm({ ...form, name: e.target.value })} /><Field error={formErrors.whatsapp} label="WhatsApp" value={form.whatsapp || ""} onChange={(e) => setForm({ ...form, whatsapp: e.target.value })} /><Field label="Instagram" value={form.instagram || ""} onChange={(e) => setForm({ ...form, instagram: e.target.value })} /><Field error={formErrors.email} label="E-mail comercial" type="email" value={form.email || ""} onChange={(e) => setForm({ ...form, email: e.target.value })} /><ModalActions busy={saving} onCancel={closeModal} onSave={saveStore} /></div>;
-    }
-    if (modal.type === "stripe") {
-      return <div className="settings-form"><Field label="Public Key" value={form.publicKey || ""} onChange={(e) => setForm({ ...form, publicKey: e.target.value })} /><Field label="Secret Key" value={form.secretKey || ""} onChange={(e) => setForm({ ...form, secretKey: e.target.value })} /><Field label="Webhook Secret" value={form.webhookSecret || ""} onChange={(e) => setForm({ ...form, webhookSecret: e.target.value })} /><SelectField label="Modo" value={form.mode || "Teste"} onChange={(e) => setForm({ ...form, mode: e.target.value })}><option>Teste</option><option>Produção</option></SelectField><ModalActions busy={saving} onCancel={closeModal} onSave={() => savePaymentConfig("stripe")}><button className="settings-secondary-action" onClick={testStripeConnection} type="button">Testar conexão</button></ModalActions></div>;
-    }
-    if (modal.type === "pix") {
-      return <div className="settings-form"><SelectField label="Tipo de chave PIX" value={form.keyType || "CPF"} onChange={(e) => setForm({ ...form, keyType: e.target.value })}>{["CPF", "CNPJ", "E-mail", "Telefone", "Aleatória"].map((item) => <option key={item}>{item}</option>)}</SelectField><Field label="Chave PIX" value={form.key || ""} onChange={(e) => setForm({ ...form, key: e.target.value })} /><Field label="Nome do recebedor" value={form.receiverName || ""} onChange={(e) => setForm({ ...form, receiverName: e.target.value })} /><Field label="Cidade do recebedor" value={form.receiverCity || ""} onChange={(e) => setForm({ ...form, receiverCity: e.target.value })} /><Field label="Desconto no PIX (%)" type="number" value={form.discount || ""} onChange={(e) => setForm({ ...form, discount: e.target.value })} /><ModalActions busy={saving} onCancel={closeModal} onSave={() => savePaymentConfig("pix")} /></div>;
-    }
-    if (modal.type === "boleto") {
-      return <div className="settings-form"><SelectField label="Provedor" value={form.provider || "Mercado Pago"} onChange={(e) => setForm({ ...form, provider: e.target.value })}>{["Mercado Pago", "PagSeguro", "Asaas", "Outro"].map((item) => <option key={item}>{item}</option>)}</SelectField><Field label="Dias para vencimento" type="number" value={form.dueDays || ""} onChange={(e) => setForm({ ...form, dueDays: e.target.value })} /><TextArea label="Instruções do boleto" value={form.instructions || ""} onChange={(e) => setForm({ ...form, instructions: e.target.value })} /><ModalActions busy={saving} onCancel={closeModal} onSave={() => savePaymentConfig("boleto")} /></div>;
-    }
-    if (modal.type === "cash") {
-      return <div className="settings-form"><SettingsRow label="Permitir troco?"><ToggleSwitch checked={Boolean(form.allowChange)} onChange={() => setForm({ ...form, allowChange: !form.allowChange })} /></SettingsRow><Field label="Valor máximo permitido" type="number" value={form.maxValue || ""} onChange={(e) => setForm({ ...form, maxValue: e.target.value })} /><TextArea label="Observações para pagamento na entrega" value={form.notes || ""} onChange={(e) => setForm({ ...form, notes: e.target.value })} /><ModalActions busy={saving} onCancel={closeModal} onSave={() => savePaymentConfig("cash")} /></div>;
-    }
-    if (modal.type === "payments") {
-      return <div className="settings-form"><div className="settings-list-panel">{["stripe", "pix", "boleto", "cashOnDelivery"].map((key) => <SettingsRow key={key} label={{ stripe: "Stripe", pix: "PIX", boleto: "Boleto", cashOnDelivery: "Dinheiro na entrega" }[key]}><ToggleSwitch checked={Boolean(form[key])} onChange={() => setForm({ ...form, [key]: !form[key] })} /></SettingsRow>)}</div><ModalActions busy={saving} onCancel={closeModal} onSave={savePaymentManager} /></div>;
     }
     if (modal.type === "correios") {
       return <div className="settings-form"><Field label="CEP de origem" value={form.originCep || ""} onChange={(e) => setForm({ ...form, originCep: e.target.value })} /><Field label="Código de contrato (opcional)" value={form.contractCode || ""} onChange={(e) => setForm({ ...form, contractCode: e.target.value })} /><SelectField label="Serviço padrão" value={form.defaultService || "Ambos"} onChange={(e) => setForm({ ...form, defaultService: e.target.value })}><option>PAC</option><option>SEDEX</option><option>Ambos</option></SelectField><Field label="Prazo adicional em dias" type="number" value={form.extraDays || ""} onChange={(e) => setForm({ ...form, extraDays: e.target.value })} /><Field label="Taxa extra de manuseio" type="number" value={form.handlingFee || ""} onChange={(e) => setForm({ ...form, handlingFee: e.target.value })} /><Field label="CEP de destino para teste" value={form.testCep || ""} onChange={(e) => setForm({ ...form, testCep: e.target.value })} /><ModalActions busy={saving} onCancel={closeModal} onSave={() => saveDeliveryConfig("correios")}><button className="settings-secondary-action" onClick={testShipping} type="button">Testar cálculo</button></ModalActions></div>;
@@ -685,12 +553,6 @@ export function Settings() {
     }
     if (modal.type === "checkout") {
       return <div className="settings-form">{["loginRequired", "cpfRequired", "couponEnabled", "orderNoteEnabled", "termsRequired"].map((key) => <SettingsRow key={key} label={{ loginRequired: "Login obrigatório", cpfRequired: "CPF obrigatório", couponEnabled: "Cupom de desconto ativo", orderNoteEnabled: "Campo de observação ativo", termsRequired: "Aceite dos termos obrigatório" }[key]}><ToggleSwitch checked={Boolean(form[key])} onChange={() => setForm({ ...form, [key]: !form[key] })} /></SettingsRow>)}<TextArea label="Mensagem exibida após compra" value={form.postPurchaseMessage || ""} onChange={(e) => setForm({ ...form, postPurchaseMessage: e.target.value })} /><TextArea label="Texto curto dos termos de compra" value={form.termsText || ""} onChange={(e) => setForm({ ...form, termsText: e.target.value })} /><Field label="URL da política de troca" value={form.exchangePolicyUrl || ""} onChange={(e) => setForm({ ...form, exchangePolicyUrl: e.target.value })} /><Field label="URL da política de privacidade" value={form.privacyPolicyUrl || ""} onChange={(e) => setForm({ ...form, privacyPolicyUrl: e.target.value })} /><ModalActions busy={saving} onCancel={closeModal} onSave={saveCheckout} /></div>;
-    }
-    if (modal.type === "security") {
-      return <div className="settings-form"><SettingsRow label="Autenticação 2FA"><ToggleSwitch checked={Boolean(form.twoFactorEnabled)} onChange={() => setForm({ ...form, twoFactorEnabled: !form.twoFactorEnabled })} /></SettingsRow><div className="settings-list-panel">{(form.sessions || []).map((session) => <SettingsRow action="Encerrar" key={session.id} label={`${session.device} - ${session.location}`} onAction={() => endSession(session.id)} value={session.lastAccess} />)}</div><ModalActions busy={saving} onCancel={closeModal} onSave={saveSecurity}><button className="settings-secondary-action" onClick={endOtherSessions} type="button">Encerrar outras sessões</button></ModalActions></div>;
-    }
-    if (modal.type === "accessHistory") {
-      return <div className="settings-history">{settings.security.accessHistory.map((item) => <div key={`${item.date}-${item.device}`}><span>{item.date}</span><strong>{item.device}</strong><span>{item.location}</span><StatusBadge status={item.status === "Sucesso" ? "Ativo" : "Pendente"} /></div>)}</div>;
     }
     if (modal.type === "coupons") {
       const coupon = form.coupon || emptyCoupon;

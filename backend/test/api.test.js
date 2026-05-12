@@ -3,6 +3,7 @@ const fs = require("node:fs/promises");
 const os = require("node:os");
 const path = require("node:path");
 const test = require("node:test");
+const jwt = require("jsonwebtoken");
 
 process.env.BIGSMOKE_DATA_DIR = path.join(os.tmpdir(), `bigsmoke-data-${process.pid}`);
 process.env.BIGSMOKE_UPLOADS_DIR = path.join(os.tmpdir(), `bigsmoke-uploads-${process.pid}`);
@@ -159,13 +160,30 @@ test("manual paid order debits product stock", async () => {
   assert.equal(product.stock, 1);
 });
 
-test("customer orders endpoint returns public orders by email", async () => {
-  const response = await fetch(`${baseUrl}/api/orders/customer/${encodeURIComponent("manual@teste.com")}`);
+test("customer tokens cannot access admin endpoints", async () => {
+  const customerToken = jwt.sign({ email: "manual@teste.com", role: "customer" }, process.env.JWT_SECRET, { expiresIn: "1h" });
+  const response = await fetch(`${baseUrl}/api/admin/orders`, {
+    headers: { Authorization: `Bearer ${customerToken}` }
+  });
+
+  assert.equal(response.status, 403);
+});
+
+test("customer orders endpoint requires matching authenticated email", async () => {
+  const customerToken = jwt.sign({ email: "manual@teste.com", role: "customer" }, process.env.JWT_SECRET, { expiresIn: "1h" });
+  const response = await fetch(`${baseUrl}/api/orders/customer/${encodeURIComponent("manual@teste.com")}`, {
+    headers: { Authorization: `Bearer ${customerToken}` }
+  });
 
   assert.equal(response.status, 200);
   const orders = await response.json();
   assert.ok(Array.isArray(orders));
   assert.ok(orders.some((order) => order.customer?.email === "m***@teste.com"));
+
+  const forbiddenResponse = await fetch(`${baseUrl}/api/orders/customer/${encodeURIComponent("outra@teste.com")}`, {
+    headers: { Authorization: `Bearer ${customerToken}` }
+  });
+  assert.equal(forbiddenResponse.status, 403);
 });
 
 test("admin status changes debit and restore stock once", async () => {

@@ -290,6 +290,10 @@
     <span>Total</span>
     <span>R$ <span id="total">0,00</span></span>
   </div>
+  <div class="payment-method-picker legacy-payment-methods" aria-label="Forma de pagamento">
+    <button class="active" data-payment-method="pix" type="button">PIX</button>
+    <button data-payment-method="card" type="button">Cartao de credito</button>
+  </div>
   <button id="checkout-button" type="button" class="btn btn-primary full-width">Finalizar compra</button>
   <a id="whatsapp" target="_blank" rel="noopener" class="btn btn-outline full-width cart-secondary-link">Atendimento no WhatsApp</a>
 </aside>
@@ -378,6 +382,10 @@
         <div class="summary-line total-line">
           <span>Total final</span>
           <strong id="checkout-total">R$ 0,00</strong>
+        </div>
+        <div class="payment-method-picker legacy-payment-methods" aria-label="Forma de pagamento">
+          <button class="active" data-payment-method="pix" type="button">PIX</button>
+          <button data-payment-method="card" type="button">Cartao de credito</button>
         </div>
         <button type="button" class="btn btn-primary full-width" id="confirm-checkout">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="margin-right:0.4rem;vertical-align:-1px" aria-hidden="true">

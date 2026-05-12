@@ -1,5 +1,31 @@
 import { useState, useEffect, useRef } from "react";
 import { useAuth } from "../../context/AuthContext.jsx";
+import { apiFetch } from "../../services/api.js";
+
+const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID || "";
+let googleScriptPromise = null;
+
+function loadGoogleIdentityScript() {
+  if (window.google?.accounts?.id) return Promise.resolve();
+  if (!googleScriptPromise) {
+    googleScriptPromise = new Promise((resolve, reject) => {
+      const existing = document.querySelector('script[src="https://accounts.google.com/gsi/client"]');
+      if (existing) {
+        existing.addEventListener("load", resolve, { once: true });
+        existing.addEventListener("error", reject, { once: true });
+        return;
+      }
+      const script = document.createElement("script");
+      script.src = "https://accounts.google.com/gsi/client";
+      script.async = true;
+      script.defer = true;
+      script.onload = resolve;
+      script.onerror = reject;
+      document.head.appendChild(script);
+    });
+  }
+  return googleScriptPromise;
+}
 
 export function AuthModal() {
   const { authOpen, closeAuth, login } = useAuth();
@@ -16,6 +42,7 @@ export function AuthModal() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const overlayRef = useRef(null);
+  const googleButtonRef = useRef(null);
 
   // Reset on open
   useEffect(() => {
@@ -39,6 +66,34 @@ export function AuthModal() {
   useEffect(() => {
     document.body.style.overflow = authOpen ? "hidden" : "";
     return () => { document.body.style.overflow = ""; };
+  }, [authOpen]);
+
+  useEffect(() => {
+    if (!authOpen || !googleClientId || !googleButtonRef.current) return;
+
+    let cancelled = false;
+    loadGoogleIdentityScript()
+      .then(() => {
+        if (cancelled || !googleButtonRef.current) return;
+        googleButtonRef.current.innerHTML = "";
+        window.google.accounts.id.initialize({
+          client_id: googleClientId,
+          callback: handleGoogleCredential,
+        });
+        window.google.accounts.id.renderButton(googleButtonRef.current, {
+          theme: "outline",
+          size: "large",
+          text: "continue_with",
+          shape: "rectangular",
+          locale: "pt-BR",
+          width: Math.min(360, googleButtonRef.current.offsetWidth || 360),
+        });
+      })
+      .catch(() => setError("Nao foi possivel carregar o login do Google."));
+
+    return () => {
+      cancelled = true;
+    };
   }, [authOpen]);
 
   if (!authOpen) return null;
@@ -106,6 +161,23 @@ export function AuthModal() {
     }
   }
 
+  async function handleGoogleCredential(response) {
+    setError("");
+    setLoading(true);
+
+    try {
+      const data = await apiFetch("/api/auth/google", {
+        method: "POST",
+        body: JSON.stringify({ credential: response?.credential || "" }),
+      });
+      login(data.user, data.token);
+    } catch (err) {
+      setError(err.message || "Nao foi possivel entrar com Google.");
+    } finally {
+      setLoading(false);
+    }
+  }
+
   return (
     <div className="auth-overlay" ref={overlayRef} onClick={handleOverlayClick}>
       <div className="auth-modal" role="dialog" aria-modal="true" aria-label={mode === "login" ? "Iniciar sessão" : "Criar conta"}>
@@ -151,6 +223,19 @@ export function AuthModal() {
             Criar conta
           </button>
         </div>
+
+        {googleClientId && (
+          <>
+            <div className="auth-google-slot">
+              <div className="auth-google-official" ref={googleButtonRef} />
+              <div className="auth-google-visual" aria-hidden="true">
+                <img src="/google-logo.webp" alt="" />
+                <span>Continuar com Google</span>
+              </div>
+            </div>
+            <div className="auth-divider"><span>ou</span></div>
+          </>
+        )}
 
         {/* Form */}
         <form className="auth-form" onSubmit={handleSubmit} noValidate>

@@ -1842,6 +1842,14 @@
     return null;
   }
 
+  function readStoredCustomerToken() {
+    try {
+      return localStorage.getItem('bigsmoke_customer_token') || '';
+    } catch {
+      return '';
+    }
+  }
+
   function saveStoredCustomer(customer) {
     localStorage.setItem('bigsmoke_customer', JSON.stringify(customer));
     try {
@@ -2462,7 +2470,7 @@
         <div class="info-row"><span class="lbl">CEP</span><span class="val">${esc(addr.cep||'—')}</span></div>
       </div>
       <div class="detail-grid" style="margin-top:0.75rem">
-        <div class="info-row"><span class="lbl">Método</span><span class="val">${esc(order?.paymentMethod||'Stripe')}</span></div>
+        <div class="info-row"><span class="lbl">Método</span><span class="val">${esc(order?.paymentMethod||'Pagamento')}</span></div>
         <div class="info-row"><span class="lbl">Subtotal</span><span class="val">${fmt(subtotal)}</span></div>
         <div class="info-row"><span class="lbl">Frete</span>${shipLabel}</div>
         ${discount > 0 ? `<div class="info-row"><span class="lbl">Desconto</span><span class="val">-${fmt(discount)}</span></div>` : ''}
@@ -2635,18 +2643,19 @@
     let orders = [];
     const customer = readStoredCustomer();
     const customerEmail = normalizeEmail(customer?.email);
-    try {
-      const res = await fetch(`${API_BASE}/api/orders`);
-      if (res.ok) {
-        const data = await res.json();
-        orders = Array.isArray(data) ? data : Array.isArray(data.orders) ? data.orders : [];
+    const token = readStoredCustomerToken();
+    if (customerEmail && token) {
+      try {
+        const res = await fetch(`${API_BASE}/api/orders/customer/${encodeURIComponent(customerEmail)}`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        if (res.ok) {
+          const data = await res.json();
+          orders = Array.isArray(data) ? data : Array.isArray(data.orders) ? data.orders : [];
+        }
+      } catch (error) {
+        console.error('Erro ao carregar pedidos do perfil:', error);
       }
-    } catch (error) {
-      console.error('Erro ao carregar pedidos do perfil:', error);
-    }
-
-    if (customerEmail) {
-      orders = orders.filter(order => getOrderCustomerEmail(order) === customerEmail);
     }
 
     const active  = orders.filter(isActive);

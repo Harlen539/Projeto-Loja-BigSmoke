@@ -6,6 +6,7 @@ const path = require("node:path");
 const bcrypt = require("bcryptjs");
 const cors = require("cors");
 const express = require("express");
+const { OAuth2Client } = require("google-auth-library");
 const helmet = require("helmet");
 const rateLimit = require("express-rate-limit");
 const jwt = require("jsonwebtoken");
@@ -32,14 +33,20 @@ const settingsFile = path.join(dataDir, "settings.json");
 const PRODUCT_TABLE = process.env.SUPABASE_PRODUCTS_TABLE || "products";
 const ORDER_TABLE = process.env.SUPABASE_ORDERS_TABLE || "orders";
 const JWT_SECRET = process.env.JWT_SECRET || "";
+const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID || "";
+const ABACATEPAY_API_KEY = process.env.ABACATEPAY_API_KEY || "";
+const ABACATEPAY_API_URL = (process.env.ABACATEPAY_API_URL || "https://api.abacatepay.com/v2").replace(/\/$/, "");
+const ABACATEPAY_WEBHOOK_SECRET = process.env.ABACATEPAY_WEBHOOK_SECRET || "";
+const ABACATEPAY_CARD_MAX_INSTALLMENTS = Math.min(12, Math.max(1, Number(process.env.ABACATEPAY_CARD_MAX_INSTALLMENTS || 6)));
 const STRIPE_SECRET_KEY = process.env.STRIPE_SECRET_KEY || "";
 const WEBHOOK_SECRET = process.env.STRIPE_WEBHOOK_SECRET || "";
 const MOCK_STRIPE = process.env.STRIPE_MOCK === "true";
+const USE_ABACATEPAY = Boolean(ABACATEPAY_API_KEY) && !MOCK_STRIPE;
 const STRIPE_LIVE_MODE = STRIPE_SECRET_KEY.startsWith("sk_live_") && !MOCK_STRIPE;
-
 const stripe = process.env.STRIPE_SECRET_KEY
-  ? new Stripe(STRIPE_SECRET_KEY, { apiVersion: "2024-06-20" })
+  ? new Stripe(STRIPE_SECRET_KEY, { apiVersion: "2026-02-25.clover" })
   : null;
+const googleOAuthClient = GOOGLE_CLIENT_ID ? new OAuth2Client(GOOGLE_CLIENT_ID) : null;
 
 const supabase = process.env.SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY
   ? createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY)
@@ -109,11 +116,11 @@ app.use(helmet({
       "base-uri": ["'self'"],
       "object-src": ["'none'"],
       "frame-ancestors": ["'self'"],
-      "script-src": ["'self'", "'unsafe-inline'", "https://js.stripe.com"],
+      "script-src": ["'self'", "'unsafe-inline'", "https://js.stripe.com", "https://accounts.google.com"],
       "style-src": ["'self'", "'unsafe-inline'", "https:"],
       "img-src": ["'self'", "data:", "blob:", "https:"],
-      "connect-src": ["'self'", "https://api.stripe.com", "https://viacep.com.br"],
-      "frame-src": ["'self'", "https://js.stripe.com", "https://checkout.stripe.com"],
+      "connect-src": ["'self'", "https://api.stripe.com", "https://viacep.com.br", "https://accounts.google.com"],
+      "frame-src": ["'self'", "https://js.stripe.com", "https://checkout.stripe.com", "https://accounts.google.com"],
       "form-action": ["'self'", "https://checkout.stripe.com"],
       "upgrade-insecure-requests": []
     }
@@ -1234,7 +1241,30 @@ function authMiddleware(req, res, next) {
   }
 
   try {
-    req.admin = jwt.verify(token, JWT_SECRET);
+    const payload = jwt.verify(token, JWT_SECRET);
+    if (payload?.role !== "admin") {
+      return res.status(403).json({ error: "Acesso restrito ao administrador." });
+    }
+    req.admin = payload;
+    return next();
+  } catch {
+    return res.status(401).json({ error: "Sessão expirada ou inválida." });
+  }
+}
+
+function customerAuthMiddleware(req, res, next) {
+  const header = req.headers.authorization || "";
+  const token = header.startsWith("Bearer ") ? header.slice(7) : header;
+  if (!token) {
+    return res.status(401).json({ error: "Token de acesso ausente." });
+  }
+
+  try {
+    const payload = jwt.verify(token, JWT_SECRET);
+    if (!["customer", "admin"].includes(payload?.role)) {
+      return res.status(403).json({ error: "Acesso não autorizado." });
+    }
+    req.user = payload;
     return next();
   } catch {
     return res.status(401).json({ error: "Sessão expirada ou inválida." });
@@ -2031,6 +2061,103 @@ function buildMetadataForOrder(order) {
   };
 }
 
+async function createAbacatePixCharge(order) {
+  const amount = Math.max(50, Math.round(normalizeNumber(order.amountTotal, 0) * 100));
+  const response = await fetch(`${ABACATEPAY_API_URL}/transparents/create`, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${ABACATEPAY_API_KEY}`,
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      method: "PIX",
+      data: {
+        amount,
+        expiresIn: 3600,
+        description: `Pedido ${order.orderNumberFormatted || order.id} - BigSmoke`,
+        metadata: {
+          orderId: order.id,
+          orderNumber: order.orderNumberFormatted || "",
+          provider: "abacatepay"
+        }
+      }
+    })
+  });
+  const payload = await response.json().catch(() => null);
+  if (!response.ok || payload?.error) {
+    const message = typeof payload?.error === "string"
+      ? payload.error
+      : payload?.error?.message || "Nao foi possivel criar o PIX na Abacate Pay.";
+    throw new Error(message);
+  }
+  return payload?.data || {};
+}
+
+async function createAbacateProductForCheckout(order) {
+  const amount = Math.max(100, Math.round(normalizeNumber(order.amountTotal, 0) * 100));
+  const response = await fetch(`${ABACATEPAY_API_URL}/products/create`, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${ABACATEPAY_API_KEY}`,
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      externalId: order.id,
+      name: `Pedido ${order.orderNumberFormatted || order.id} - BigSmoke`,
+      description: (order.items || [])
+        .map((item) => `${item.quantity}x ${item.name}${item.size ? ` ${item.size}` : ""}`)
+        .join(", ")
+        .slice(0, 500),
+      price: amount,
+      currency: "BRL"
+    })
+  });
+  const payload = await response.json().catch(() => null);
+  if (!response.ok || payload?.error) {
+    const message = typeof payload?.error === "string"
+      ? payload.error
+      : payload?.error?.message || "Nao foi possivel criar o produto na Abacate Pay.";
+    throw new Error(message);
+  }
+  return payload?.data || {};
+}
+
+async function createAbacateCardCheckout(order, baseUrl) {
+  const product = await createAbacateProductForCheckout(order);
+  const total = normalizeNumber(order.amountTotal, 0);
+  const maxInstallments = Math.max(1, Math.min(ABACATEPAY_CARD_MAX_INSTALLMENTS, Math.floor(total / 10) || 1));
+  const tracking = encodeURIComponent(order.trackingCode || order.orderNumberFormatted || order.id);
+  const response = await fetch(`${ABACATEPAY_API_URL}/checkouts/create`, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${ABACATEPAY_API_KEY}`,
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      items: [{ id: product.id, quantity: 1 }],
+      externalId: order.id,
+      returnUrl: `${baseUrl}/loja/`,
+      completionUrl: `${baseUrl}/pedidos?tracking=${tracking}`,
+      methods: ["CARD"],
+      card: { maxInstallments },
+      metadata: {
+        orderId: order.id,
+        orderNumber: order.orderNumberFormatted || "",
+        provider: "abacatepay",
+        paymentMethod: "card"
+      }
+    })
+  });
+  const payload = await response.json().catch(() => null);
+  if (!response.ok || payload?.error) {
+    const message = typeof payload?.error === "string"
+      ? payload.error
+      : payload?.error?.message || "Nao foi possivel criar o checkout de cartao na Abacate Pay.";
+    throw new Error(message);
+  }
+  return payload?.data || {};
+}
+
 function setOrderPaid(order, event) {
   return normalizeOrder(
     {
@@ -2040,7 +2167,7 @@ function setOrderPaid(order, event) {
       paymentIntentId: event?.data?.object?.payment_intent || order.paymentIntentId,
       stripeEventId: event?.id || order.stripeEventId,
       inventoryDebitedAt: order.inventoryDebitedAt || nowIso(),
-      paymentConfirmed: Boolean(event?.livemode),
+      paymentConfirmed: Boolean(event?.livemode) || String(event?.type || "").endsWith(".completed"),
       events: [
         ...(order.events || []),
         {
@@ -2151,6 +2278,50 @@ app.post("/api/stripe/webhook", express.raw({ type: "application/json" }), async
   }
 });
 
+app.post("/api/abacatepay/webhook", express.raw({ type: "application/json" }), async (req, res) => {
+  if (ABACATEPAY_WEBHOOK_SECRET && req.query.webhookSecret !== ABACATEPAY_WEBHOOK_SECRET) {
+    return res.status(401).json({ error: "Unauthorized" });
+  }
+
+  try {
+    const event = JSON.parse(Buffer.isBuffer(req.body) ? req.body.toString("utf8") : "{}");
+    const payment = event?.data?.transparent || event?.data?.checkout || {};
+    const paymentId = normalizeText(payment.id);
+    const externalId = normalizeText(payment.externalId);
+    const order = paymentId
+      ? await findOrderBySessionId(paymentId)
+      : null;
+    const fallbackOrder = !order && externalId ? await findOrderById(externalId) : null;
+    const targetOrder = order || fallbackOrder;
+
+    if (targetOrder && ["transparent.completed", "checkout.completed"].includes(event.event)) {
+      if (!(targetOrder.status === "paid" && targetOrder.paymentConfirmed)) {
+        await applyStockDelta(targetOrder.items || [], -1);
+        const next = setOrderPaid(
+          {
+            ...targetOrder,
+            paymentIntentId: paymentId || targetOrder.paymentIntentId,
+            stripeEventId: normalizeText(event.id || `${event.event}:${paymentId}`),
+            sessionUrl: normalizeText(payment.receiptUrl || targetOrder.sessionUrl),
+            inventoryDebitedAt: targetOrder.inventoryDebitedAt || nowIso()
+          },
+          {
+            id: normalizeText(event.id || `${event.event}:${paymentId}`),
+            type: event.event,
+            created: Math.floor(Date.now() / 1000),
+            data: { object: { payment_intent: paymentId } }
+          }
+        );
+        await updateOrderById(targetOrder.id, next);
+      }
+    }
+
+    return res.json({ received: true });
+  } catch (error) {
+    return res.status(400).json({ error: error.message });
+  }
+});
+
 app.use(express.json({ limit: "2mb", verify: rawBodySaver }));
 app.use(express.urlencoded({ extended: true }));
 
@@ -2230,10 +2401,11 @@ app.get("/api/config", async (_req, res) => {
     store: DEFAULT_STORE,
     publicStore: publicSettings.store,
     whatsappNumber: publicSettings.store.whatsapp || DEFAULT_WHATSAPP,
-    paymentProvider: "stripe",
+    paymentProvider: USE_ABACATEPAY ? "abacatepay" : "stripe",
+    abacatepayConfigured: USE_ABACATEPAY,
     stripeConfigured: Boolean(process.env.STRIPE_SECRET_KEY),
     paymentMetricsEnabled: STRIPE_LIVE_MODE,
-    webhookConfigured: Boolean(WEBHOOK_SECRET),
+    webhookConfigured: USE_ABACATEPAY ? Boolean(ABACATEPAY_WEBHOOK_SECRET) : Boolean(WEBHOOK_SECRET),
     twilioConfigured: canSendTwilioWhatsApp(),
     twilioTemplateConfigured: Boolean(TWILIO_WHATSAPP_CONTENT_SID),
     twilioCustomerConfirmationEnabled: TWILIO_CUSTOMER_CONFIRMATION_ENABLED,
@@ -2276,6 +2448,49 @@ app.post("/api/auth/login", loginLimiter, async (req, res) => {
   });
 });
 
+app.post("/api/auth/google", loginLimiter, async (req, res) => {
+  if (!googleOAuthClient) {
+    return res.status(400).json({ error: "Google Login nao configurado. Defina GOOGLE_CLIENT_ID." });
+  }
+
+  const credential = normalizeText(req.body?.credential);
+  if (!credential) {
+    return res.status(400).json({ error: "Token do Google ausente." });
+  }
+
+  try {
+    const ticket = await googleOAuthClient.verifyIdToken({
+      idToken: credential,
+      audience: GOOGLE_CLIENT_ID
+    });
+    const payload = ticket.getPayload();
+    const email = normalizeText(payload?.email).toLowerCase();
+
+    if (!email || payload?.email_verified !== true) {
+      return res.status(401).json({ error: "Conta Google sem e-mail verificado." });
+    }
+
+    const fullName = normalizeText(payload?.name);
+    const firstName = normalizeText(payload?.given_name || fullName.split(" ")[0]);
+    const lastName = normalizeText(payload?.family_name || fullName.split(" ").slice(1).join(" "));
+    const picture = sanitizeSafeUrl(payload?.picture || "");
+    const user = {
+      id: sanitizeIdentifier(payload?.sub || email),
+      provider: "google",
+      email,
+      firstName,
+      lastName,
+      name: fullName || email,
+      picture
+    };
+    const token = jwt.sign({ email, role: "customer", provider: "google" }, JWT_SECRET, { expiresIn: "7d" });
+
+    res.json({ token, user });
+  } catch {
+    res.status(401).json({ error: "Login Google invalido." });
+  }
+});
+
 app.get("/api/auth/me", authMiddleware, (req, res) => {
   res.json({ user: req.admin });
 });
@@ -2312,30 +2527,19 @@ app.get("/api/coupons", async (_req, res) => {
   }
 });
 
-app.get("/api/orders", async (req, res) => {
-  try {
-    const orders = (await readOrders())
-      .filter((order) => !order.hiddenInAdmin)
-      .map((order) => {
-        const responseOrder = decorateOrderForResponse(order, makeBaseUrl(req));
-        return {
-          ...responseOrder,
-          customer: maskPublicCustomer(responseOrder.customer),
-          address: maskPublicAddress(responseOrder.address)
-        };
-      });
-
-    res.json(orders);
-  } catch (error) {
-    sendServerError(res);
-  }
+app.get("/api/orders", (_req, res) => {
+  res.status(401).json({ error: "Use um código de rastreio ou entre na conta para consultar seus pedidos." });
 });
 
-app.get("/api/orders/customer/:email", async (req, res) => {
+app.get("/api/orders/customer/:email", customerAuthMiddleware, async (req, res) => {
   try {
     const email = normalizeText(req.params.email).toLowerCase();
     if (!email || !email.includes("@")) {
       return res.status(400).json({ error: "E-mail inválido." });
+    }
+    const requesterEmail = normalizeText(req.user?.email).toLowerCase();
+    if (req.user?.role !== "admin" && requesterEmail !== email) {
+      return res.status(403).json({ error: "Você só pode consultar pedidos da sua própria conta." });
     }
 
     const orders = (await readOrders())
@@ -2362,10 +2566,9 @@ app.get("/api/orders/public/:sessionId", async (req, res) => {
       return res.status(400).json({ error: "Session id ausente." });
     }
 
-    const numericSession = sessionId.replace(/\D/g, "");
     let order = await findOrderByTrackingCode(sessionId)
       || await findOrderBySessionId(sessionId)
-      || (numericSession ? await findOrderByNumber(numericSession) : null);
+      || await findOrderById(sessionId);
     if (!order) {
       return res.status(404).json({ error: "Pedido não encontrado." });
     }
@@ -2379,7 +2582,6 @@ app.get("/api/orders/public/:sessionId", async (req, res) => {
       orderNumber: responseOrder.orderNumber || null,
       orderNumberFormatted: responseOrder.orderNumberFormatted || null,
       orderAccessCode: responseOrder.orderAccessCode || null,
-      stripeSessionId: responseOrder.stripeSessionId,
       status: responseOrder.status,
       amountSubtotal: responseOrder.amountSubtotal,
       shippingAmount: responseOrder.shippingAmount,
@@ -2775,7 +2977,7 @@ app.post("/api/admin/uploads", authMiddleware, upload.fields([{ name: "image", m
 });
 
 app.post("/api/checkout/session", checkoutLimiter, async (req, res) => {
-  if (!stripe && !MOCK_STRIPE) {
+  if (!USE_ABACATEPAY && !stripe && !MOCK_STRIPE) {
     return res.status(400).json({
       error: "Stripe não configurado. Defina STRIPE_SECRET_KEY ou STRIPE_MOCK."
     });
@@ -2817,6 +3019,10 @@ app.post("/api/checkout/session", checkoutLimiter, async (req, res) => {
     }
     const deliveryMethod = deliveryMethodRaw;
     const baseUrl = makeCheckoutBaseUrl(req);
+    const paymentMethodRaw = normalizeText(req.body?.paymentMethod || req.body?.method || deliveryMethodRaw).toLowerCase();
+    const abacatePaymentMethod = ["card", "credit_card", "cartao", "cartao_credito", "card_checkout"].includes(paymentMethodRaw)
+      ? "card"
+      : "pix";
 
     const normalizedItems = items.map((item) => {
       const quantity = Math.max(1, normalizeNumber(item.quantity, 1));
@@ -2889,6 +3095,101 @@ app.post("/api/checkout/session", checkoutLimiter, async (req, res) => {
       order.discountAmount = couponDiscount.totalDiscount;
       order.productDiscountAmount = productDiscount;
       order.shippingDiscountAmount = shippingDiscount;
+    }
+
+    if (USE_ABACATEPAY) {
+      if (total < 0.5) {
+        return res.status(400).json({ error: "O total do pedido precisa ser maior que R$ 0,50 para pagamento." });
+      }
+      if (abacatePaymentMethod === "card") {
+        const checkout = await createAbacateCardCheckout(order, baseUrl);
+        const nextOrder = normalizeOrder(
+          {
+            ...order,
+            stripeSessionId: checkout.id,
+            paymentIntentId: checkout.id,
+            sessionUrl: checkout.url || "",
+            items: normalizedItems,
+            amountSubtotal: subtotal,
+            shippingAmount: discountedShipping,
+            amountTotal: total,
+            coupon: couponDiscount?.coupon || null,
+            discountAmount: couponDiscount?.totalDiscount || 0,
+            productDiscountAmount: productDiscount,
+            shippingDiscountAmount: shippingDiscount,
+            status: "pending",
+            events: [
+              ...(order.events || []),
+              { type: "abacatepay.card.checkout.created", id: checkout.id, created: nowIso() }
+            ]
+          },
+          order
+        );
+
+        await upsertOrder(nextOrder);
+        notifyOrderCreated(nextOrder);
+        return res.json({
+          provider: "abacatepay",
+          paymentMethod: "card",
+          url: checkout.url || "",
+          id: checkout.id,
+          orderId: nextOrder.id,
+          orderNumber: nextOrder.orderNumber || null,
+          orderNumberFormatted: nextOrder.orderNumberFormatted || null,
+          coupon: nextOrder.coupon || null,
+          discountAmount: nextOrder.discountAmount || 0,
+          productDiscountAmount: nextOrder.productDiscountAmount || 0,
+          shippingDiscountAmount: nextOrder.shippingDiscountAmount || 0,
+          amountSubtotal: nextOrder.amountSubtotal,
+          shippingAmount: nextOrder.shippingAmount,
+          amountTotal: nextOrder.amountTotal
+        });
+      }
+      const charge = await createAbacatePixCharge(order);
+      const nextOrder = normalizeOrder(
+        {
+          ...order,
+          stripeSessionId: charge.id,
+          paymentIntentId: charge.id,
+          sessionUrl: charge.url || "",
+          items: normalizedItems,
+          amountSubtotal: subtotal,
+          shippingAmount: discountedShipping,
+          amountTotal: total,
+          coupon: couponDiscount?.coupon || null,
+          discountAmount: couponDiscount?.totalDiscount || 0,
+          productDiscountAmount: productDiscount,
+          shippingDiscountAmount: shippingDiscount,
+          status: "pending",
+          events: [
+            ...(order.events || []),
+            { type: "abacatepay.pix.created", id: charge.id, created: nowIso() }
+          ]
+        },
+        order
+      );
+
+      await upsertOrder(nextOrder);
+      notifyOrderCreated(nextOrder);
+      return res.json({
+        provider: "abacatepay",
+        paymentMethod: "pix",
+        url: charge.url || "",
+        id: charge.id,
+        orderId: nextOrder.id,
+        orderNumber: nextOrder.orderNumber || null,
+        orderNumberFormatted: nextOrder.orderNumberFormatted || null,
+        brCode: charge.brCode || "",
+        brCodeBase64: charge.brCodeBase64 || "",
+        expiresAt: charge.expiresAt || "",
+        coupon: nextOrder.coupon || null,
+        discountAmount: nextOrder.discountAmount || 0,
+        productDiscountAmount: nextOrder.productDiscountAmount || 0,
+        shippingDiscountAmount: nextOrder.shippingDiscountAmount || 0,
+        amountSubtotal: nextOrder.amountSubtotal,
+        shippingAmount: nextOrder.shippingAmount,
+        amountTotal: nextOrder.amountTotal
+      });
     }
 
     const lineItems = normalizedItems.map((item) => ({
@@ -2996,9 +3297,11 @@ app.get("/healthz", (_req, res) => {
     mode: usePrisma ? "prisma" : useSupabase ? "supabase" : "local",
     prisma: usePrisma,
     supabase: useSupabase,
+    paymentProvider: USE_ABACATEPAY ? "abacatepay" : "stripe",
+    abacatepay: USE_ABACATEPAY,
     stripe: Boolean(stripe),
     paymentMetricsEnabled: STRIPE_LIVE_MODE,
-    webhookConfigured: Boolean(WEBHOOK_SECRET)
+    webhookConfigured: USE_ABACATEPAY ? Boolean(ABACATEPAY_WEBHOOK_SECRET) : Boolean(WEBHOOK_SECRET)
   });
 });
 

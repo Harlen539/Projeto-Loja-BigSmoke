@@ -65,7 +65,7 @@ function OrderCard({ order }) {
 }
 
 export function Perfil() {
-  const { user: authUser, logout: authLogout, openAuth } = useAuth();
+  const { user: authUser, token, logout: authLogout, openAuth } = useAuth();
   const [tab, setTab] = useState("account");
   const [customer, setCustomer] = useState(() => authUser || getStored());
   const [form, setForm] = useState({
@@ -167,10 +167,12 @@ export function Perfil() {
   }
 
   async function loadMyOrders() {
-    if (!customer?.email) return;
+    if (!customer?.email || !token) return;
     setLoadingOrders(true);
     try {
-      const data = await apiFetch(`/api/orders/customer/${encodeURIComponent(customer.email)}`);
+      const data = await apiFetch(`/api/orders/customer/${encodeURIComponent(customer.email)}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
       setOrders(Array.isArray(data) ? data : [data]);
     } catch (_) {
       setOrders([]);

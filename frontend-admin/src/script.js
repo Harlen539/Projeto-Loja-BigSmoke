@@ -1538,9 +1538,9 @@ function updateDashboardMetrics(analytics) {
   if (statusMessage) {
     statusMessage.textContent = paymentMetricsEnabled
       ? (hasRealPayments
-        ? "Pagamentos reais confirmados pela Stripe."
-        : "Stripe ativo, mas ainda sem pagamentos reais confirmados.")
-      : "Aguardando pagamentos reais confirmados pela Stripe. Os totais ficam zerados até o Stripe live receber uma cobrança confirmada.";
+        ? "Pagamentos reais confirmados."
+        : "Pagamento ativo, mas ainda sem pagamentos reais confirmados.")
+      : "Aguardando pagamentos reais confirmados. Os totais ficam zerados ate o provedor receber uma cobranca confirmada.";
     statusMessage.classList.toggle("is-empty", !hasRealPayments);
   }
 
@@ -1786,7 +1786,7 @@ function renderOrders(result) {
           <span class="badge order-number-tag">${order.orderAccessCode || order.trackingCode || "#" + order.id.slice(-8)}</span>
           <span class="badge">${order.orderNumberFormatted || "#" + order.id.slice(-8)}</span>
           <span class="badge ${statusTone(normalizedStatus)}" data-status="${normalizedStatus}">${formatOrderStatus(normalizedStatus)}</span>
-          ${runtimeConfig.paymentMetricsEnabled && order.paymentConfirmed ? '<span class="badge badge-payment-confirmed">Stripe confirmado</span>' : ""}
+          ${runtimeConfig.paymentMetricsEnabled && order.paymentConfirmed ? '<span class="badge badge-payment-confirmed">Pagamento confirmado</span>' : ""}
           <span class="badge">${formatCurrency(order.amountTotal)}</span>
         </div>
         <small>${order.deliveryMethod || "retirada"} • ${order.address?.city || "Cidade não informada"} / ${order.address?.state || "--"}</small>
@@ -2522,8 +2522,8 @@ function renderSystemAlerts(config) {
     showAlert("info", "Modo local ativo", "Imagens armazenadas localmente. Configure um CDN para produção.");
   }
 
-  if (!runtimeConfig.stripeConfigured) {
-    showAlert("warning", "Stripe em modo teste", "Pagamentos reais desativados. Ative o modo live no dashboard da Stripe.");
+  if (!runtimeConfig.abacatepayConfigured && !runtimeConfig.stripeConfigured) {
+    showAlert("warning", "Pagamento em modo teste", "Pagamentos reais desativados. Configure o provedor de pagamento no backend.");
   }
 
   const products = getLocalProducts();

@@ -97,6 +97,9 @@ button { cursor: pointer; }
 .coupon-suggestions button { font-size: .75rem; padding: .4rem .55rem; }
 .coupon-box small.success { color: #8ee6a6; }
 .coupon-box small.error { color: #ff9a9a; }
+.payment-method-picker { display: grid; grid-template-columns: 1fr 1fr; gap: .55rem; margin-bottom: .75rem; }
+.payment-method-picker button { min-height: 44px; border: 1px solid var(--line); border-radius: 8px; background: rgba(255,255,255,.04); color: var(--text); font-weight: 800; }
+.payment-method-picker button.active { border-color: var(--gold); color: #111; background: var(--gold); }
 .cart-list { list-style: none; padding: 0; display: grid; gap: .8rem; }
 .cart-item { display: grid; grid-template-columns: 64px 1fr auto; gap: .8rem; align-items: center; border: 1px solid var(--line); border-radius: 8px; padding: .65rem; }
 .cart-item img { width: 64px; height: 80px; object-fit: cover; border-radius: 6px; }
@@ -239,6 +242,70 @@ button { cursor: pointer; }
 }
 .auth-mode-btn.active { color: var(--gold); border-bottom-color: var(--gold); }
 .auth-mode-btn:hover:not(.active) { color: var(--text); }
+
+.auth-google-slot {
+  width: 100%;
+  min-height: 54px;
+  position: relative;
+  margin: -0.35rem 0 1rem;
+  border-radius: 999px;
+}
+
+.auth-google-official {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  opacity: 0.01;
+}
+
+.auth-google-official > div,
+.auth-google-official iframe {
+  width: 100% !important;
+  max-width: 100%;
+  height: 54px !important;
+}
+
+.auth-google-visual {
+  min-height: 54px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.65rem;
+  width: 100%;
+  border: 1px solid rgba(245, 240, 232, 0.22);
+  border-radius: 999px;
+  background: #f8f9fa;
+  color: #1f1f1f;
+  font: 700 0.92rem Inter, Arial, sans-serif;
+  pointer-events: none;
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.2);
+}
+
+.auth-google-visual img {
+  width: 30px;
+  height: 30px;
+  border-radius: 999px;
+  object-fit: cover;
+  background: #fff;
+}
+
+.auth-divider {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  color: var(--muted);
+  font-size: 0.78rem;
+  margin: -0.35rem 0 0.1rem;
+  text-transform: uppercase;
+}
+
+.auth-divider::before,
+.auth-divider::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: var(--line);
+}
 
 .auth-form { display: grid; gap: 1rem; }
 

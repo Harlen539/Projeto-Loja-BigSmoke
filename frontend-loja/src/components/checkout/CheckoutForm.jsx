@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 
 import { useCart } from "../../hooks/useCart.js";
 import { apiFetch } from "../../services/api.js";
+import { showPixPayment } from "../../services/checkout.js";
 import { AddressStep } from "./AddressStep.jsx";
 import { PaymentStep } from "./PaymentStep.jsx";
 
@@ -23,7 +24,7 @@ function CheckoutSuccess() {
     <div className="checkout-feedback checkout-success">
       <span className="checkout-feedback-icon">✓</span>
       <h2>Pagamento confirmado!</h2>
-      <p>Obrigado pela sua compra. Você receberá atualizações do seu pedido.</p>
+      <p>Obrigado pela compra. A BigSmoke já recebeu seu pedido.</p>
       <a className="btn btn-primary" href="/pedidos">
         Acompanhar pedido
       </a>
@@ -51,7 +52,7 @@ export function CheckoutForm() {
   const [loading, setLoading] = useState(false);
   const [checkoutState, setCheckoutState] = useState("idle"); // idle | success | cancelled
 
-  // Detecta retorno do Stripe via query string
+  // Detecta retorno do provedor de pagamento via query string.
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const checkout = params.get("checkout");
@@ -96,6 +97,11 @@ export function CheckoutForm() {
 
       if (data?.url) {
         window.location.href = data.url;
+        return;
+      }
+      if (data?.brCode || data?.brCodeBase64) {
+        showPixPayment(data);
+        setStatus(`PIX gerado: ${data?.orderNumberFormatted || data?.orderId || "ok"}`);
         return;
       }
 

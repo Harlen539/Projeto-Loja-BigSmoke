@@ -174,14 +174,6 @@ export function Dashboard() {
           </div>
         </article>
 
-        <article className="soc-panel soc-stripe-panel">
-          <div className="soc-panel-head"><span>Status da integração</span></div>
-          <div className="soc-stripe-box">
-            <div className="soc-stripe-title"><strong>stripe</strong><i /><span>Stripe Live <small>Ativo</small></span></div>
-            <p>Pagamentos reais estáveis e funcionando.</p>
-            <button onClick={() => window.open("https://dashboard.stripe.com/", "_blank", "noreferrer")} type="button">Abrir painel do Stripe</button>
-          </div>
-        </article>
       </section>
     </main>
   );

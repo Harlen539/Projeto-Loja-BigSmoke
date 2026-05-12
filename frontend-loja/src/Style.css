@@ -349,6 +349,28 @@ body:has(.page-header-brand) .navbar {
   background: rgba(255, 255, 255, 0.06);
 }
 
+.payment-method-picker {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.55rem;
+  margin: 0.75rem 0;
+}
+
+.payment-method-picker button {
+  min-height: 44px;
+  border: 1px solid rgba(245, 240, 232, 0.16);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--accent-color);
+  font-weight: 800;
+}
+
+.payment-method-picker button.active {
+  border-color: var(--accent-color);
+  background: var(--accent-color);
+  color: #111;
+}
+
 .cart-toggle {
   display: inline-flex;
   align-items: center;
@@ -1437,6 +1459,52 @@ main {
   background: var(--accent-color);
   color: #111;
   font: 800 0.82rem Inter, sans-serif;
+}
+
+.auth-google-native {
+  width: 100%;
+  min-height: 54px;
+  position: relative;
+  margin: -0.25rem 0 1rem;
+  border-radius: 999px;
+}
+
+.auth-google-official {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  opacity: 0.01;
+}
+
+.auth-google-official > div,
+.auth-google-official iframe {
+  width: 100% !important;
+  max-width: 100%;
+  height: 54px !important;
+}
+
+.auth-google-visual {
+  min-height: 54px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.65rem;
+  width: 100%;
+  border: 1px solid rgba(245, 240, 232, 0.22);
+  border-radius: 999px;
+  background: #f8f9fa;
+  color: #1f1f1f;
+  font: 700 0.92rem Inter, Arial, sans-serif;
+  pointer-events: none;
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.2);
+}
+
+.auth-google-visual img {
+  width: 30px;
+  height: 30px;
+  border-radius: 999px;
+  object-fit: cover;
+  background: #fff;
 }
 
 .auth-photo-field {

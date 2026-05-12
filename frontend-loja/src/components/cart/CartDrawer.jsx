@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 
 import { useCart } from "../../hooks/useCart.js";
 import { apiFetch } from "../../services/api.js";
-import { startStripeCheckout } from "../../services/checkout.js";
+import { startPaymentCheckout } from "../../services/checkout.js";
 import { CartItem } from "./CartItem.jsx";
 import { CartSummary } from "./CartSummary.jsx";
 
@@ -13,6 +13,7 @@ export function CartDrawer() {
   const [couponInput, setCouponInput] = useState("");
   const [appliedCoupon, setAppliedCoupon] = useState(null);
   const [couponMessage, setCouponMessage] = useState("");
+  const [paymentMethod, setPaymentMethod] = useState("pix");
 
   useEffect(() => {
     apiFetch("/api/coupons")
@@ -54,24 +55,25 @@ export function CartDrawer() {
     }
     if (!coupon) {
       setAppliedCoupon(null);
-      setCouponMessage("Cupom não encontrado ou inativo.");
+      setCouponMessage("Cupom nao encontrado ou inativo.");
       return;
     }
     if (Number(cart.total || 0) < Number(coupon.minOrderValue || 0)) {
       setAppliedCoupon(null);
-      setCouponMessage(`Pedido mínimo de R$ ${Number(coupon.minOrderValue || 0).toFixed(2).replace(".", ",")}.`);
+      setCouponMessage(`Pedido minimo de R$ ${Number(coupon.minOrderValue || 0).toFixed(2).replace(".", ",")}.`);
       return;
     }
     setAppliedCoupon(coupon);
     setCouponMessage("Cupom aplicado.");
   }
 
-  async function goToStripe() {
+  async function goToPayment() {
     setLoading(true);
     try {
-      await startStripeCheckout(cart.items, appliedCoupon?.code || "");
+      await startPaymentCheckout(cart.items, appliedCoupon?.code || "", paymentMethod);
     } catch (error) {
-      alert(error.message || "Não foi possível abrir o Stripe Checkout.");
+      alert(error.message || "Nao foi possivel iniciar o pagamento.");
+    } finally {
       setLoading(false);
     }
   }
@@ -119,8 +121,16 @@ export function CartDrawer() {
           {couponMessage ? <small className={appliedCoupon ? "success" : "error"}>{couponMessage}</small> : null}
         </div>
         <CartSummary discount={discountPreview.totalDiscount} shippingDiscount={discountPreview.shippingDiscount} subtotal={cart.total} />
-        <button className="btn btn-primary full-width" disabled={!cart.items.length || loading} onClick={goToStripe} type="button">
-          {loading ? "Abrindo Stripe..." : "Ir direto para o Stripe"}
+        <div className="payment-method-picker" aria-label="Forma de pagamento">
+          <button className={paymentMethod === "pix" ? "active" : ""} onClick={() => setPaymentMethod("pix")} type="button">
+            PIX
+          </button>
+          <button className={paymentMethod === "card" ? "active" : ""} onClick={() => setPaymentMethod("card")} type="button">
+            Cartao de credito
+          </button>
+        </div>
+        <button className="btn btn-primary full-width" disabled={!cart.items.length || loading} onClick={goToPayment} type="button">
+          {loading ? (paymentMethod === "card" ? "Abrindo cartao..." : "Gerando PIX...") : (paymentMethod === "card" ? "Pagar com cartao" : "Pagar com PIX")}
         </button>
       </aside>
     </>

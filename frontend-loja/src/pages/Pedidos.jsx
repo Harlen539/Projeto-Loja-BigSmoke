@@ -22,7 +22,7 @@ export function Pedidos() {
     <main className="page-shell">
       <h1>Meus pedidos</h1>
       <form className="tracking-search" onSubmit={search}>
-        <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Código, número ou session id" />
+        <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Código de rastreio ou acesso" />
         <button className="btn btn-primary" type="submit">Buscar</button>
       </form>
       {status ? <p className="form-status">{status}</p> : null}

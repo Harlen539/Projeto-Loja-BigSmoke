@@ -47,20 +47,23 @@ const LEGACY_LOCAL_PRODUCTS_KEY = "bigsmoke-custom-products";
 const LOCALE_KEY = "bigsmoke-language";
 const AUTH_USERS_KEY = "bigsmoke_users";
 const AUTH_CUSTOMER_KEY = "bigsmoke_customer";
+const AUTH_CUSTOMER_TOKEN_KEY = "bigsmoke_customer_token";
+const GOOGLE_CLIENT_ID = "751029886073-5t9qtelporidj7jvfvnet1bf9ffndbo2.apps.googleusercontent.com";
 const REMOVED_PRODUCT_IDS = new Set(["camiseta-oversized"]);
 let apiBaseUrl = "";
+let googleIdentityScriptPromise = null;
 
 const LOCALES = {
   pt: {
     lang: "pt-BR",
-    ticker: ["Frete para todo o Brasil", "Cartão via Stripe", "Streetwear autoral BigSmoke", "Atendimento direto pelo WhatsApp"],
+    ticker: ["Frete para todo o Brasil", "Pagamento via PIX", "Streetwear autoral BigSmoke", "Atendimento direto pelo WhatsApp"],
     nav: ["Drops", "Marca", "Meus pedidos", "Contato", "Privacidade"],
     heroEyebrow: "BigSmoke Streetwear",
     heroTitle: "Streetwear com presença, contraste e assinatura própria.",
     heroSubtitle: "BigSmoke não é só roupa. É presença, movimento e identidade pra quem vive a rua e transforma atitude em assinatura.",
     heroPrimary: "Ver catálogo",
     heroSecondary: "Falar com a marca",
-    heroStats: [["Brasil", "Atendimento online"], ["Stripe", "Checkout seguro e profissional"], ["Assinatura própria", "Visual pensado para carregar a identidade BigSmoke"]],
+    heroStats: [["Brasil", "Atendimento online"], ["PIX", "Pagamento integrado"], ["Assinatura propria", "Visual pensado para carregar a identidade BigSmoke"]],
     trustStrong: ["Rua e cultura", "Comunidade", "Drop constante"],
     trustSpan: ["Peças que carregam atitude e presença", "Quem veste BigSmoke representa um movimento", "Novas peças, novas histórias, mesma identidade"],
     quickKicker: "Comprar rápido",
@@ -125,8 +128,8 @@ const LOCALES = {
     shipping: "Frete",
     totalFinal: "Total final",
     payButton: "Pagamento",
-    checkoutNoteReady: "Você será redirecionado para o Stripe Checkout. O frete é recalculado no servidor antes da cobrança.",
-    checkoutNoteConfig: "Configure STRIPE_SECRET_KEY no backend para habilitar o checkout seguro do Stripe.",
+    checkoutNoteReady: "O PIX sera gerado aqui na loja. O frete e recalculado no servidor antes da cobranca.",
+    checkoutNoteConfig: "Configure ABACATEPAY_API_KEY no backend para habilitar o pagamento por PIX.",
     addToCart: "Adicionar ao carrinho",
     completeProduct: "Completar cadastro",
     noResultsKicker: "Sem resultado",
@@ -138,7 +141,7 @@ const LOCALES = {
     cardDefaultBadge: "BigSmoke",
     cartEmpty: "Nenhuma peça adicionada ainda.",
     orderSuccessTitle: "Pedido confirmado",
-    orderSuccessText: "Seu pagamento foi recebido. Clique abaixo para enviar os detalhes do pedido no WhatsApp da loja.",
+    orderSuccessText: "Obrigado pela compra. A BigSmoke já recebeu seu pedido.",
     orderSuccessBtn: "Enviar pedido no WhatsApp",
     orderSuccessBack: "Voltar para a loja",
     orderSuccessTotal: "Total",
@@ -147,14 +150,14 @@ const LOCALES = {
   },
   en: {
     lang: "en",
-    ticker: ["Shipping across Brazil", "Stripe card checkout", "Original BigSmoke streetwear", "Direct WhatsApp support"],
+    ticker: ["Shipping across Brazil", "PIX payment", "Original BigSmoke streetwear", "Direct WhatsApp support"],
     nav: ["Drops", "Brand", "My orders", "Contact", "Privacy"],
     heroEyebrow: "BigSmoke Streetwear",
     heroTitle: "Streetwear with presence, contrast, and its own signature.",
     heroSubtitle: "BigSmoke is more than clothing. It is presence, movement, and identity for people who live the street and turn attitude into signature.",
     heroPrimary: "View catalog",
     heroSecondary: "Talk to the brand",
-    heroStats: [["Brazil", "Online support"], ["Stripe", "Secure professional checkout"], ["Own signature", "A visual built to carry BigSmoke identity"]],
+    heroStats: [["Brazil", "Online support"], ["PIX", "Integrated payment"], ["Own signature", "A visual built to carry BigSmoke identity"]],
     trustStrong: ["Street & culture", "Community", "Constant drop"],
     trustSpan: ["Pieces that carry attitude and presence", "Whoever wears BigSmoke represents a movement", "New pieces, new stories, same identity"],
     quickKicker: "Quick buy",
@@ -219,8 +222,8 @@ const LOCALES = {
     shipping: "Shipping",
     totalFinal: "Final total",
     payButton: "Payment",
-    checkoutNoteReady: "You'll be redirected to Stripe Checkout. Shipping is recalculated on the server before payment.",
-    checkoutNoteConfig: "Set STRIPE_SECRET_KEY in the backend to enable secure Stripe checkout.",
+    checkoutNoteReady: "PIX payment will be generated in the store. Shipping is recalculated on the server before payment.",
+    checkoutNoteConfig: "Set ABACATEPAY_API_KEY in the backend to enable PIX payment.",
     addToCart: "Add to cart",
     completeProduct: "Complete listing",
     noResultsKicker: "No results",
@@ -241,14 +244,14 @@ const LOCALES = {
   },
   es: {
     lang: "es",
-    ticker: ["Envío a todo Brasil", "Pago con Stripe", "Streetwear original BigSmoke", "Atención directa por WhatsApp"],
+    ticker: ["Envío a todo Brasil", "Pago por PIX", "Streetwear original BigSmoke", "Atención directa por WhatsApp"],
     nav: ["Drops", "Marca", "Mis pedidos", "Contacto", "Privacidad"],
     heroEyebrow: "BigSmoke Streetwear",
     heroTitle: "Streetwear con presencia, contraste y firma propia.",
     heroSubtitle: "BigSmoke no es solo ropa. Es presencia, movimiento e identidad para quienes viven la calle y convierten actitud en firma.",
     heroPrimary: "Ver catálogo",
     heroSecondary: "Hablar con la marca",
-    heroStats: [["Brasil", "Atención online"], ["Stripe", "Checkout seguro y profesional"], ["Firma propia", "Un visual pensado para llevar la identidad BigSmoke"]],
+    heroStats: [["Brasil", "Atención online"], ["PIX", "Pago integrado"], ["Firma propia", "Un visual pensado para llevar la identidad BigSmoke"]],
     trustStrong: ["Calle y cultura", "Comunidad", "Drop constante"],
     trustSpan: ["Prendas que cargan actitud y presencia", "Quien viste BigSmoke representa un movimiento", "Nuevas piezas, nuevas historias, misma identidad"],
     quickKicker: "Compra rápida",
@@ -313,8 +316,8 @@ const LOCALES = {
     shipping: "Envío",
     totalFinal: "Total final",
     payButton: "Pago",
-    checkoutNoteReady: "Serás redirigido al Stripe Checkout. El envío se recalcula en el servidor antes del cobro.",
-    checkoutNoteConfig: "Configura STRIPE_SECRET_KEY en el backend para habilitar el checkout seguro de Stripe.",
+    checkoutNoteReady: "El PIX se genera en la tienda. El envio se recalcula en el servidor antes del cobro.",
+    checkoutNoteConfig: "Configura ABACATEPAY_API_KEY en el backend para habilitar el pago por PIX.",
     addToCart: "Agregar al carrito",
     completeProduct: "Completar ficha",
     noResultsKicker: "Sin resultados",
@@ -346,6 +349,7 @@ let shouldScrollToHighlight = false;
 let orderSuccessData = null;
 let availableCoupons = [];
 let appliedCoupon = null;
+let selectedPaymentMethod = "pix";
 const CATEGORY_VIEW_PRODUCT_LIMIT = 10;
 const selectedProductSizes = new Map();
 let shippingState = {
@@ -2060,6 +2064,51 @@ function validateCheckout(data) {
   return true;
 }
 
+function showPixPayment(data) {
+  document.querySelector(".pix-payment-overlay")?.remove();
+
+  const brCode = String(data?.brCode || "");
+  const qrCode = safeUrl(data?.brCodeBase64 || "", { allowDataImage: true });
+  const tracking = encodeURIComponent(data?.id || data?.orderId || "");
+  const overlay = document.createElement("div");
+  overlay.className = "pix-payment-overlay";
+  overlay.style.cssText = "position:fixed;inset:0;z-index:5000;display:grid;place-items:center;padding:16px;background:rgba(0,0,0,.76);backdrop-filter:blur(8px);";
+  overlay.innerHTML = `
+    <section style="width:min(440px,100%);max-height:calc(100vh - 32px);overflow:auto;border:1px solid rgba(245,240,232,.16);border-radius:10px;background:#141414;color:#f5f0e8;padding:20px;box-shadow:0 24px 80px rgba(0,0,0,.6);">
+      <div style="display:flex;justify-content:space-between;gap:12px;align-items:center;margin-bottom:14px;">
+        <div>
+          <small style="color:#c9a84c;text-transform:uppercase;font-weight:800;">Pagamento PIX</small>
+          <h2 style="margin:4px 0 0;font:400 2rem 'Bebas Neue', Oswald, sans-serif;">${sanitizeText(data?.orderNumberFormatted || "Pedido BigSmoke")}</h2>
+        </div>
+        <button type="button" data-pix-close style="border:1px solid rgba(245,240,232,.16);border-radius:999px;background:transparent;color:#f5f0e8;width:36px;height:36px;">x</button>
+      </div>
+      ${qrCode ? `<img src="${qrCode}" alt="QR Code PIX" style="display:block;width:min(280px,100%);margin:0 auto 14px;border-radius:8px;background:#fff;padding:10px;">` : ""}
+      <label style="display:grid;gap:8px;color:#b7b0a5;font-size:.85rem;">
+        Copia e cola PIX
+        <textarea readonly style="min-height:110px;resize:vertical;border:1px solid rgba(245,240,232,.16);border-radius:8px;background:#0d0d0d;color:#f5f0e8;padding:10px;">${sanitizeText(brCode)}</textarea>
+      </label>
+      <button type="button" data-pix-copy class="btn btn-primary full-width" style="margin-top:14px;">Copiar codigo PIX</button>
+      <a href="/pedidos?tracking=${tracking}" class="btn btn-outline full-width" style="margin-top:10px;display:flex;align-items:center;justify-content:center;">Acompanhar pedido</a>
+    </section>
+  `;
+  overlay.querySelector("[data-pix-close]")?.addEventListener("click", () => overlay.remove());
+  overlay.addEventListener("click", (event) => {
+    if (event.target === overlay) overlay.remove();
+  });
+  overlay.querySelector("[data-pix-copy]")?.addEventListener("click", async () => {
+    await navigator.clipboard?.writeText(brCode);
+    overlay.querySelector("[data-pix-copy]").textContent = "Codigo copiado";
+  });
+  document.body.appendChild(overlay);
+}
+
+function setPaymentMethod(method = "pix") {
+  selectedPaymentMethod = method === "card" ? "card" : "pix";
+  document.querySelectorAll("[data-payment-method]").forEach((button) => {
+    button.classList.toggle("active", button.dataset.paymentMethod === selectedPaymentMethod);
+  });
+}
+
 async function handleCheckoutSubmit() {
   const data = collectCheckoutData();
   if (!validateCheckout(data)) return;
@@ -2068,6 +2117,7 @@ async function handleCheckoutSubmit() {
     customer: data.customer,
     address: data.address,
     deliveryMethod: data.deliveryMethod,
+    paymentMethod: selectedPaymentMethod,
     couponCode: appliedCoupon?.code || "",
     items: cart.map((item) => ({
       id: item.productId || item.id,
@@ -2091,14 +2141,20 @@ async function handleCheckoutSubmit() {
     });
 
     const result = await readApiJson(response);
-    if (!response.ok || !result.url) {
+    if (!response.ok || (!result?.url && !result?.brCode && !result?.brCodeBase64)) {
       throw new Error(result?.error || (currentLocale === "en" ? "Could not start payment." : currentLocale === "es" ? "No fue posible iniciar el pago." : "Não foi possível iniciar o pagamento."));
     }
 
-    localStorage.setItem("bigsmoke-last-order-session", result.id);
-    window.location.href = result.url;
+    if (result.id) {
+      localStorage.setItem("bigsmoke-last-order-session", result.id);
+    }
+    if (result.url) {
+      window.location.href = result.url;
+      return;
+    }
+    showPixPayment(result);
   } catch (error) {
-    alert(error.message || (currentLocale === "en" ? "Could not open Stripe checkout right now." : currentLocale === "es" ? "No se pudo abrir Stripe Checkout ahora." : "Não foi possível abrir o checkout da Stripe agora."));
+    alert(error.message || (currentLocale === "en" ? "Could not generate PIX payment right now." : currentLocale === "es" ? "No se pudo generar el PIX ahora." : "Não foi possível gerar o PIX agora."));
   } finally {
     button.disabled = false;
     button.textContent = originalText;
@@ -2116,7 +2172,8 @@ async function redirectCartToStripe(button = null) {
   }
 
   const payload = {
-    deliveryMethod: "stripe_checkout",
+    deliveryMethod: selectedPaymentMethod === "card" ? "card_checkout" : "pix_checkout",
+    paymentMethod: selectedPaymentMethod,
     couponCode: appliedCoupon?.code || "",
     items: cart.map((item) => ({
       id: item.productId || item.id,
@@ -2129,7 +2186,9 @@ async function redirectCartToStripe(button = null) {
   stripeRedirectInProgress = true;
   if (button) {
     button.disabled = true;
-    button.textContent = currentLocale === "en" ? "Opening Stripe..." : currentLocale === "es" ? "Abriendo Stripe..." : "Abrindo Stripe...";
+    button.textContent = selectedPaymentMethod === "card"
+      ? (currentLocale === "en" ? "Opening card..." : currentLocale === "es" ? "Abriendo tarjeta..." : "Abrindo cartao...")
+      : (currentLocale === "en" ? "Generating PIX..." : currentLocale === "es" ? "Generando PIX..." : "Gerando PIX...");
   }
 
   try {
@@ -2139,20 +2198,29 @@ async function redirectCartToStripe(button = null) {
       body: JSON.stringify(payload)
     });
     const result = await readApiJson(response);
-    if (!response.ok || !result.url) {
+    if (!response.ok || (!result?.url && !result?.brCode && !result?.brCodeBase64)) {
       throw new Error(result?.error || "Não foi possível iniciar o pagamento.");
     }
     if (result.id) {
       localStorage.setItem("bigsmoke-last-order-session", result.id);
     }
-    window.location.href = result.url;
+    if (result.url) {
+      window.location.href = result.url;
+      return;
+    }
+    showPixPayment(result);
+    stripeRedirectInProgress = false;
+    if (button) {
+      button.disabled = false;
+      button.textContent = originalText;
+    }
   } catch (error) {
     stripeRedirectInProgress = false;
     if (button) {
       button.disabled = false;
       button.textContent = originalText;
     }
-    alert(error.message || "Não foi possível abrir o Stripe Checkout agora.");
+    alert(error.message || "Não foi possível iniciar o pagamento agora.");
   }
 }
 
@@ -2542,6 +2610,9 @@ function setupPaymentSuccessStyles() {
 function setupCheckout() {
   document.getElementById("checkout-button")?.addEventListener("click", (event) => redirectCartToStripe(event.currentTarget));
   document.getElementById("confirm-checkout")?.addEventListener("click", handleCheckoutSubmit);
+  document.querySelectorAll("[data-payment-method]").forEach((button) => {
+    button.addEventListener("click", () => setPaymentMethod(button.dataset.paymentMethod));
+  });
   document.getElementById("apply-coupon")?.addEventListener("click", applyCouponCode);
   document.getElementById("apply-cart-coupon")?.addEventListener("click", () => applyCouponCode("cart"));
   document.getElementById("coupon-code")?.addEventListener("keydown", (event) => {
@@ -2849,9 +2920,33 @@ function getGoogleClientId() {
   return (
     document.querySelector('meta[name="google-client-id"]')?.content ||
     window.BIGSMOKE_GOOGLE_CLIENT_ID ||
+    GOOGLE_CLIENT_ID ||
     localStorage.getItem("bigsmoke_google_client_id") ||
     ""
   ).trim();
+}
+
+function loadGoogleIdentityScript() {
+  if (window.google?.accounts?.id) return Promise.resolve();
+  if (!googleIdentityScriptPromise) {
+    googleIdentityScriptPromise = new Promise((resolve, reject) => {
+      const existing = document.querySelector('script[src="https://accounts.google.com/gsi/client"]');
+      if (existing) {
+        existing.addEventListener("load", resolve, { once: true });
+        existing.addEventListener("error", reject, { once: true });
+        return;
+      }
+
+      const script = document.createElement("script");
+      script.src = "https://accounts.google.com/gsi/client";
+      script.async = true;
+      script.defer = true;
+      script.onload = resolve;
+      script.onerror = reject;
+      document.head.appendChild(script);
+    });
+  }
+  return googleIdentityScriptPromise;
 }
 
 function decodeJwtPayload(token) {
@@ -2870,7 +2965,7 @@ function decodeJwtPayload(token) {
   }
 }
 
-function saveGoogleUser(profile) {
+function saveGoogleUser(profile, token = "") {
   const fullName = String(profile.name || profile.email?.split("@")[0] || "Google").trim();
   const [firstName, ...rest] = fullName.split(/\s+/);
   const user = {
@@ -2897,57 +2992,99 @@ function saveGoogleUser(profile) {
 
   saveStorage(AUTH_USERS_KEY, users);
   saveStorage(AUTH_CUSTOMER_KEY, user);
+  if (token) {
+    localStorage.setItem(AUTH_CUSTOMER_TOKEN_KEY, token);
+  }
   updateAuthProfileButton();
   closeAuthModal();
 }
 
-function handleGoogleCredential(response) {
-  const profile = decodeJwtPayload(response?.credential || "");
-  if (!profile) {
+async function handleGoogleCredential(response) {
+  const credential = response?.credential || "";
+  if (!credential) {
     showAuthError("Não foi possível acessar os dados da conta Google.");
     return;
   }
-  saveGoogleUser(profile);
+
+  try {
+    const apiResponse = await fetch(buildApiUrl("/api/auth/google"), {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ credential })
+    });
+    const data = await apiResponse.json().catch(() => null);
+    if (!apiResponse.ok) {
+      throw new Error(data?.error || "Não foi possível validar a conta Google.");
+    }
+    saveGoogleUser(data.user, data.token);
+  } catch (error) {
+    const profile = decodeJwtPayload(credential);
+    if (profile?.email) {
+      saveGoogleUser(profile);
+      return;
+    }
+    showAuthError(error.message || "Não foi possível entrar com Google.");
+  }
 }
 
-function handleGoogleAuth() {
+async function handleGoogleAuth() {
   const clientId = getGoogleClientId();
-  if (clientId && window.google?.accounts?.id) {
+  if (!clientId) {
+    showAuthError("Google Login não configurado.");
+    return;
+  }
+
+  try {
+    await loadGoogleIdentityScript();
     window.google.accounts.id.initialize({
       client_id: clientId,
       callback: handleGoogleCredential
     });
     window.google.accounts.id.prompt();
+  } catch {
+    showAuthError("Não foi possível carregar o login oficial do Google.");
+  }
+}
+
+function renderGoogleAuthButton(button) {
+  const clientId = getGoogleClientId();
+  if (!button || !clientId) {
+    button?.addEventListener("click", handleGoogleAuth);
     return;
   }
 
-  const email = prompt("Digite seu e-mail Google para continuar:");
-  if (!email || !email.includes("@")) {
-    showAuthError("Informe um e-mail Google válido.");
-    return;
-  }
-  const cleanEmail = email.trim().toLowerCase();
-  const name = prompt("Nome para sua conta BigSmoke:", cleanEmail.split("@")[0]) || cleanEmail.split("@")[0];
-  const [firstName, ...rest] = name.trim().split(/\s+/);
-  const user = {
-    firstName: firstName || "Google",
-    lastName: rest.join(" "),
-    email: cleanEmail,
-    photo: prompt("Cole a URL da foto do Google, se quiser usar no perfil:", "") || "",
-    provider: "google",
-    createdAt: new Date().toISOString()
-  };
-  const users = getAuthUsers();
-  const existingIndex = users.findIndex((entry) => entry.email === cleanEmail);
-  if (existingIndex >= 0) {
-    users[existingIndex] = { ...users[existingIndex], ...user };
-  } else {
-    users.push({ ...user, password: "" });
-  }
-  saveStorage(AUTH_USERS_KEY, users);
-  saveStorage(AUTH_CUSTOMER_KEY, user);
-  updateAuthProfileButton();
-  closeAuthModal();
+  const slot = document.createElement("div");
+  slot.id = "auth-google";
+  slot.className = "auth-google-native";
+  slot.innerHTML = `
+    <div class="auth-google-official"></div>
+    <div class="auth-google-visual" aria-hidden="true">
+      <img src="/google-logo.webp" alt="">
+      <span>Continuar com Google</span>
+    </div>
+  `;
+  button.replaceWith(slot);
+  const officialButton = slot.querySelector(".auth-google-official");
+
+  loadGoogleIdentityScript()
+    .then(() => {
+      window.google.accounts.id.initialize({
+        client_id: clientId,
+        callback: handleGoogleCredential
+      });
+      window.google.accounts.id.renderButton(officialButton, {
+        theme: "outline",
+        size: "large",
+        text: "continue_with",
+        shape: "rectangular",
+        locale: "pt-BR",
+        width: Math.min(360, slot.offsetWidth || 360)
+      });
+    })
+    .catch(() => {
+      slot.replaceWith(button);
+      button.addEventListener("click", handleGoogleAuth);
+    });
 }
 
 function setupAuthProfileModal() {
@@ -2999,7 +3136,7 @@ function setupAuthProfileModal() {
     updateAuthPhotoPreview(src);
   });
 
-  googleButton?.addEventListener("click", handleGoogleAuth);
+  renderGoogleAuthButton(googleButton);
 
   form?.addEventListener("submit", handleAuthSubmit);
   setAuthMode("login");

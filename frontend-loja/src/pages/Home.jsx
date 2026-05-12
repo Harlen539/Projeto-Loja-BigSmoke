@@ -71,7 +71,7 @@ export function Home() {
         </div>
         <div className="hero-brand-panel">
           <img src={logo} alt="BigSmoke" />
-          <span>Brasil • Stripe • Identidade própria</span>
+          <span>Brasil • PIX • Identidade propria</span>
         </div>
       </section>
 
@@ -115,7 +115,7 @@ export function Home() {
         <p>
           A BigSmoke mistura streetwear, cultura urbana e operação digital com
           catálogo dinâmico, carrinho persistente e checkout preparado para
-          Stripe.
+          PIX.
         </p>
       </section>
 
@@ -131,8 +131,8 @@ export function Home() {
         <details>
           <summary>O checkout é seguro?</summary>
           <p>
-            Sim. O pagamento é processado diretamente pela Stripe, sem que seus
-            dados de cartão passem pelo nosso servidor.
+            Sim. O pagamento e gerado via PIX pela Abacate Pay, e a loja recebe
+            a confirmacao pelo provedor de pagamento.
           </p>
         </details>
         <details>

@@ -1,5 +1,5 @@
 export function TopTicker() {
-  const items = ["Frete para todo o Brasil", "Cartão via Stripe", "Streetwear autoral BigSmoke", "Atendimento direto pelo WhatsApp"];
+  const items = ["Frete para todo o Brasil", "Pagamento via PIX", "Streetwear autoral BigSmoke", "Atendimento direto pelo WhatsApp"];
   return (
     <div className="top-ticker">
       <div className="ticker-track">
