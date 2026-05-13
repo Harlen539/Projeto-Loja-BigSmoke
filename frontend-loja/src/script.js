@@ -57,7 +57,7 @@ const LOCALES = {
   pt: {
     lang: "pt-BR",
     ticker: ["Frete para todo o Brasil", "Pagamento via PIX", "Streetwear autoral BigSmoke", "Atendimento direto pelo WhatsApp"],
-    nav: ["Drops", "Marca", "Meus pedidos", "Contato", "Privacidade"],
+    nav: ["Drops", "Marca", "Contato", "Privacidade"],
     heroEyebrow: "BigSmoke Streetwear",
     heroTitle: "Streetwear com presença, contraste e assinatura própria.",
     heroSubtitle: "BigSmoke não é só roupa. É presença, movimento e identidade pra quem vive a rua e transforma atitude em assinatura.",
@@ -151,7 +151,7 @@ const LOCALES = {
   en: {
     lang: "en",
     ticker: ["Shipping across Brazil", "PIX payment", "Original BigSmoke streetwear", "Direct WhatsApp support"],
-    nav: ["Drops", "Brand", "My orders", "Contact", "Privacy"],
+    nav: ["Drops", "Brand", "Contact", "Privacy"],
     heroEyebrow: "BigSmoke Streetwear",
     heroTitle: "Streetwear with presence, contrast, and its own signature.",
     heroSubtitle: "BigSmoke is more than clothing. It is presence, movement, and identity for people who live the street and turn attitude into signature.",
@@ -245,7 +245,7 @@ const LOCALES = {
   es: {
     lang: "es",
     ticker: ["Envío a todo Brasil", "Pago por PIX", "Streetwear original BigSmoke", "Atención directa por WhatsApp"],
-    nav: ["Drops", "Marca", "Mis pedidos", "Contacto", "Privacidad"],
+    nav: ["Drops", "Marca", "Contacto", "Privacidad"],
     heroEyebrow: "BigSmoke Streetwear",
     heroTitle: "Streetwear con presencia, contraste y firma propia.",
     heroSubtitle: "BigSmoke no es solo ropa. Es presencia, movimiento e identidad para quienes viven la calle y convierten actitud en firma.",
@@ -511,6 +511,25 @@ function syncLanguageSwitcher(locale) {
   });
 }
 
+function syncHeaderNav(copy) {
+  const nav = document.querySelector("header.navbar > .nav-links");
+  if (!nav) return;
+
+  const path = window.location.pathname.replace(/\/+$/, "");
+  const onStoreHome = path === "/loja" || path.endsWith("/index.html");
+  const links = [
+    { label: copy.nav[0] || "Drops", href: onStoreHome ? "#products" : "/loja/#products" },
+    { label: copy.nav[1] || "Marca", href: onStoreHome ? "#about" : "/loja/#about" },
+    { label: copy.nav[2] || "Contato", href: onStoreHome ? "#contact" : "/loja/#contact" },
+    { label: copy.nav[3] || "Privacidade", href: "/src/politica.html" },
+  ];
+
+  nav.innerHTML = links.map((link) => {
+    const isCurrent = path.endsWith("/politica.html") && link.href.endsWith("/politica.html");
+    return `<a href="${link.href}"${isCurrent ? ' aria-current="page"' : ""}>${link.label}</a>`;
+  }).join("");
+}
+
 function applyLocale(locale) {
   currentLocale = LOCALES[locale] ? locale : "pt";
   saveStorage(LOCALE_KEY, currentLocale);
@@ -520,7 +539,7 @@ function applyLocale(locale) {
 
   setAllText(".top-ticker span", copy.ticker);
 
-  setAllText(".nav-links a", copy.nav);
+  syncHeaderNav(copy);
   setText(".hero .eyebrow", copy.heroEyebrow);
   setText(".hero h1", copy.heroTitle);
   setText(".hero-subtitle", copy.heroSubtitle);
@@ -1513,6 +1532,7 @@ function removeItem(cartKey) {
 function updateCartUI() {
   const cartItems = document.getElementById("cart-items");
   const totalEl = document.getElementById("total");
+  const subtotalEl = document.getElementById("cart-subtotal");
   const countEl = document.getElementById("cart-count");
   const whatsappBtn = document.getElementById("whatsapp");
   const emptyState = document.getElementById("empty-cart");
@@ -1556,7 +1576,14 @@ function updateCartUI() {
           <span class="qty-value">${item.quantity}</span>
           <button type="button" aria-label="${currentLocale === "en" ? "Increase quantity" : currentLocale === "es" ? "Aumentar cantidad" : "Aumentar quantidade"}">+</button>
         </div>
-        <button class="remove-item" type="button" aria-label="${currentLocale === "en" ? "Remove item" : currentLocale === "es" ? "Eliminar artículo" : "Remover item"}">×</button>
+        <button class="remove-item" type="button" aria-label="${currentLocale === "en" ? "Remove item" : currentLocale === "es" ? "Eliminar artículo" : "Remover item"}">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M3 6h18"/>
+            <path d="M8 6V4h8v2"/>
+            <path d="M19 6l-1 14H6L5 6"/>
+            <path d="M10 11v5M14 11v5"/>
+          </svg>
+        </button>
         <span class="cart-item-price">${formatCurrency(item.price * item.quantity)}</span>
       </div>
     `;
@@ -1574,8 +1601,10 @@ function updateCartUI() {
 
   const discount = getCouponDiscountPreview();
   if (cartDiscountRow && cartDiscountEl) {
-    cartDiscountRow.hidden = false;
     cartDiscountEl.textContent = discount.productDiscount.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  }
+  if (subtotalEl) {
+    subtotalEl.textContent = getCartSubtotal().toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   }
   totalEl.textContent = getCartDrawerTotal().toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   countEl.textContent = String(itemCount);
@@ -1612,6 +1641,7 @@ function openCheckout() {
   if (!modal || !overlay) return;
 
   toggleCart(false);
+  prefillCheckoutFromAccount();
   modal.classList.add("active");
   overlay.classList.add("active");
   document.body.style.overflow = "hidden";
@@ -2001,23 +2031,68 @@ function useCurrentLocation() {
 }
 
 function collectCheckoutData() {
+  const accountData = getAccountCheckoutData();
   return {
     customer: {
-      name: document.getElementById("customer-name").value.trim(),
-      email: document.getElementById("customer-email").value.trim(),
-      phone: document.getElementById("customer-phone").value.trim()
+      name: document.getElementById("customer-name").value.trim() || accountData.customer.name,
+      email: document.getElementById("customer-email").value.trim() || accountData.customer.email,
+      phone: document.getElementById("customer-phone").value.trim() || accountData.customer.phone
     },
     address: {
-      cep: normalizeCep(document.getElementById("customer-cep").value),
-      street: document.getElementById("customer-street").value.trim(),
-      number: document.getElementById("customer-number").value.trim(),
-      neighborhood: document.getElementById("customer-neighborhood").value.trim(),
-      city: document.getElementById("customer-city").value.trim(),
-      state: document.getElementById("customer-state").value.trim(),
-      complement: document.getElementById("customer-complement").value.trim()
+      cep: normalizeCep(document.getElementById("customer-cep").value) || accountData.address.cep,
+      street: document.getElementById("customer-street").value.trim() || accountData.address.street,
+      number: document.getElementById("customer-number").value.trim() || accountData.address.number,
+      neighborhood: document.getElementById("customer-neighborhood").value.trim() || accountData.address.neighborhood,
+      city: document.getElementById("customer-city").value.trim() || accountData.address.city,
+      state: document.getElementById("customer-state").value.trim() || accountData.address.state,
+      complement: document.getElementById("customer-complement").value.trim() || accountData.address.complement
     },
     deliveryMethod: getSelectedValue("delivery-method")
   };
+}
+
+function getAccountCheckoutData() {
+  const customer = getCurrentCustomer() || {};
+  const address = customer.address || (Array.isArray(customer.addresses) ? customer.addresses[0] : null) || {};
+  const fullName = [customer.firstName, customer.lastName].filter(Boolean).join(" ").trim();
+
+  return {
+    customer: {
+      name: customer.name || fullName || "",
+      email: customer.email || "",
+      phone: customer.phone || ""
+    },
+    address: {
+      cep: normalizeCep(address.cep || address.zip || ""),
+      street: address.street || "",
+      number: address.number || "",
+      neighborhood: address.neighborhood || "",
+      city: address.city || "",
+      state: address.state || "",
+      complement: address.complement || ""
+    }
+  };
+}
+
+function prefillCheckoutFromAccount() {
+  const data = getAccountCheckoutData();
+  const fields = {
+    "customer-name": data.customer.name,
+    "customer-email": data.customer.email,
+    "customer-phone": data.customer.phone,
+    "customer-cep": data.address.cep,
+    "customer-street": data.address.street,
+    "customer-number": data.address.number,
+    "customer-neighborhood": data.address.neighborhood,
+    "customer-city": data.address.city,
+    "customer-state": data.address.state,
+    "customer-complement": data.address.complement
+  };
+
+  Object.entries(fields).forEach(([id, value]) => {
+    const field = document.getElementById(id);
+    if (field && !field.value && value) field.value = value;
+  });
 }
 
 function validateCheckout(data) {
@@ -2195,7 +2270,10 @@ async function redirectCartToStripe(button = null) {
     return;
   }
 
+  const accountData = getAccountCheckoutData();
   const payload = {
+    customer: accountData.customer,
+    address: accountData.address,
     deliveryMethod: selectedPaymentMethod === "card" ? "card_checkout" : "pix_checkout",
     paymentMethod: selectedPaymentMethod,
     couponCode: appliedCoupon?.code || "",
@@ -2637,6 +2715,7 @@ function setupCheckout() {
   document.querySelectorAll("[data-payment-method]").forEach((button) => {
     button.addEventListener("click", () => setPaymentMethod(button.dataset.paymentMethod));
   });
+  setPaymentMethod("pix");
   document.getElementById("apply-coupon")?.addEventListener("click", applyCouponCode);
   document.getElementById("apply-cart-coupon")?.addEventListener("click", () => applyCouponCode("cart"));
   document.getElementById("coupon-code")?.addEventListener("keydown", (event) => {

@@ -18,7 +18,7 @@ export function ProductCard({ product }) {
   const [size, setSize] = useState(sizes[0] || "Unico");
 
   function addSelectedProductToCart() {
-    cart.add(product, size);
+    cart.add({ ...product, sizes }, size);
   }
 
   return (

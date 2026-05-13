@@ -266,8 +266,8 @@
 <aside id="cart" class="cart" aria-label="Carrinho lateral">
   <div class="cart-header">
     <div>
-      <p class="section-kicker">Pedido</p>
-      <h2>Carrinho BigSmoke</h2>
+      <p class="section-kicker">PEDIDO</p>
+      <h2>CARRINHO BIGSMOKE</h2>
     </div>
     <button type="button" class="cart-close" onclick="toggleCart(false)" aria-label="Fechar carrinho">&times;</button>
   </div>
@@ -282,22 +282,28 @@
     <div id="cart-coupon-suggestions" class="coupon-suggestions"></div>
     <small id="cart-coupon-message" class="coupon-message"></small>
   </div>
-  <div class="total-section cart-discount-row" id="cart-discount-row" hidden>
-    <span>Desconto</span>
-    <span>- R$ <span id="cart-discount">0,00</span></span>
-  </div>
-  <div class="total-section">
-    <span>Total</span>
-    <span>R$ <span id="total">0,00</span></span>
+  <div class="cart-summary-card" aria-label="Resumo do pedido">
+    <div class="total-section cart-subtotal-row">
+      <span>Subtotal</span>
+      <span>R$ <span id="cart-subtotal">0,00</span></span>
+    </div>
+    <div class="total-section cart-discount-row" id="cart-discount-row">
+      <span>Desconto</span>
+      <span>- R$ <span id="cart-discount">0,00</span></span>
+    </div>
+    <div class="total-section cart-total-row">
+      <span>Total</span>
+      <span>R$ <span id="total">0,00</span></span>
+    </div>
   </div>
   <div class="payment-method-picker legacy-payment-methods" aria-label="Forma de pagamento">
-    <button data-payment-method="pix" type="button" aria-label="PIX">
-      <img class="payment-method-icon" src="/src/imagens/icone_Pix.png" alt="" aria-hidden="true">
-      <span class="sr-only">PIX</span>
-    </button>
     <button data-payment-method="card" type="button" aria-label="Cartão de crédito">
       <img class="payment-method-icon" src="/src/imagens/icone_cartao_credito.png" alt="" aria-hidden="true">
-      <span class="sr-only">Cartão de crédito</span>
+      <span>Cartão</span>
+    </button>
+    <button data-payment-method="pix" type="button" aria-label="PIX">
+      <img class="payment-method-icon" src="/src/imagens/icone_Pix.png" alt="" aria-hidden="true">
+      <span>PIX</span>
     </button>
   </div>
   <small class="payment-method-message" id="cart-payment-message" hidden></small>

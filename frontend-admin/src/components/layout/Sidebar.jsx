@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
 
 import accountIcon from "../../assets/icone_bigsmoke_conta.png";
-import logo from "../../assets/logo.png";
+import adminLogo from "../../assets/logo_bigsmoke_admin.jpg";
 import { useAuth } from "../../hooks/useAuth.js";
 
 const items = [
@@ -120,10 +120,8 @@ export function Sidebar() {
       <div className="soc-sidebar-inner">
         <NavLink className="soc-sidebar-logo" to="/" aria-label="BigSmoke Admin">
           <span className="soc-logo-card">
-            <img src={logo} alt="BigSmoke" />
+            <img src={adminLogo} alt="BigSmoke Admin" />
           </span>
-          <span className="soc-logo-title">BigSmoke</span>
-          <span className="soc-logo-subtitle">Admin</span>
         </NavLink>
 
         <nav className="soc-sidebar-nav" aria-label="Menu administrativo">

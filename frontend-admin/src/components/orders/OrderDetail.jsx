@@ -5,8 +5,9 @@ const STATUS_OPTIONS = [
   { value: "pending", label: "Pagamento não realizado", icon: "☐", desc: "Quero deixar o estoque sem alterações." },
   { value: "paid", label: "Pagamento pendente", icon: "$", desc: "Ainda não recebi o dinheiro, mas quero reservar o estoque para meu cliente." },
   { value: "processing", label: "Pagamento recebido", icon: "✓", desc: "Tudo certo! Já recebi o dinheiro e quero descontar o produto do meu estoque." },
-  { value: "shipped", label: "Enviado", icon: "🚚", desc: "Produto enviado para o cliente." },
-  { value: "delivered", label: "Entregue", icon: "✅", desc: "Produto entregue com sucesso." },
+  { value: "shipped", label: "Enviado", icon: "truck", desc: "Produto enviado para o cliente." },
+  { value: "delivered", label: "Entregue", icon: "badgeCheck", desc: "Produto entregue com sucesso." },
+  { value: "canceled", label: "Cancelado", icon: "square", desc: "Pedido cancelado." },
 ];
 
 const EVENTS_LABELS = {
@@ -15,6 +16,61 @@ const EVENTS_LABELS = {
   "checkout.session.completed": "Pagamento recebido",
   "checkout.session.expired": "Sessão expirada",
 };
+
+function StatusIcon({ status }) {
+  const props = {
+    "aria-hidden": "true",
+    viewBox: "0 0 24 24",
+    fill: "none",
+    stroke: "currentColor",
+    strokeWidth: "1.9",
+    strokeLinecap: "round",
+    strokeLinejoin: "round",
+  };
+
+  if (status === "paid") {
+    return (
+      <svg {...props}>
+        <circle cx="12" cy="12" r="8" />
+        <path d="M12 8v8M15 10.5c-.6-.7-1.5-1-2.7-1-1.4 0-2.3.6-2.3 1.6 0 2.5 5 1 5 3.6 0 1.1-1 1.8-2.6 1.8-1.3 0-2.4-.4-3.1-1.2" />
+      </svg>
+    );
+  }
+
+  if (status === "processing") {
+    return (
+      <svg {...props}>
+        <path d="M20 6 9 17l-5-5" />
+      </svg>
+    );
+  }
+
+  if (status === "shipped") {
+    return (
+      <svg {...props}>
+        <path d="M3 7h11v9H3z" />
+        <path d="M14 10h3l3 3v3h-6z" />
+        <circle cx="7" cy="18" r="1.7" />
+        <circle cx="17" cy="18" r="1.7" />
+      </svg>
+    );
+  }
+
+  if (status === "delivered") {
+    return (
+      <svg {...props}>
+        <circle cx="12" cy="12" r="8" />
+        <path d="m8.5 12.2 2.2 2.2 4.8-5" />
+      </svg>
+    );
+  }
+
+  return (
+    <svg {...props}>
+      <rect x="6" y="6" width="12" height="12" rx="2" />
+    </svg>
+  );
+}
 
 export function OrderDetail({ order, onClose, onUpdate }) {
   const [status, setStatus] = useState(order.status || "pending");
@@ -83,7 +139,7 @@ export function OrderDetail({ order, onClose, onUpdate }) {
             <div className="od-status-list">
               {STATUS_OPTIONS.map((opt) => (
                 <label key={opt.value} className={`od-status-option${status === opt.value ? " active" : ""}`}>
-                  <div className="od-status-icon">{opt.icon}</div>
+                  <div className="od-status-icon"><StatusIcon status={opt.value} /></div>
                   <div className="od-status-text">
                     <strong>{opt.label}</strong>
                     <span>{opt.desc}</span>
@@ -99,7 +155,10 @@ export function OrderDetail({ order, onClose, onUpdate }) {
             <h3>Rastreamento</h3>
             <div className="pf-field">
               <label>Código de rastreio</label>
-              <input value={trackingCode} onChange={(e) => setTrackingCode(e.target.value)} placeholder="Ex: BR123456789BR" />
+              <input value={trackingCode} onChange={(e) => setTrackingCode(e.target.value.toUpperCase())} placeholder="Ex: AA123456789BR" />
+              <small style={{ color: "var(--muted)", lineHeight: 1.45 }}>
+                Ao salvar, o cliente abre esse codigo no rastreamento oficial dos Correios.
+              </small>
             </div>
           </div>
 

@@ -1,5 +1,68 @@
 [
   {
+    "id": "order_c8d31337-7814-4139-ad0b-f965d98845c7",
+    "orderNumber": "66",
+    "orderNumberFormatted": "#00066",
+    "orderAccessCode": "#80f77d43",
+    "hiddenInAdmin": false,
+    "stripeSessionId": "pix_char_G6yZfSMqjU605NBdmDgwXHXE",
+    "paymentIntentId": "pix_char_G6yZfSMqjU605NBdmDgwXHXE",
+    "stripeEventId": "",
+    "status": "pending",
+    "currency": "brl",
+    "amountSubtotal": 84.9,
+    "shippingAmount": 28,
+    "amountTotal": 112.9,
+    "paymentConfirmed": false,
+    "inventoryDebitedAt": "",
+    "customer": {
+      "name": "Cliente Stripe",
+      "email": "",
+      "phone": ""
+    },
+    "address": {
+      "cep": "",
+      "street": "",
+      "number": "",
+      "neighborhood": "",
+      "city": "",
+      "state": "",
+      "complement": ""
+    },
+    "deliveryMethod": "pix_checkout",
+    "shippingLabel": "Envio nacional",
+    "discountAmount": 0,
+    "productDiscountAmount": 0,
+    "shippingDiscountAmount": 0,
+    "coupon": null,
+    "trackingCode": "#3f02679c",
+    "trackingUrl": "http://localhost:3000/loja/pedidos.html?tracking=%2380f77d43",
+    "items": [
+      {
+        "id": "preview-1777902029458",
+        "name": "Camiseta BigSmoke Smoke Identity",
+        "quantity": 1,
+        "price": 84.9,
+        "category": "Camisetas",
+        "image": "/uploads/1777901887119-cinza_1.webp",
+        "size": "P",
+        "color": ""
+      }
+    ],
+    "events": [
+      {
+        "type": "abacatepay.pix.created",
+        "id": "pix_char_G6yZfSMqjU605NBdmDgwXHXE",
+        "created": "2026-05-12T23:50:34.888Z"
+      }
+    ],
+    "sessionUrl": "",
+    "paidAt": "",
+    "canceledAt": "",
+    "createdAt": "2026-05-12T23:50:34.237Z",
+    "updatedAt": "2026-05-12T23:50:34.888Z"
+  },
+  {
     "id": "order_57f3c99c-fba7-4cc1-bd76-41c57ee1bdbb",
     "orderNumber": "65",
     "orderNumberFormatted": "#00065",
@@ -910,13 +973,21 @@
         "type": "abacatepay.card.checkout.created",
         "id": "bill_KfHsJ23AnRc4zuHzCAs6gndW",
         "created": "2026-05-12T02:04:33.083Z"
+      },
+      {
+        "type": "admin.order.updated",
+        "id": "87530b62-6d81-45fa-879c-2edcb25d1ef5",
+        "created": "2026-05-13T03:08:27.362Z",
+        "status": "pending",
+        "trackingCode": "#ae46b77f",
+        "trackingUrl": "http://localhost:3000/loja/pedidos.html?tracking=%237ed87642"
       }
     ],
     "sessionUrl": "https://app.abacatepay.com/pay/bill_KfHsJ23AnRc4zuHzCAs6gndW",
     "paidAt": "",
     "canceledAt": "",
     "createdAt": "2026-05-12T02:04:32.705Z",
-    "updatedAt": "2026-05-12T02:04:33.083Z"
+    "updatedAt": "2026-05-13T03:08:27.368Z"
   },
   {
     "id": "order_03cbeaf1-add8-4b49-8d7b-34e232c91b88",
@@ -2306,7 +2377,7 @@
     "stripeSessionId": "cs_test_b1klJDU6eyClqEP8olk1wLaDBqwt8C7XAVgFKaipZtH8hyEnc8v7TQQ9yh",
     "paymentIntentId": "",
     "stripeEventId": "",
-    "status": "canceled",
+    "status": "processing",
     "currency": "brl",
     "amountSubtotal": 84.9,
     "shippingAmount": 28,
@@ -2329,7 +2400,11 @@
     },
     "deliveryMethod": "stripe_checkout",
     "shippingLabel": "Envio nacional",
-    "trackingCode": "#b73be6ba",
+    "discountAmount": 0,
+    "productDiscountAmount": 0,
+    "shippingDiscountAmount": 0,
+    "coupon": null,
+    "trackingCode": "#AA9405D6",
     "trackingUrl": "http://localhost:3000/loja/pedidos.html?tracking=%238878e06f",
     "items": [
       {
@@ -2367,13 +2442,37 @@
         "status": "canceled",
         "trackingCode": "#b73be6ba",
         "trackingUrl": "http://localhost:3000/loja/pedidos.html?tracking=%238878e06f"
+      },
+      {
+        "type": "admin.order.updated",
+        "id": "ef2be54c-980b-4cc5-ab7f-2fe982cb1611",
+        "created": "2026-05-13T04:17:50.629Z",
+        "status": "canceled",
+        "trackingCode": "#B73BE6BA",
+        "trackingUrl": "http://localhost:3000/loja/pedidos.html?tracking=%238878e06f"
+      },
+      {
+        "type": "admin.order.updated",
+        "id": "69f20e41-98a3-423f-b4eb-2c3091cd5847",
+        "created": "2026-05-13T04:18:06.968Z",
+        "status": "processing",
+        "trackingCode": "#B73BE6BA",
+        "trackingUrl": "http://localhost:3000/loja/pedidos.html?tracking=%238878e06f"
+      },
+      {
+        "type": "admin.order.updated",
+        "id": "30b34b34-1c9e-4639-a19f-2bc917c624b0",
+        "created": "2026-05-13T04:19:18.812Z",
+        "status": "processing",
+        "trackingCode": "#AA9405D6",
+        "trackingUrl": "http://localhost:3000/loja/pedidos.html?tracking=%238878e06f"
       }
     ],
     "sessionUrl": "https://checkout.stripe.com/c/pay/cs_test_b1klJDU6eyClqEP8olk1wLaDBqwt8C7XAVgFKaipZtH8hyEnc8v7TQQ9yh#fidnandhYHdWcXxpYCc%2FJ2FgY2RwaXEnKSdpamZkaWAnPyd1cShHVycpJ2JwZGZkaGppYFNkd2xka3EnPydmamtxd2ppJyknZHVsTmB8Jz8ndW5acWB2cVowNFFUZnVCQXN%2FY0N9aWJqd3ZpfGlfMVBCclVfSF1ja1F%2FbktoYjxNUkJrQFZLNTB9dHNqUzJraH1rfGFLZmFMR012QDwxbTYydF1ybDV%2FNlxJcWZMNDY8MDU1PEFASzF9UW4nKSdjd2poVmB3c2B3Jz9xd3BgKSdnZGZuYndqcGthRmppancnPycmY2NjY2NjJyknaWR8anBxUXx1YCc%2FJ2hwaXFsWmxxYGgnKSdga2RnaWBVaWRmYG1qaWFgd3YnP3F3cGB4JSUl",
     "paidAt": "2026-05-06T13:09:37.728Z",
     "canceledAt": "2026-05-08T03:04:59.260Z",
     "createdAt": "2026-05-06T13:04:40.032Z",
-    "updatedAt": "2026-05-08T03:04:59.260Z"
+    "updatedAt": "2026-05-13T04:19:18.813Z"
   },
   {
     "id": "order_a181f613-5a6a-4eaf-b569-581e00d43e7a",
@@ -3075,20 +3174,20 @@
   },
   {
     "id": "order_fa00b219-4cb5-4a94-a725-c9c5047270f1",
-    "orderNumber": 8,
+    "orderNumber": "8",
     "orderNumberFormatted": "#00008",
     "orderAccessCode": "#b732d6d8",
     "hiddenInAdmin": false,
     "stripeSessionId": "cs_test_a14WZMytvX0FtVmABKMgvd9QaBxRFGoMRNV7ijigxwSxZ1ur52tqpZ9i0T",
     "paymentIntentId": "pi_3TRYJ5DvzfFxlgor2IkciQBO",
     "stripeEventId": "",
-    "status": "shipped",
+    "status": "delivered",
     "currency": "brl",
     "amountSubtotal": 129.9,
     "shippingAmount": 0,
     "amountTotal": 129.9,
     "paymentConfirmed": false,
-    "inventoryDebitedAt": "",
+    "inventoryDebitedAt": "2026-05-13T04:07:40.743Z",
     "customer": {
       "name": "harlen Galdino",
       "email": "harlenhenrick14@gmail.com",
@@ -3105,6 +3204,10 @@
     },
     "deliveryMethod": "entrega",
     "shippingLabel": "Frete grátis para Cabedelo",
+    "discountAmount": 0,
+    "productDiscountAmount": 0,
+    "shippingDiscountAmount": 0,
+    "coupon": null,
     "trackingCode": "#88720869",
     "trackingUrl": "http://localhost:3000/loja/pedidos.html?tracking=%23b732d6d8",
     "items": [
@@ -3115,7 +3218,8 @@
         "price": 129.9,
         "category": "Camisetas",
         "image": "/uploads/1777442950243-oversised.webp",
-        "size": "P"
+        "size": "P",
+        "color": ""
       }
     ],
     "events": [
@@ -3168,12 +3272,20 @@
         "status": "shipped",
         "trackingCode": "#88720869",
         "trackingUrl": "http://localhost:3000/loja/pedidos.html?tracking=%23b732d6d8"
+      },
+      {
+        "type": "admin.order.updated",
+        "id": "afcc48bb-29ee-4485-8959-ee43bde3a774",
+        "created": "2026-05-13T04:07:40.748Z",
+        "status": "delivered",
+        "trackingCode": "#88720869",
+        "trackingUrl": "http://localhost:3000/loja/pedidos.html?tracking=%23b732d6d8"
       }
     ],
     "sessionUrl": "https://checkout.stripe.com/c/pay/cs_test_a14WZMytvX0FtVmABKMgvd9QaBxRFGoMRNV7ijigxwSxZ1ur52tqpZ9i0T#fidnandhYHdWcXxpYCc%2FJ2FgY2RwaXEnKSdpamZkaWAnPyd1cShHVycpJ2JwZGZkaGppYFNkd2xka3EnPydmamtxd2ppJyknZHVsTmB8Jz8ndW5acWB2cVowNFFUZnVCQXN%2FY0N9aWJqd3ZpfGlfMVBCclVfSF1ja1F%2FbktoYjxNUkJrQFZLNTB9dHNqUzJraH1rfGFLZmFMR012QDwxbTYydF1ybDV%2FNlxJcWZMNDY8MDU1PEFASzF9UW4nKSdjd2poVmB3c2B3Jz9xd3BgKSdnZGZuYndqcGthRmppancnPycmY2NjY2NjJyknaWR8anBxUXx1YCc%2FJ3Zsa2JpYFpscWBoJyknYGtkZ2lgVWlkZmBtamlhYHd2Jz9xd3BgeCUl",
     "paidAt": "2026-04-29T13:37:45.490Z",
     "canceledAt": "",
     "createdAt": "2026-04-29T13:36:46.211Z",
-    "updatedAt": "2026-05-04T13:50:31.746Z"
+    "updatedAt": "2026-05-13T04:07:40.749Z"
   }
 ]

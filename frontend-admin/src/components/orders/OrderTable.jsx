@@ -11,22 +11,30 @@ const STATUS_OPTIONS = [
   { value: "canceled", label: "Cancelado" },
 ];
 
-export function OrderTable({ orders, onSelect, onUpdateStatus }) {
+export function OrderTable({ orders, onDelete, onSelect, onUpdateStatus }) {
   const [draftStatus, setDraftStatus] = useState({});
+  const [draftTracking, setDraftTracking] = useState({});
   const [optimisticStatus, setOptimisticStatus] = useState({});
 
   useEffect(() => {
-    setDraftStatus((current) => {
+    setDraftStatus(() => {
       const next = {};
       orders.forEach((order) => {
-        next[order.id] = current[order.id] || order.status || "pending";
+        next[order.id] = order.status || "pending";
       });
       return next;
     });
-    setOptimisticStatus((current) => {
+    setDraftTracking(() => {
       const next = {};
       orders.forEach((order) => {
-        next[order.id] = current[order.id] || order.status || "pending";
+        next[order.id] = order.trackingCode || "";
+      });
+      return next;
+    });
+    setOptimisticStatus(() => {
+      const next = {};
+      orders.forEach((order) => {
+        next[order.id] = order.status || "pending";
       });
       return next;
     });
@@ -79,20 +87,45 @@ export function OrderTable({ orders, onSelect, onUpdateStatus }) {
                       <option key={option.value} value={option.value}>{option.label}</option>
                     ))}
                   </select>
+                  <input
+                    className="order-tracking-input"
+                    value={draftTracking[order.id] || ""}
+                    onChange={(event) => setDraftTracking((current) => ({ ...current, [order.id]: event.target.value }))}
+                    onClick={(event) => event.stopPropagation()}
+                    placeholder="Rastreio Correios"
+                    aria-label="Codigo de rastreio dos Correios"
+                  />
                 </div>
               </td>
               <td onClick={(event) => event.stopPropagation()}>
-                <button
-                  className="compact-action"
-                  onClick={async () => {
-                    const status = draftStatus[order.id] || order.status || "pending";
-                    setOptimisticStatus((current) => ({ ...current, [order.id]: status }));
-                    await onUpdateStatus(order, status);
-                  }}
-                  type="button"
-                >
-                  Atualizar
-                </button>
+                <div className="order-actions">
+                  <button
+                    className="compact-action"
+                    onClick={async () => {
+                      const status = draftStatus[order.id] || order.status || "pending";
+                      const trackingCode = draftTracking[order.id] || "";
+                      const previousStatus = optimisticStatus[order.id] || order.status || "pending";
+                      setOptimisticStatus((current) => ({ ...current, [order.id]: status }));
+                      try {
+                        await onUpdateStatus(order, status, trackingCode);
+                      } catch (error) {
+                        setOptimisticStatus((current) => ({ ...current, [order.id]: previousStatus }));
+                        setDraftStatus((current) => ({ ...current, [order.id]: previousStatus }));
+                        window.alert(error?.message || "Nao foi possivel atualizar o status do pedido.");
+                      }
+                    }}
+                    type="button"
+                  >
+                    Atualizar
+                  </button>
+                  <button
+                    className="compact-action danger-action"
+                    onClick={() => onDelete?.(order)}
+                    type="button"
+                  >
+                    Excluir
+                  </button>
+                </div>
               </td>
             </tr>
           ))}

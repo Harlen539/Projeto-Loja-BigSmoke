@@ -725,28 +725,154 @@
     .val-green { color: #4ade80; }
 
     /* Timeline */
-    .timeline { display: grid; gap: 0.75rem; }
+    .status-overview {
+      display: grid;
+      gap: 0.7rem;
+      padding: 1rem;
+      border-radius: 18px;
+      border: 1px solid rgba(245,240,232,0.1);
+      background: #151515;
+    }
+
+    .status-overview-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 1rem;
+    }
+
+    .status-overview-kicker,
+    .delivery-card-kicker {
+      color: var(--text-muted);
+      font-family: 'Oswald', sans-serif;
+      font-size: 0.72rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+
+    .status-overview-title {
+      margin-top: 0.15rem;
+      color: var(--text-primary);
+      font-size: 1.35rem;
+      line-height: 1.1;
+      font-weight: 800;
+    }
+
+    .status-overview-desc {
+      color: var(--text-secondary);
+      font-size: 0.9rem;
+      line-height: 1.55;
+    }
+
+    .status-overview-code {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.45rem;
+      color: var(--text-secondary);
+      font-size: 0.82rem;
+    }
+
+    .status-overview-code strong {
+      color: var(--text-primary);
+      word-break: break-all;
+    }
+
+    .delivery-card {
+      display: grid;
+      gap: 0.8rem;
+      padding: 1rem;
+      border-radius: 18px;
+      border: 1px solid rgba(245,240,232,0.1);
+      background: #151515;
+    }
+
+    .delivery-card-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .delivery-card-title {
+      margin-top: 0.1rem;
+      color: var(--text-primary);
+      font-size: 1.05rem;
+      font-weight: 800;
+    }
+
+    .delivery-card-grid {
+      display: grid;
+      gap: 0.55rem;
+    }
+
+    .delivery-track-link {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 2.25rem;
+      padding: 0.45rem 0.8rem;
+      border-radius: 999px;
+      border: 1px solid rgba(245,240,232,0.18);
+      color: var(--text-primary);
+      font-size: 0.78rem;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      text-decoration: none;
+      white-space: nowrap;
+    }
+
+    .timeline { display: grid; gap: 0.85rem; }
 
     .tl-item {
       display: grid;
-      grid-template-columns: 16px 1fr;
-      gap: 0.7rem;
+      grid-template-columns: 24px 1fr;
+      gap: 0.85rem;
       align-items: start;
+      opacity: 0.72;
     }
 
     .tl-dot {
       display: grid;
       place-items: center;
-      padding-top: 0.18rem;
+      padding-top: 0.2rem;
     }
 
     .tl-dot::before {
       content: '';
-      width: 11px;
-      height: 11px;
+      width: 12px;
+      height: 12px;
       border-radius: 50%;
+      border: 1px solid rgba(245,240,232,0.3);
+      background: #242424;
+      box-shadow: 0 0 0 5px rgba(245,240,232,0.04);
+    }
+
+    .tl-item.done,
+    .tl-item.current {
+      opacity: 1;
+    }
+
+    .tl-item.done .tl-dot::before {
+      content: '✓';
+      display: grid;
+      place-items: center;
+      width: 18px;
+      height: 18px;
+      border: 1px solid rgba(142,230,166,0.5);
+      background: rgba(142,230,166,0.16);
+      color: #8ee6a6;
+      font-size: 0.72rem;
+      font-weight: 900;
+      box-shadow: 0 0 0 5px rgba(142,230,166,0.06);
+    }
+
+    .tl-item.current .tl-dot::before {
+      width: 20px;
+      height: 20px;
+      border-color: rgba(245,240,232,0.55);
       background: var(--accent-color);
-      box-shadow: 0 0 0 5px rgba(245,240,232,0.06);
+      box-shadow: 0 0 0 7px rgba(245,240,232,0.08);
     }
 
     .tl-item:not(:last-child) .tl-dot { position: relative; }
@@ -754,7 +880,7 @@
     .tl-item:not(:last-child) .tl-dot::after {
       content: '';
       position: absolute;
-      top: 20px;
+      top: 24px;
       left: 50%;
       transform: translateX(-50%);
       width: 2px;
@@ -764,15 +890,330 @@
 
     .tl-content {
       display: grid;
-      gap: 0.15rem;
-      padding-bottom: 0.75rem;
+      gap: 0.32rem;
+      padding: 0 0 0.9rem;
       border-bottom: 1px solid rgba(245,240,232,0.06);
     }
 
     .tl-item:last-child .tl-content { padding-bottom: 0; border-bottom: none; }
 
-    .tl-content strong { font-size: 0.88rem; }
-    .tl-content span { color: var(--text-secondary); font-size: 0.8rem; }
+    .tl-content strong {
+      color: var(--text-primary);
+      font-size: 0.95rem;
+      line-height: 1.25;
+    }
+
+    .tl-time {
+      color: var(--text-muted);
+      font-size: 0.78rem;
+    }
+
+    .tl-detail {
+      color: var(--text-secondary);
+      font-size: 0.82rem;
+      line-height: 1.45;
+    }
+
+    .fulfillment-grid {
+      display: grid;
+      grid-template-columns: minmax(280px, 0.85fr) minmax(0, 1.35fr);
+      gap: 1rem;
+      align-items: start;
+    }
+
+    .fulfillment-column {
+      display: grid;
+      gap: 0.8rem;
+    }
+
+    .fulfillment-card {
+      padding: 1.05rem;
+      border: 1px solid rgba(245,240,232,0.1);
+      border-radius: 18px;
+      background:
+        linear-gradient(180deg, rgba(255,255,255,0.025), rgba(255,255,255,0.01)),
+        #131313;
+      box-shadow: 0 16px 38px rgba(0,0,0,0.22);
+    }
+
+    .fulfillment-title {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin: 0 0 1rem;
+      color: #f7f7f7;
+      font-family: 'Oswald', sans-serif;
+      font-size: 0.78rem;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+    }
+
+    .fulfillment-title svg,
+    .delivery-status-badge svg,
+    .tracking-link svg,
+    .timeline-state-icon svg {
+      width: 16px;
+      height: 16px;
+      fill: none;
+      stroke: currentColor;
+      stroke-width: 1.9;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+
+    .delivery-info-list {
+      display: grid;
+      gap: 0.9rem;
+    }
+
+    .delivery-info-row {
+      display: grid;
+      gap: 0.28rem;
+      padding-bottom: 0.78rem;
+      border-bottom: 1px solid rgba(245,240,232,0.07);
+    }
+
+    .delivery-info-row:last-child {
+      border-bottom: 0;
+      padding-bottom: 0;
+    }
+
+    .delivery-info-row span,
+    .order-mini-card span {
+      color: #8e8e8e;
+      font-size: 0.72rem;
+      font-weight: 800;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+
+    .delivery-info-row strong,
+    .order-mini-card strong {
+      color: #f3f3f3;
+      font-size: 0.92rem;
+      line-height: 1.35;
+      word-break: break-word;
+    }
+
+    .delivery-status-badge {
+      width: fit-content;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.42rem;
+      min-height: 30px;
+      padding: 0 0.72rem;
+      border: 1px solid rgba(74,222,128,0.28);
+      border-radius: 999px;
+      background: rgba(74,222,128,0.1);
+      color: #78e59a;
+      font-size: 0.78rem;
+      font-weight: 850;
+    }
+
+    .tracking-link {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.45rem;
+      min-height: 38px;
+      padding: 0 0.9rem;
+      border: 1px solid rgba(245,240,232,0.14);
+      border-radius: 10px;
+      background: #101010;
+      color: #f7f7f7;
+      font-size: 0.82rem;
+      font-weight: 850;
+      text-decoration: none;
+      transition: border-color 180ms ease, background 180ms ease, transform 180ms ease;
+    }
+
+    .tracking-link:hover {
+      border-color: rgba(245,240,232,0.28);
+      background: #181818;
+      transform: translateY(-1px);
+    }
+
+    .tracking-link.disabled {
+      color: #7f7f7f;
+      pointer-events: none;
+    }
+
+    .order-mini-card {
+      display: grid;
+      gap: 0.75rem;
+      padding: 1rem;
+      border: 1px solid rgba(245,240,232,0.09);
+      border-radius: 16px;
+      background: #111111;
+      box-shadow: 0 12px 30px rgba(0,0,0,0.18);
+    }
+
+    .order-mini-line {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+    }
+
+    .timeline-status-card {
+      display: grid;
+      grid-template-columns: 42px minmax(0, 1fr);
+      gap: 0.85rem;
+      padding: 0.95rem;
+      margin-bottom: 1rem;
+      border: 1px solid rgba(245,240,232,0.11);
+      border-radius: 16px;
+      background: #181818;
+    }
+
+    .timeline-state-icon {
+      width: 42px;
+      height: 42px;
+      display: grid;
+      place-items: center;
+      border-radius: 999px;
+      border: 1px solid rgba(245,240,232,0.12);
+      background: rgba(255,255,255,0.035);
+      color: #eeeeee;
+    }
+
+    .timeline-status-card span {
+      color: #9a9a9a;
+      font-size: 0.72rem;
+      font-weight: 800;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+
+    .timeline-status-card strong {
+      display: block;
+      margin-top: 0.2rem;
+      color: #f7f7f7;
+      font-size: 1rem;
+      line-height: 1.25;
+    }
+
+    .timeline-status-card p {
+      margin: 0.38rem 0 0;
+      color: #b8b8b8;
+      font-size: 0.86rem;
+      line-height: 1.5;
+    }
+
+    .timeline-code {
+      margin-top: 0.55rem;
+      color: #d8d8d8;
+      font-size: 0.82rem;
+      font-weight: 750;
+    }
+
+    .premium-timeline {
+      display: grid;
+      gap: 0;
+    }
+
+    .premium-timeline-item {
+      display: grid;
+      grid-template-columns: 28px minmax(0, 1fr);
+      gap: 0.85rem;
+      color: #858585;
+      position: relative;
+    }
+
+    .premium-timeline-item:not(:last-child)::before {
+      content: '';
+      position: absolute;
+      left: 9px;
+      top: 22px;
+      bottom: -6px;
+      width: 2px;
+      background: rgba(245,240,232,0.1);
+    }
+
+    .premium-timeline-item.done:not(:last-child)::before {
+      background: rgba(74,222,128,0.38);
+    }
+
+    .premium-timeline-marker {
+      position: relative;
+      z-index: 1;
+      width: 20px;
+      height: 20px;
+      display: grid;
+      place-items: center;
+      border-radius: 999px;
+      border: 1px solid rgba(245,240,232,0.18);
+      background: #151515;
+      color: transparent;
+      margin-top: 0.1rem;
+    }
+
+    .premium-timeline-marker svg {
+      width: 12px;
+      height: 12px;
+      fill: none;
+      stroke: currentColor;
+      stroke-width: 2.4;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+
+    .premium-timeline-item.done .premium-timeline-marker {
+      border-color: rgba(74,222,128,0.48);
+      background: rgba(74,222,128,0.18);
+      color: #74e394;
+    }
+
+    .premium-timeline-item.current .premium-timeline-marker {
+      border-color: rgba(245,240,232,0.45);
+      background: #efefef;
+      color: #111;
+      box-shadow: 0 0 0 5px rgba(245,240,232,0.06);
+    }
+
+    .premium-timeline-content {
+      padding: 0 0 1rem;
+      border-bottom: 1px solid rgba(245,240,232,0.07);
+    }
+
+    .premium-timeline-item:last-child .premium-timeline-content {
+      padding-bottom: 0;
+      border-bottom: 0;
+    }
+
+    .premium-timeline-item.current .premium-timeline-content {
+      padding: 0.75rem 0.85rem;
+      margin: -0.55rem 0 0.9rem;
+      border: 1px solid rgba(245,240,232,0.11);
+      border-radius: 14px;
+      background: #171717;
+    }
+
+    .premium-timeline-content strong {
+      display: block;
+      color: #e8e8e8;
+      font-size: 0.92rem;
+      line-height: 1.3;
+    }
+
+    .premium-timeline-item.future .premium-timeline-content strong,
+    .premium-timeline-item.future .premium-timeline-content time,
+    .premium-timeline-item.future .premium-timeline-content p {
+      color: #7d7d7d;
+    }
+
+    .premium-timeline-content time,
+    .premium-timeline-content p {
+      display: block;
+      margin-top: 0.28rem;
+      color: #a8a8a8;
+      font-size: 0.82rem;
+      line-height: 1.45;
+    }
+
+    .premium-timeline-content .timeline-note {
+      color: #c4c4c4;
+    }
 
     /* Order actions */
     .order-actions {
@@ -1418,6 +1859,7 @@
     /* RESPONSIVE */
     @media (max-width: 960px) {
       .content-grid { grid-template-columns: 1fr; }
+      .fulfillment-grid { grid-template-columns: 1fr; }
     }
 
     @media (max-width: 768px) {
@@ -1440,6 +1882,11 @@
       .stat-card:last-child { grid-column: 1 / -1; }
       .order-card-head { flex-direction: column; align-items: stretch; }
       .order-card-right { flex-direction: row; align-items: center; justify-content: space-between; }
+      .fulfillment-card,
+      .order-mini-card { border-radius: 16px; padding: 0.9rem; }
+      .order-mini-line { align-items: flex-start; flex-direction: column; gap: 0.45rem; }
+      .tracking-link { width: 100%; }
+      .timeline-status-card { grid-template-columns: 1fr; }
       .history-actions { flex-direction: row; align-items: center; gap: 0.75rem; }
       .site-footer { flex-direction: column; padding-inline: 1rem; }
     }
@@ -1534,7 +1981,6 @@
   <nav class="nav-links" aria-label="Navegação principal">
     <a href="/loja/#products">Drops</a>
     <a href="/loja/#about">Marca</a>
-    <a href="/src/pedidos.html">Meus pedidos</a>
     <a href="/loja/#contact">Contato</a>
     <a href="/src/politica.html">Privacidade</a>
   </nav>
@@ -1651,7 +2097,7 @@
     <div class="tabs" role="tablist" aria-label="Pedidos e histórico" style="margin: 0.85rem 0 0;">
       <button class="tab-btn active" role="tab" aria-selected="true" aria-controls="tab-active" id="tab-active-btn">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>
-        Em andamento
+        Todos
         <span class="tab-count" id="tab-active-count">0</span>
       </button>
       <button class="tab-btn" role="tab" aria-selected="false" aria-controls="tab-history" id="tab-history-btn">
@@ -1825,6 +2271,15 @@
     const d = new Date(v);
     if (isNaN(d)) return String(v);
     return new Intl.DateTimeFormat('pt-BR', { dateStyle:'short', timeStyle:'short' }).format(d);
+  }
+
+  function fmtTimelineDate(v) {
+    if (!v) return 'Aguardando atualização da transportadora';
+    const d = new Date(v);
+    if (isNaN(d)) return String(v);
+    const date = new Intl.DateTimeFormat('pt-BR', { day:'2-digit', month:'2-digit', year:'numeric' }).format(d);
+    const time = new Intl.DateTimeFormat('pt-BR', { hour:'2-digit', minute:'2-digit' }).format(d);
+    return `${date} às ${time}`;
   }
 
   function fmtDateShort(v) {
@@ -2493,6 +2948,155 @@
     </div>`;
   }
 
+  function iconSvg(name) {
+    const icons = {
+      truck: '<svg viewBox="0 0 24 24"><path d="M3 7h11v9H3z"/><path d="M14 10h3l3 3v3h-6z"/><circle cx="7" cy="18" r="1.7"/><circle cx="17" cy="18" r="1.7"/></svg>',
+      box: '<svg viewBox="0 0 24 24"><path d="m21 8-9-5-9 5 9 5 9-5Z"/><path d="M3 8v8l9 5 9-5V8"/><path d="M12 13v8"/></svg>',
+      check: '<svg viewBox="0 0 24 24"><path d="m6 12 4 4 8-8"/></svg>',
+      external: '<svg viewBox="0 0 24 24"><path d="M7 17 17 7"/><path d="M8 7h9v9"/></svg>',
+    };
+    return icons[name] || icons.box;
+  }
+
+  function statusIndex(status) {
+    return FLOW.indexOf(String(status || 'pending').toLowerCase());
+  }
+
+  function getTrackingCode(order) {
+    return order?.trackingCode || order?.orderAccessCode || order?.orderNumberFormatted || order?.orderNumber || order?.id || '';
+  }
+
+  function findFriendlyEventDate(order, step) {
+    const events = Array.isArray(order?.events) ? order.events : [];
+    const aliases = {
+      paid: ['paid', 'payment.paid', 'checkout.session.completed', 'pagamento confirmado'],
+      processing: ['processing', 'order.processing', 'em separa'],
+      shipped: ['shipped', 'order.shipped', 'pedido enviado'],
+      delivered: ['delivered', 'order.delivered', 'pedido entregue', 'entregue'],
+      canceled: ['canceled', 'order.canceled', 'pedido cancelado', 'cancelado'],
+    };
+    const match = events.find(event => {
+      const raw = `${event?.type || ''} ${event?.status || ''} ${event?.title || ''}`.toLowerCase();
+      return (aliases[step] || []).some(alias => raw.includes(alias));
+    });
+    return match?.created || match?.createdAt || match?.timestamp || '';
+  }
+
+  function getFriendlyTimeline(order) {
+    const current = String(order?.status || 'pending').toLowerCase();
+    const ci = statusIndex(current);
+    const trackCode = getTrackingCode(order);
+    if (current === 'canceled') {
+      return [
+        { key: 'pending', title: 'Pedido criado', date: order?.createdAt, done: true, current: false, future: false },
+        {
+          key: 'canceled',
+          title: 'Pedido cancelado',
+          date: order?.canceledAt || order?.updatedAt || findFriendlyEventDate(order, 'canceled') || order?.createdAt,
+          note: 'Esse pedido foi cancelado.',
+          done: false,
+          current: true,
+          future: false
+        }
+      ];
+    }
+    const base = [
+      { key: 'pending', title: 'Pedido criado', date: order?.createdAt },
+      { key: 'paid', title: 'Pagamento confirmado', date: order?.paidAt || findFriendlyEventDate(order, 'paid') || (ci >= 1 ? order?.updatedAt || order?.createdAt : '') },
+      { key: 'processing', title: 'Pedido em separação', date: findFriendlyEventDate(order, 'processing') || (ci >= 2 ? order?.updatedAt || order?.paidAt || order?.createdAt : ''), note: 'Estamos preparando seu pedido com todo cuidado.' },
+      { key: 'shipped', title: 'Pedido enviado', date: order?.shippedAt || findFriendlyEventDate(order, 'shipped') || (ci >= 3 ? order?.updatedAt || order?.paidAt || order?.createdAt : ''), note: 'Seu pedido foi despachado e está a caminho.', extra: trackCode ? `Rastreio: ${trackCode}` : '' },
+      { key: 'out_for_delivery', title: 'Saiu para entrega', futureText: 'Aguardando atualização da transportadora' },
+      { key: 'delivered', title: 'Entregue', date: order?.deliveredAt || findFriendlyEventDate(order, 'delivered') || (ci >= 4 ? order?.updatedAt || order?.createdAt : ''), futureText: 'Aguardando atualização da transportadora' },
+    ];
+    return base.map(item => {
+      const index = item.key === 'out_for_delivery' ? 4.5 : statusIndex(item.key);
+      const done = ci > index || (item.key === 'delivered' && current === 'delivered');
+      const currentStep = item.key === current || (current === 'shipped' && item.key === 'shipped');
+      const future = !done && !currentStep;
+      return { ...item, done, current: currentStep, future };
+    });
+  }
+
+  function getCurrentStatusCopy(order) {
+    const status = String(order?.status || 'pending').toLowerCase();
+    const code = getTrackingCode(order);
+    const copies = {
+      pending: ['Status atual', 'Pedido criado', 'Recebemos seu pedido e estamos aguardando a próxima atualização.'],
+      paid: ['Status atual', 'Pagamento confirmado', 'Pagamento identificado. Seu pedido será separado em breve.'],
+      processing: ['Status atual', 'Pedido em separação', 'Estamos preparando seu pedido com todo cuidado.'],
+      shipped: ['Status atual', 'Pedido enviado', 'Seu pedido já foi despachado e está a caminho.'],
+      delivered: ['Status atual', 'Entregue', 'Seu pedido foi entregue com sucesso.'],
+      canceled: ['Status atual', 'Pedido cancelado', 'Esse pedido foi cancelado.'],
+    };
+    const copy = copies[status] || copies.pending;
+    return { kicker: copy[0], title: copy[1], desc: copy[2], code };
+  }
+
+  function renderTimelinePremium(order) {
+    const current = getCurrentStatusCopy(order);
+    const steps = getFriendlyTimeline(order);
+    return `<div class="fulfillment-card timeline-card">
+      <h3 class="fulfillment-title">${iconSvg('box')} Timeline</h3>
+      <div class="timeline-status-card">
+        <div class="timeline-state-icon">${iconSvg('box')}</div>
+        <div>
+          <span>${esc(current.kicker)}</span>
+          <strong>${esc(current.title)}</strong>
+          <p>${esc(current.desc)}</p>
+          ${current.code ? `<div class="timeline-code">Código de rastreio: ${esc(current.code)}</div>` : ''}
+        </div>
+      </div>
+      <div class="premium-timeline">
+        ${steps.map(step => `
+          <div class="premium-timeline-item ${step.done ? 'done' : step.current ? 'current' : 'future'}">
+            <div class="premium-timeline-marker" aria-hidden="true">${step.done ? iconSvg('check') : ''}</div>
+            <div class="premium-timeline-content">
+              <strong>${esc(step.title)}</strong>
+              <time>${esc(step.future ? (step.futureText || 'Aguardando atualização') : fmtTimelineDate(step.date))}</time>
+              ${step.note ? `<p class="timeline-note">${esc(step.note)}</p>` : ''}
+              ${step.extra ? `<p>${esc(step.extra)}</p>` : ''}
+            </div>
+          </div>
+        `).join('')}
+      </div>
+    </div>`;
+  }
+
+  function renderCarrierPremium(order) {
+    const trackUrl = order?.trackingUrl || order?.trackingLink || '';
+    const trackCode = getTrackingCode(order);
+    const ext = /^https?:\/\//i.test(trackUrl);
+    const linkEl = trackUrl
+      ? `<a class="tracking-link" href="${esc(trackUrl)}"${ext?' target="_blank" rel="noopener"':''}>Ver rastreio ${iconSvg('external')}</a>`
+      : `<span class="tracking-link disabled">Ver rastreio ${iconSvg('external')}</span>`;
+    const shippingLabel = order?.carrier || order?.shippingLabel || 'Frete grátis para Cabedelo';
+    const status = String(order?.status || 'pending').toLowerCase();
+    const deliveryStatus = status === 'delivered' ? 'Entregue' : status === 'shipped' ? 'Enviado' : STATUS_PT[status] || 'Em breve';
+    return `<div class="fulfillment-column">
+      <div class="fulfillment-card delivery-main-card">
+        <h3 class="fulfillment-title">${iconSvg('truck')} Entrega</h3>
+        <div class="delivery-info-list">
+          <div class="delivery-info-row"><span>Transportadora</span><strong>${esc(shippingLabel)}</strong></div>
+          <div class="delivery-info-row"><span>Código de rastreio</span><strong>${esc(trackCode || 'Em breve')}</strong></div>
+          <div class="delivery-info-row"><span>Status da entrega</span><strong class="delivery-status-badge">${iconSvg('check')} ${esc(deliveryStatus)}</strong></div>
+          <div class="delivery-info-row"><span>Previsão de entrega</span><strong>${esc(order?.deliveryEstimate?.text || order?.deliveryEstimate?.label || order?.deliveryEstimate || 'Em breve')}</strong></div>
+          <div class="delivery-info-row">${linkEl}</div>
+        </div>
+      </div>
+      <div class="order-mini-card">
+        <div class="order-mini-line"><span>Código do pedido</span><strong>${esc(trackCode || order?.orderNumberFormatted || 'Em breve')}</strong></div>
+        <div class="order-mini-line"><span>Link do pedido</span><a class="tracking-link" href="#${esc(`order-card-${order.id || trackCode}`)}">Ver detalhes ${iconSvg('external')}</a></div>
+      </div>
+    </div>`;
+  }
+
+  function renderFulfillment(order) {
+    return `<div class="fulfillment-grid">
+      ${renderCarrierPremium(order)}
+      ${renderTimelinePremium(order)}
+    </div>`;
+  }
+
   /* render one active order card */
   function renderActiveOrder(order) {
     const code  = order?.orderAccessCode || order?.orderNumberFormatted || order?.id || '';
@@ -2540,16 +3144,7 @@
             </section>
           </div>
 
-          <div class="content-grid">
-            <section class="panel" aria-labelledby="carrier-h-${cardId}">
-              <h3 id="carrier-h-${cardId}">Transportadora</h3>
-              ${renderCarrier(order)}
-            </section>
-            <section class="panel" aria-labelledby="timeline-h-${cardId}">
-              <h3 id="timeline-h-${cardId}">Timeline</h3>
-              ${renderTimeline(order)}
-            </section>
-          </div>
+          ${renderFulfillment(order)}
 
           <div class="order-actions">
             ${trackUrl
@@ -2638,27 +3233,124 @@
   setupAccountPanels();
   setupAddressTools();
 
+  let profileOrdersSignature = '';
+  let profileRefreshInFlight = false;
+  let profileRefreshTimer = null;
+
+  function getCollapsedOrderIds() {
+    return new Set(Array.from(document.querySelectorAll('.order-card.collapsed[id]')).map(card => card.id));
+  }
+
+  function restoreCollapsedOrderIds(collapsedIds) {
+    if (!collapsedIds?.size) return;
+    collapsedIds.forEach((id) => {
+      const card = document.getElementById(id);
+      if (!card) return;
+      card.classList.remove('expanded');
+      card.classList.add('collapsed');
+      const btn = card.querySelector('.toggle-btn');
+      if (btn) btn.setAttribute('aria-expanded', 'false');
+    });
+  }
+
+  function getOrdersSignature(customerEmail, token, orders) {
+    const normalizedOrders = orders.map((order) => {
+      const events = Array.isArray(order.events) ? order.events : [];
+      const lastEvent = events[events.length - 1] || {};
+      return {
+        id: order.id || order.orderNumberFormatted || order.orderAccessCode || '',
+        number: order.orderNumberFormatted || order.orderNumber || '',
+        status: order.status || '',
+        updatedAt: order.updatedAt || '',
+        paidAt: order.paidAt || '',
+        canceledAt: order.canceledAt || '',
+        deliveredAt: order.deliveredAt || '',
+        trackingCode: order.trackingCode || '',
+        trackingUrl: order.trackingUrl || '',
+        amountTotal: Number(order.amountTotal) || Number(order.amountSubtotal) || 0,
+        itemsCount: Array.isArray(order.items) ? order.items.length : 0,
+        eventsCount: events.length,
+        lastEvent: `${lastEvent.type || ''}|${lastEvent.status || ''}|${lastEvent.title || ''}|${lastEvent.created || lastEvent.createdAt || ''}`
+      };
+    }).sort((a, b) => String(a.id).localeCompare(String(b.id)));
+
+    return JSON.stringify({
+      customerEmail: customerEmail || '',
+      token: token ? 'auth' : 'guest',
+      orders: normalizedOrders
+    });
+  }
+
+  function startProfileRealtime() {
+    if (profileRefreshTimer) clearInterval(profileRefreshTimer);
+    profileRefreshTimer = setInterval(() => {
+      if (document.hidden) return;
+      loadProfile({ realtime: true }).catch((error) => {
+        console.error('Erro ao sincronizar pedidos do perfil:', error);
+      });
+    }, 1500);
+  }
+
+  window.addEventListener('focus', () => {
+    loadProfile({ realtime: true, force: true }).catch((error) => {
+      console.error('Erro ao atualizar pedidos ao focar a conta:', error);
+    });
+  });
+
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden) return;
+    loadProfile({ realtime: true, force: true }).catch((error) => {
+      console.error('Erro ao atualizar pedidos ao voltar para a conta:', error);
+    });
+  });
+
+  window.addEventListener('beforeunload', () => {
+    if (profileRefreshTimer) clearInterval(profileRefreshTimer);
+  });
+
   /* load data */
-  async function loadProfile() {
+  async function loadProfile(options = {}) {
+    if (profileRefreshInFlight) return [];
+    profileRefreshInFlight = true;
+
     let orders = [];
     const customer = readStoredCustomer();
     const customerEmail = normalizeEmail(customer?.email);
     const token = readStoredCustomerToken();
-    if (customerEmail && token) {
-      try {
+    let fetchFailed = false;
+
+    try {
+      if (customerEmail) {
+        const headers = { 'X-Customer-Email': customerEmail };
+        if (token) headers.Authorization = `Bearer ${token}`;
         const res = await fetch(`${API_BASE}/api/orders/customer/${encodeURIComponent(customerEmail)}`, {
-          headers: { Authorization: `Bearer ${token}` }
+          cache: 'no-store',
+          headers
         });
         if (res.ok) {
           const data = await res.json();
           orders = Array.isArray(data) ? data : Array.isArray(data.orders) ? data.orders : [];
         }
-      } catch (error) {
-        console.error('Erro ao carregar pedidos do perfil:', error);
       }
+    } catch (error) {
+      fetchFailed = true;
+      console.error('Erro ao carregar pedidos do perfil:', error);
     }
 
-    const active  = orders.filter(isActive);
+    if (fetchFailed && options.realtime) {
+      profileRefreshInFlight = false;
+      return orders;
+    }
+
+    const nextSignature = getOrdersSignature(customerEmail, token, orders);
+    if (!options.force && nextSignature === profileOrdersSignature) {
+      profileRefreshInFlight = false;
+      return orders;
+    }
+    const collapsedOrderIds = getCollapsedOrderIds();
+    profileOrdersSignature = nextSignature;
+
+    const active  = orders;
     const history = orders.filter(o => !isActive(o));
 
     // Stats
@@ -2721,6 +3413,10 @@
         <a href="/loja/" class="btn btn-primary" style="margin-top:0.5rem;font-size:0.85rem;">Comprar agora</a>
       </div>`;
     }
+
+    restoreCollapsedOrderIds(collapsedOrderIds);
+    profileRefreshInFlight = false;
+    return orders;
   }
 
   /* demo orders (shown when no API is available) */
@@ -2805,7 +3501,7 @@
     ];
   }
 
-  loadProfile();
+  loadProfile({ force: true }).finally(startProfileRealtime);
 })();
 </script>
 

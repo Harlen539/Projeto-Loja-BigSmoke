@@ -39,9 +39,8 @@
   <nav class="nav-links" aria-label="Navegação principal">
     <a href="#products">Drops</a>
     <a href="#about">Marca</a>
-    <a href="/loja/pedidos.html">Meus pedidos</a>
     <a href="#contact">Contato</a>
-    <a href="/loja/politica.html">Privacidade</a>
+    <a href="/src/politica.html">Privacidade</a>
   </nav>
 
   <div class="header-actions">
@@ -280,22 +279,28 @@
     <div id="cart-coupon-suggestions" class="coupon-suggestions"></div>
     <small id="cart-coupon-message" class="coupon-message"></small>
   </div>
-  <div class="total-section cart-discount-row" id="cart-discount-row" hidden>
-    <span>Desconto</span>
-    <span>- R$ <span id="cart-discount">0,00</span></span>
-  </div>
-  <div class="total-section">
-    <span>Total</span>
-    <span>R$ <span id="total">0,00</span></span>
+  <div class="cart-summary-card">
+    <div class="total-section cart-subtotal-row">
+      <span>Subtotal</span>
+      <span>R$ <span id="cart-subtotal">0,00</span></span>
+    </div>
+    <div class="total-section cart-discount-row" id="cart-discount-row">
+      <span>Desconto</span>
+      <span>- R$ <span id="cart-discount">0,00</span></span>
+    </div>
+    <div class="total-section cart-total-row">
+      <span>Total</span>
+      <span>R$ <span id="total">0,00</span></span>
+    </div>
   </div>
   <div class="payment-method-picker legacy-payment-methods" aria-label="Forma de pagamento">
     <button data-payment-method="pix" type="button" aria-label="PIX">
       <img class="payment-method-icon" src="/src/imagens/icone_Pix.png" alt="" aria-hidden="true">
-      <span class="sr-only">PIX</span>
+      <span>PIX</span>
     </button>
     <button data-payment-method="card" type="button" aria-label="Cartão de crédito">
       <img class="payment-method-icon" src="/src/imagens/icone_cartao_credito.png" alt="" aria-hidden="true">
-      <span class="sr-only">Cartão de crédito</span>
+      <span>Cartão</span>
     </button>
   </div>
   <small class="payment-method-message" id="cart-payment-message" hidden></small>

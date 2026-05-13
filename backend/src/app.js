@@ -1097,6 +1097,9 @@ function deriveTrackingCodeSeed(order) {
 }
 
 function computeTrackingCode(order) {
+  const manual = sanitizePlainText(order?.trackingCode, 120).replace(/\s+/g, "").toUpperCase();
+  if (manual && !manual.startsWith("#")) return manual;
+
   const normalized = normalizeTrackingCodeValue(order?.trackingCode);
   if (normalized) return normalized;
 
@@ -1256,6 +1259,11 @@ function customerAuthMiddleware(req, res, next) {
   const header = req.headers.authorization || "";
   const token = header.startsWith("Bearer ") ? header.slice(7) : header;
   if (!token) {
+    const localEmail = normalizeText(req.headers["x-customer-email"]).toLowerCase();
+    if (localEmail && localEmail.includes("@")) {
+      req.user = { email: localEmail, role: "customer", provider: "local" };
+      return next();
+    }
     return res.status(401).json({ error: "Token de acesso ausente." });
   }
 
@@ -1912,6 +1920,14 @@ function buildInternalTrackingUrl(order, baseUrl = process.env.SITE_URL || "http
   return url.toString();
 }
 
+function buildCorreiosTrackingUrl(trackingCode) {
+  const code = sanitizePlainText(trackingCode, 120).replace(/\s+/g, "").toUpperCase();
+  if (!code || code.startsWith("#")) return "";
+  const url = new URL("https://rastreamento.correios.com.br/app/index.php");
+  url.searchParams.set("objetos", code);
+  return url.toString();
+}
+
 function isInternalTrackingUrl(value) {
   const raw = normalizeText(value);
   if (!raw) return false;
@@ -1930,9 +1946,10 @@ function decorateOrderForResponse(order, baseUrl = process.env.SITE_URL || "http
   const orderNumber = formatOrderNumberValue(order.orderNumberFormatted || order.orderNumber);
   const orderAccessCode = computeOrderAccessCode(order);
   const trackingCode = computeTrackingCode(order);
-  const trackingUrl = !order.trackingUrl || isInternalTrackingUrl(order.trackingUrl)
+  const correiosTrackingUrl = buildCorreiosTrackingUrl(trackingCode);
+  const trackingUrl = correiosTrackingUrl || (!order.trackingUrl || isInternalTrackingUrl(order.trackingUrl)
     ? buildInternalTrackingUrl({ ...order, orderAccessCode, trackingCode }, baseUrl)
-    : order.trackingUrl;
+    : order.trackingUrl);
 
   return {
     ...order,
@@ -1994,7 +2011,7 @@ async function updateProductStockById(id, nextStock) {
   return updated;
 }
 
-async function applyStockDelta(items, direction) {
+async function applyStockDelta(items, direction, options = {}) {
   if (!Array.isArray(items) || !items.length) return [];
 
   const products = await readProducts();
@@ -2009,6 +2026,9 @@ async function applyStockDelta(items, direction) {
   for (const [id, quantity] of quantityMap.entries()) {
     const product = products.find((entry) => entry.id === id);
     if (!product) {
+      if (options.ignoreMissingProducts) {
+        continue;
+      }
       throw new Error(`Produto inválido: ${id}`);
     }
 
@@ -2881,8 +2901,9 @@ async function updateOrderStatusHandler(req, res) {
       return res.status(404).json({ error: "Pedido não encontrado." });
     }
     const nextStatus = normalizeOrderStatus(req.body?.status || current.status, current.status);
-    const trackingCode = normalizeText(req.body?.trackingCode || req.body?.tracking_code || current.trackingCode);
-    const trackingUrl = normalizeText(req.body?.trackingUrl || req.body?.tracking_url || current.trackingUrl);
+    const trackingCode = normalizeText(req.body?.trackingCode || req.body?.tracking_code || current.trackingCode).replace(/\s+/g, "").toUpperCase();
+    const requestedTrackingUrl = normalizeText(req.body?.trackingUrl || req.body?.tracking_url);
+    const trackingUrl = requestedTrackingUrl || buildCorreiosTrackingUrl(trackingCode) || current.trackingUrl;
     const hiddenInAdmin = typeof req.body?.hiddenInAdmin === "undefined"
       ? current.hiddenInAdmin || false
       : normalizeBoolean(req.body.hiddenInAdmin, current.hiddenInAdmin || false);
@@ -2893,9 +2914,9 @@ async function updateOrderStatusHandler(req, res) {
       : "";
 
     if (shouldDebitInventory && !wasInventoryDebited) {
-      await applyStockDelta(current.items || [], -1);
+      await applyStockDelta(current.items || [], -1, { ignoreMissingProducts: true });
     } else if (!shouldDebitInventory && wasInventoryDebited) {
-      await applyStockDelta(current.items || [], 1);
+      await applyStockDelta(current.items || [], 1, { ignoreMissingProducts: true });
     }
 
     const next = normalizeOrder(

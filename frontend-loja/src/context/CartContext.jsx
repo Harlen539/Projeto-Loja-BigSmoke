@@ -29,9 +29,37 @@ export function CartProvider({ children }) {
         if (found) {
           return current.map((item) => item.key === key ? { ...item, quantity: item.quantity + 1 } : item);
         }
-        return [...current, { key, id: product.id, name: product.name, price: Number(product.price || 0), image: product.image, size, quantity: 1 }];
+        return [...current, {
+          key,
+          id: product.id,
+          name: product.name,
+          category: product.category,
+          price: Number(product.price || 0),
+          image: product.image,
+          size,
+          sizes: product.sizes,
+          quantity: 1
+        }];
       });
       setOpen(true);
+    },
+    updateSize(key, size) {
+      setItems((current) => {
+        const item = current.find((entry) => entry.key === key);
+        if (!item || item.size === size) return current;
+
+        const nextKey = `${item.id}-${size}`;
+        const target = current.find((entry) => entry.key === nextKey);
+        if (target) {
+          return current
+            .filter((entry) => entry.key !== key)
+            .map((entry) => entry.key === nextKey
+              ? { ...entry, quantity: entry.quantity + item.quantity }
+              : entry);
+        }
+
+        return current.map((entry) => entry.key === key ? { ...entry, key: nextKey, size } : entry);
+      });
     },
     updateQuantity(key, quantity) {
       setItems((current) => current.flatMap((item) => item.key === key ? (quantity > 0 ? [{ ...item, quantity }] : []) : [item]));

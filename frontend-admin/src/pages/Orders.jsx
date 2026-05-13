@@ -12,6 +12,7 @@ const STATUS_FILTERS = [
   { key: "processing", label: "Por embalar" },
   { key: "shipped", label: "Por enviar" },
   { key: "delivered", label: "Entregues" },
+  { key: "canceled", label: "Cancelados" },
 ];
 
 export function Orders() {
@@ -22,13 +23,14 @@ export function Orders() {
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [showManual, setShowManual] = useState(false);
 
-  async function updateStatus(order, status) {
-    await apiFetch(`/api/admin/orders/${order.id}`, {
+  async function updateStatus(order, status, trackingCode = order.trackingCode || "") {
+    const updated = await apiFetch(`/api/admin/orders/${order.id}`, {
       method: "PUT",
       headers: { Authorization: `Bearer ${token}` },
-      body: JSON.stringify({ status }),
+      body: JSON.stringify({ status, trackingCode }),
     });
     await reload();
+    setSelectedOrder((current) => (current?.id === order.id ? updated : current));
   }
 
   async function updateOrder(order, patch) {
@@ -41,13 +43,26 @@ export function Orders() {
     setSelectedOrder(null);
   }
 
+  async function deleteOrder(order) {
+    const label = order.orderNumberFormatted || order.id?.slice(0, 8) || "este pedido";
+    if (!window.confirm(`Excluir ${label}? Essa ação não pode ser desfeita.`)) return;
+
+    await apiFetch(`/api/admin/orders/${order.id}`, {
+      method: "DELETE",
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    await reload();
+    setSelectedOrder((current) => (current?.id === order.id ? null : current));
+  }
+
   const filtered = orders.filter((o) => {
     const matchStatus =
       statusFilter === "all" ||
       (statusFilter === "pending" && (o.status === "pending" || o.status === "paid") && !o.hiddenInAdmin) ||
       (statusFilter === "processing" && o.status === "processing") ||
       (statusFilter === "shipped" && o.status === "shipped") ||
-      (statusFilter === "delivered" && o.status === "delivered");
+      (statusFilter === "delivered" && o.status === "delivered") ||
+      (statusFilter === "canceled" && o.status === "canceled");
     const needle = search.toLowerCase();
     const hay = `${o.orderNumberFormatted || ""} ${o.customer?.name || ""} ${o.customer?.email || ""} ${o.id || ""}`.toLowerCase();
     return matchStatus && (!needle || hay.includes(needle));
@@ -60,6 +75,7 @@ export function Orders() {
     processing: orders.filter((o) => o.status === "processing").length,
     shipped: orders.filter((o) => o.status === "shipped").length,
     delivered: orders.filter((o) => o.status === "delivered").length,
+    canceled: orders.filter((o) => o.status === "canceled").length,
   };
 
   return (
@@ -102,6 +118,7 @@ export function Orders() {
 
       <OrderTable
         orders={filtered}
+        onDelete={deleteOrder}
         onSelect={setSelectedOrder}
         onUpdateStatus={updateStatus}
       />
