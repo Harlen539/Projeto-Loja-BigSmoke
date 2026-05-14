@@ -2102,6 +2102,7 @@ async function createAbacatePixCharge(order) {
       method: "PIX",
       data: {
         amount,
+        externalId: order.id,
         expiresIn: 3600,
         description: `Pedido ${order.orderNumberFormatted || order.id} - BigSmoke`,
         metadata: {
@@ -2187,7 +2188,7 @@ async function createAbacateCardCheckout(order, baseUrl) {
     body: JSON.stringify({
       items: [{ id: product.id, quantity: 1 }],
       externalId: order.id,
-      returnUrl: `${baseUrl}/loja/`,
+      returnUrl: `${baseUrl}/`,
       completionUrl: `${baseUrl}/pedidos?tracking=${tracking}`,
       methods: ["CARD"],
       card: { maxInstallments },
@@ -2200,11 +2201,14 @@ async function createAbacateCardCheckout(order, baseUrl) {
     })
   });
   const payload = await response.json().catch(() => null);
+  // CORRECAO: loga payload completo para diagnosticar URL ausente
   console.info("[abacatepay] resposta checkout cartao", {
     ok: response.ok,
     status: response.status,
     id: payload?.data?.id || "",
-    hasUrl: Boolean(payload?.data?.url)
+    hasUrl: Boolean(payload?.data?.url),
+    url: payload?.data?.url || "",
+    rawPayload: JSON.stringify(payload || {}).slice(0, 600)
   });
   if (!response.ok || payload?.error) {
     const message = typeof payload?.error === "string"
@@ -2212,7 +2216,12 @@ async function createAbacateCardCheckout(order, baseUrl) {
       : payload?.error?.message || "Nao foi possivel criar o checkout de cartao na Abacate Pay.";
     throw new Error(message);
   }
-  return payload?.data || {};
+  // CORRECAO: normaliza url independente do campo retornado pela AbacatePay
+  const checkoutData = payload?.data || {};
+  return {
+    ...checkoutData,
+    url: checkoutData.url || checkoutData.checkoutUrl || checkoutData.paymentUrl || checkoutData.payment_url || "",
+  };
 }
 
 function setOrderPaid(order, event) {

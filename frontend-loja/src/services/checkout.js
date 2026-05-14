@@ -40,43 +40,89 @@ export function showPixPayment(data) {
   document.body.appendChild(overlay);
 }
 
+function openPaymentUrl(url) {
+  const targetUrl = String(url || "").trim();
+  if (!targetUrl) return false;
+
+  try {
+    window.location.assign(targetUrl);
+  } catch {
+    window.location.href = targetUrl;
+  }
+
+  window.setTimeout(() => {
+    if (document.hidden) return;
+    const existing = document.querySelector("[data-payment-fallback-link]");
+    if (existing) return;
+
+    const link = document.createElement("a");
+    link.href = targetUrl;
+    link.dataset.paymentFallbackLink = "true";
+    link.rel = "noopener";
+    link.textContent = "Abrir pagamento Abacate Pay";
+    link.style.cssText = "position:fixed;left:50%;bottom:18px;transform:translateX(-50%);z-index:7000;width:min(360px,calc(100vw - 32px));padding:14px 18px;border-radius:999px;background:#f5f0e8;color:#050505;text-align:center;font-weight:900;letter-spacing:.06em;text-transform:uppercase;text-decoration:none;box-shadow:0 18px 50px rgba(0,0,0,.45);";
+    document.body.appendChild(link);
+  }, 700);
+
+  return true;
+}
+
 function normalizePaymentResponse(data) {
+  // CORREÇÃO: garante que checkoutUrl vem de qualquer campo que a AbacatePay retorne
+  const checkoutUrl =
+    data?.checkoutUrl ||
+    data?.url ||
+    data?.data?.url ||
+    data?.data?.checkoutUrl ||
+    "";
   return {
     ...data,
-    checkoutUrl: data?.checkoutUrl || data?.url || "",
-    qrCode: data?.qrCode || data?.brCodeBase64 || "",
-    pixCopyPaste: data?.pixCopyPaste || data?.brCode || "",
-    paymentId: data?.paymentId || data?.id || "",
-    success: data?.success !== false
+    checkoutUrl,
+    qrCode: data?.qrCode || data?.brCodeBase64 || data?.data?.brCodeBase64 || "",
+    pixCopyPaste: data?.pixCopyPaste || data?.brCode || data?.data?.brCode || "",
+    paymentId: data?.paymentId || data?.id || data?.data?.id || "",
+    success: data?.success !== false,
   };
 }
 
-export async function startPaymentCheckout(items, couponCode = "", paymentMethod = "") {
+// CORREÇÃO: aceita customer como 4º parâmetro (passado pelo CartDrawer via modal)
+export async function startPaymentCheckout(items, couponCode = "", paymentMethod = "", customer = {}) {
   const method = paymentMethod === "card" ? "card" : paymentMethod === "pix" ? "pix" : "";
   if (!method) {
     throw new Error("Escolha PIX ou cartao de credito antes de finalizar.");
   }
+
   const payloadItems = items
-    .filter((item) => item?.id && Number(item.quantity || 0) > 0)
     .map((item) => ({
-      id: item.id,
+      id: item?.id || item?.productId || "",
       quantity: Number(item.quantity || 1),
       size: item.size || "",
-    }));
+    }))
+    .filter((item) => item.id && Number(item.quantity || 0) > 0);
 
   if (!payloadItems.length) {
     throw new Error("Seu carrinho esta vazio.");
   }
 
-  const data = normalizePaymentResponse(await apiFetch("/api/payments/abacatepay/checkout", {
+  // CORREÇÃO: envia customer coletado no modal; address vazio é aceito pelo backend
+  // para deliveryMethod card_checkout / pix_checkout (não exige CEP)
+  const rawData = await apiFetch("/api/payments/abacatepay/checkout", {
     method: "POST",
     body: JSON.stringify({
       deliveryMethod: method === "card" ? "card_checkout" : "pix_checkout",
       paymentMethod: method,
       couponCode,
       items: payloadItems,
+      customer: {
+        name: customer.name || "Cliente Loja",
+        email: customer.email || "",
+        phone: customer.phone || "",
+      },
+      address: {},
     }),
-  }));
+  });
+
+  const data = normalizePaymentResponse(rawData);
 
   if (!data.success) {
     throw new Error(data.message || data.error || "Nao foi possivel iniciar o pagamento.");
@@ -86,16 +132,24 @@ export async function startPaymentCheckout(items, couponCode = "", paymentMethod
     localStorage.setItem("bigsmoke-last-order-session", data.paymentId);
   }
 
-  if (data?.checkoutUrl) {
-    window.location.href = data.checkoutUrl;
+  // CORREÇÃO: redireciona mesmo que checkoutUrl venha em data.url ou data.data.url
+  if (data.checkoutUrl) {
+    openPaymentUrl(data.checkoutUrl);
     return;
   }
-  if (data?.pixCopyPaste || data?.qrCode) {
+
+  if (data.pixCopyPaste || data.qrCode) {
     showPixPayment(data);
     return;
   }
 
-  throw new Error(method === "card" ? "Nao foi possivel iniciar o pagamento no cartao." : "Nao foi possivel iniciar o pagamento.");
+  // CORREÇÃO: loga o retorno para facilitar depuração futura
+  console.error("[checkout] resposta inesperada da API:", rawData);
+  throw new Error(
+    method === "card"
+      ? "Nao foi possivel iniciar o pagamento no cartao. Verifique a chave ABACATEPAY_API_KEY no backend."
+      : "Nao foi possivel iniciar o pagamento PIX."
+  );
 }
 
 export const startStripeCheckout = startPaymentCheckout;

@@ -1,0 +1,13 @@
+{
+  "framework": "vite",
+  "buildCommand": "npm run build",
+  "outputDirectory": "dist",
+  "redirects": [
+    { "source": "/loja", "destination": "/", "permanent": false },
+    { "source": "/loja/", "destination": "/", "permanent": false },
+    { "source": "/loja/produto.html", "destination": "/src/produto.html", "permanent": false },
+    { "source": "/loja/pedidos.html", "destination": "/src/pedidos.html", "permanent": false },
+    { "source": "/loja/perfil.html", "destination": "/src/perfil.html", "permanent": false },
+    { "source": "/loja/politica.html", "destination": "/src/politica.html", "permanent": false }
+  ]
+}

@@ -2239,8 +2239,17 @@
 </footer>
 
 <script>
+window.BIGSMOKE_API_URL = "%VITE_API_URL%";
+window.BIGSMOKE_GOOGLE_CLIENT_ID = "%VITE_GOOGLE_CLIENT_ID%";
+</script>
+<script>
 (() => {
-  const API_BASE = window.location.protocol === 'file:' ? 'http://localhost:3000' : window.location.origin;
+  function runtimeValue(name) {
+    const value = String(window[name] || '').trim();
+    return value && !value.includes('%VITE_') ? value.replace(/\/$/, '') : '';
+  }
+
+  const API_BASE = runtimeValue('BIGSMOKE_API_URL') || (window.location.protocol === 'file:' ? 'http://localhost:3000' : window.location.origin);
 
   /* helpers */
   function esc(v) {

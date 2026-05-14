@@ -11,7 +11,12 @@ let _lbDragging = false;
 let _lbDragStart = { x: 0, y: 0, panX: 0, panY: 0 };
 let _lbPinchDist = null;
 
-const API_BASE = window.location.protocol === "file:" ? "http://localhost:3000" : window.location.origin;
+function runtimeValue(name) {
+  const value = String(window[name] || "").trim();
+  return value && !value.includes("%VITE_") ? value.replace(/\/$/, "") : "";
+}
+
+const API_BASE = runtimeValue("BIGSMOKE_API_URL") || (window.location.protocol === "file:" ? "http://localhost:3000" : window.location.origin);
 
 function apiUrl(path) {
   return new URL(path, API_BASE).toString();

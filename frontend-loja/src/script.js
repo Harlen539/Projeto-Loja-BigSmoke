@@ -48,9 +48,16 @@ const LOCALE_KEY = "bigsmoke-language";
 const AUTH_USERS_KEY = "bigsmoke_users";
 const AUTH_CUSTOMER_KEY = "bigsmoke_customer";
 const AUTH_CUSTOMER_TOKEN_KEY = "bigsmoke_customer_token";
-const GOOGLE_CLIENT_ID = "751029886073-5t9qtelporidj7jvfvnet1bf9ffndbo2.apps.googleusercontent.com";
+
+function getRuntimeValue(name) {
+  const value = String(window[name] || "").trim();
+  return value && !value.includes("%VITE_") ? value.replace(/\/$/, "") : "";
+}
+
+const CONFIGURED_API_BASE = getRuntimeValue("BIGSMOKE_API_URL");
+const GOOGLE_CLIENT_ID = getRuntimeValue("BIGSMOKE_GOOGLE_CLIENT_ID") || "751029886073-5t9qtelporidj7jvfvnet1bf9ffndbo2.apps.googleusercontent.com";
 const REMOVED_PRODUCT_IDS = new Set(["camiseta-oversized"]);
-let apiBaseUrl = "";
+let apiBaseUrl = CONFIGURED_API_BASE;
 let googleIdentityScriptPromise = null;
 
 const LOCALES = {
@@ -516,12 +523,13 @@ function syncHeaderNav(copy) {
   if (!nav) return;
 
   const path = window.location.pathname.replace(/\/+$/, "");
-  const onStoreHome = path === "/loja" || path.endsWith("/index.html");
+  const onStoreHome = path === "" || path === "/" || path === "/loja" || path.endsWith("/index.html");
+  const homePath = path === "/loja" || path.startsWith("/loja/") ? "/loja/" : "/";
   const links = [
-    { label: copy.nav[0] || "Drops", href: onStoreHome ? "#products" : "/loja/#products" },
-    { label: copy.nav[1] || "Marca", href: onStoreHome ? "#about" : "/loja/#about" },
-    { label: copy.nav[2] || "Contato", href: onStoreHome ? "#contact" : "/loja/#contact" },
-    { label: copy.nav[3] || "Privacidade", href: "/src/politica.html" },
+    { label: copy.nav[0] || "Drops", href: onStoreHome ? "#products" : `${homePath}#products` },
+    { label: copy.nav[1] || "Marca", href: onStoreHome ? "#about" : `${homePath}#about` },
+    { label: copy.nav[2] || "Contato", href: onStoreHome ? "#contact" : `${homePath}#contact` },
+    { label: copy.nav[3] || "Privacidade", href: storePagePath("politica.html") },
   ];
 
   nav.innerHTML = links.map((link) => {
@@ -1036,13 +1044,13 @@ function getOrderTrackingLink(order) {
   }
   const identifier = getPublicOrderIdentifier(order);
   if (!identifier) return "";
-  const url = new URL("/loja/pedidos.html", window.location.origin);
+  const url = new URL(storePagePath("pedidos.html"), window.location.origin);
   url.searchParams.set("tracking", identifier);
   return url.toString();
 }
 
 function getTrackingPageUrl(identifier = "") {
-  const url = new URL("/loja/pedidos.html", window.location.origin);
+  const url = new URL(storePagePath("pedidos.html"), window.location.origin);
   if (identifier) {
     url.searchParams.set("tracking", identifier);
   }
@@ -1051,6 +1059,14 @@ function getTrackingPageUrl(identifier = "") {
 
 function isTrackingPage() {
   return window.location.pathname.endsWith("/pedidos.html");
+}
+
+function storePagePath(fileName) {
+  const cleanName = String(fileName || "").replace(/^\/+/, "");
+  const path = window.location.pathname.replace(/\/+$/, "");
+  return path === "/loja" || path.startsWith("/loja/")
+    ? `/loja/${cleanName}`
+    : `/src/${cleanName}`;
 }
 
 function isPrivateCheckoutSession(value) {
@@ -1221,9 +1237,9 @@ function buildApiUrl(path) {
 async function detectApiBase() {
   const candidates = window.location.protocol === "file:"
     ? ["http://127.0.0.1:3000", "http://localhost:3000"]
-    : [window.location.origin, "http://127.0.0.1:3000", "http://localhost:3000"];
+    : [CONFIGURED_API_BASE, window.location.origin, "http://127.0.0.1:3000", "http://localhost:3000"];
 
-  for (const base of candidates) {
+  for (const base of [...new Set(candidates.filter(Boolean))]) {
     try {
       const response = await fetch(new URL("/healthz", base).toString(), { method: "GET" });
       if (!response.ok) {
@@ -1369,7 +1385,7 @@ function renderProducts() {
     card.className = "card";
     card.dataset.productId = product.id;
     card.classList.toggle("is-highlighted", product.id === previewProductId);
-    const productPagePath = window.location.port === "5173" ? "/src/produto.html" : "/loja/produto.html";
+    const productPagePath = storePagePath("produto.html");
     const productLink = `${productPagePath}?id=${encodeURIComponent(product.id)}`;
     const productImage = safeUrl(product.image || product.image_url || (Array.isArray(product.images) ? product.images[0] : "") || PLACEHOLDER_IMAGE, { allowDataImage: true }) || PLACEHOLDER_IMAGE;
 
@@ -2074,7 +2090,9 @@ function collectCheckoutData() {
 }
 
 function getAccountCheckoutData() {
-  const customer = getCurrentCustomer() || {};
+  const customer = typeof getCurrentCustomer === "function"
+    ? getCurrentCustomer() || {}
+    : getAuthCustomer() || {};
   const address = customer.address || (Array.isArray(customer.addresses) ? customer.addresses[0] : null) || {};
   const fullName = [customer.firstName, customer.lastName].filter(Boolean).join(" ").trim();
 
@@ -2193,7 +2211,7 @@ function showPixPayment(data) {
       </label>
       <button type="button" data-pix-copy class="btn btn-primary full-width" style="margin-top:14px;">Copiar codigo PIX</button>
       ${data?.expiresAt ? `<small style="display:block;margin-top:10px;color:#8f8a82;text-align:center;">Expira em ${sanitizeText(data.expiresAt)}</small>` : ""}
-      <a href="/pedidos?tracking=${tracking}" class="btn btn-outline full-width" style="margin-top:10px;display:flex;align-items:center;justify-content:center;">Acompanhar pedido</a>
+      <a href="${storePagePath("pedidos.html")}?tracking=${tracking}" class="btn btn-outline full-width" style="margin-top:10px;display:flex;align-items:center;justify-content:center;">Acompanhar pedido</a>
     </section>
   `;
   overlay.querySelector("[data-pix-close]")?.addEventListener("click", () => overlay.remove());
@@ -2248,10 +2266,10 @@ function openCheckoutUrl(url) {
 function normalizePaymentResponse(result) {
   return {
     ...result,
-    checkoutUrl: result?.checkoutUrl || result?.url || "",
-    qrCode: result?.qrCode || result?.brCodeBase64 || "",
-    pixCopyPaste: result?.pixCopyPaste || result?.brCode || "",
-    paymentId: result?.paymentId || result?.id || "",
+    checkoutUrl: result?.checkoutUrl || result?.url || result?.data?.checkoutUrl || result?.data?.url || result?.data?.paymentUrl || result?.data?.payment_url || "",
+    qrCode: result?.qrCode || result?.brCodeBase64 || result?.data?.qrCode || result?.data?.brCodeBase64 || "",
+    pixCopyPaste: result?.pixCopyPaste || result?.brCode || result?.data?.pixCopyPaste || result?.data?.brCode || "",
+    paymentId: result?.paymentId || result?.id || result?.data?.paymentId || result?.data?.id || "",
     success: result?.success !== false
   };
 }

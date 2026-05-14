@@ -172,6 +172,10 @@ export function CartDrawer() {
     setCouponMessage("Cupom aplicado.");
   }
 
+  const paymentHint = paymentMethod === "pix"
+    ? "PIX: ao finalizar, o QR Code e o codigo copia e cola aparecem aqui na loja."
+    : "Cartao: ao finalizar, voce sera redirecionado para a pagina segura da Abacate Pay.";
+
   async function goToPayment() {
     if (!paymentMethod) {
       setPaymentMessage("Escolha PIX ou cartao de credito antes de finalizar.");
@@ -182,7 +186,9 @@ export function CartDrawer() {
     try {
       await startPaymentCheckout(cart.items, appliedCoupon?.code || "", paymentMethod);
     } catch (error) {
-      alert(error.message || "Nao foi possivel iniciar o pagamento.");
+      const message = error.message || "Nao foi possivel iniciar o pagamento.";
+      setPaymentMessage(message);
+      alert(message);
     } finally {
       setLoading(false);
     }
@@ -224,7 +230,7 @@ export function CartDrawer() {
             }}
           />
           <CartSummary discount={discountPreview.totalDiscount} shippingDiscount={discountPreview.shippingDiscount} subtotal={cart.total} />
-          <small className="payment-method-message">{paymentMessage || "Escolha PIX ou cartao de credito antes de finalizar."}</small>
+          <small className="payment-method-message">{paymentMessage || paymentHint}</small>
           <CheckoutActions
             disabled={!cart.items.length}
             loading={loading}
@@ -234,6 +240,7 @@ export function CartDrawer() {
           />
         </div>
       </aside>
+
     </>
   );
 }

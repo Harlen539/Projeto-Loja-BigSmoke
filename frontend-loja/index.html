@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>BigSmoke | Streetwear Autêntico</title>
   <meta name="description" content="BigSmoke Store com catálogo atualizado via API, carrinho persistente e checkout seguro via Stripe.">
-  <link rel="canonical" href="/loja/">
+  <link rel="canonical" href="https://bigsmokestyle.vercel.app/">
   <link rel="manifest" href="/manifest.webmanifest">
   <meta name="theme-color" content="#090909">
   <link rel="icon" type="image/png" sizes="any" href="/src/imagens/logo_sem_fundo.png">
@@ -525,6 +525,10 @@
   </section>
 </div>
 
+<script>
+window.BIGSMOKE_API_URL = "%VITE_API_URL%";
+window.BIGSMOKE_GOOGLE_CLIENT_ID = "%VITE_GOOGLE_CLIENT_ID%";
+</script>
 <script type="module" src="/src/script.js"></script>
 </body>
 </html>

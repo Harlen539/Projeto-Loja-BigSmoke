@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useAuth } from "../../hooks/useAuth.js";
+import { apiUrl } from "../../services/api.js";
 
 const empty = {
   name: "",
@@ -142,7 +143,7 @@ export function ProductForm({ product, onCancel, onSubmit }) {
     for (const file of files) {
       const fd = new FormData();
       fd.append("image", file);
-      const res = await fetch("/api/admin/uploads", {
+      const res = await fetch(apiUrl("/api/admin/uploads"), {
         method: "POST",
         headers: { Authorization: `Bearer ${token}` },
         body: fd,

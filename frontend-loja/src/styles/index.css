@@ -131,7 +131,9 @@ button { cursor: pointer; }
 .cart-drawer .btn-primary { background: #f4efe7; color: #090909; border: 1px solid rgba(255,255,255,.2); }
 .cart-drawer .btn-outline { margin-top: .65rem; background: rgba(255,255,255,.02); color: #fff; border-color: rgba(245,240,232,.28); }
 .checkout-form { display: grid; gap: 1rem; margin-top: 1rem; }
-.payment-step { display: flex; justify-content: space-between; gap: 1rem; color: var(--muted); }
+.payment-step { display: grid; gap: .75rem; color: var(--muted); }
+.payment-step strong { color: var(--text); }
+.payment-step .btn { flex: 1; }
 
 .site-footer { width: min(1180px, calc(100% - 32px)); margin: 0 auto; border-top: 1px solid var(--line); padding: 2rem 0 3rem; display: flex; justify-content: space-between; gap: 1rem; }
 .footer-social { display: flex; gap: .75rem; }

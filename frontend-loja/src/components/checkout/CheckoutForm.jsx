@@ -19,6 +19,17 @@ const emptyForm = {
   state: "",
 };
 
+function normalizeCheckoutData(data) {
+  return {
+    ...data,
+    checkoutUrl: data?.checkoutUrl || data?.url || data?.data?.checkoutUrl || data?.data?.url || data?.data?.paymentUrl || data?.data?.payment_url || "",
+    brCode: data?.brCode || data?.pixCopyPaste || data?.data?.brCode || data?.data?.pixCopyPaste || "",
+    brCodeBase64: data?.brCodeBase64 || data?.qrCode || data?.data?.brCodeBase64 || data?.data?.qrCode || "",
+    orderId: data?.orderId || data?.paymentId || data?.id || data?.data?.orderId || data?.data?.paymentId || data?.data?.id || "",
+    orderNumberFormatted: data?.orderNumberFormatted || data?.data?.orderNumberFormatted || ""
+  };
+}
+
 function CheckoutSuccess() {
   return (
     <div className="checkout-feedback checkout-success">
@@ -50,6 +61,7 @@ export function CheckoutForm() {
   const [form, setForm] = useState(emptyForm);
   const [status, setStatus] = useState("");
   const [loading, setLoading] = useState(false);
+  const [paymentMethod, setPaymentMethod] = useState("pix");
   const [checkoutState, setCheckoutState] = useState("idle"); // idle | success | cancelled
 
   // Detecta retorno do provedor de pagamento via query string.
@@ -77,11 +89,11 @@ export function CheckoutForm() {
     setStatus("");
 
     try {
-      const data = await apiFetch("/api/checkout/session", {
+      const data = normalizeCheckoutData(await apiFetch("/api/payments/abacatepay/checkout", {
         method: "POST",
         body: JSON.stringify({
           items: cart.items.map((item) => ({
-            id: item.id,
+            id: item.id || item.productId,
             quantity: item.quantity,
             size: item.size,
           })),
@@ -91,12 +103,14 @@ export function CheckoutForm() {
             phone: form.phone,
           },
           address: form,
-          deliveryMethod: "national",
+          deliveryMethod: paymentMethod === "card" ? "card_checkout" : "pix_checkout",
+          paymentMethod,
+          couponCode: "",
         }),
-      });
+      }));
 
-      if (data?.url) {
-        window.location.href = data.url;
+      if (data?.checkoutUrl) {
+        window.location.href = data.checkoutUrl;
         return;
       }
       if (data?.brCode || data?.brCodeBase64) {
@@ -126,7 +140,7 @@ export function CheckoutForm() {
   return (
     <form className="checkout-form" onSubmit={submit} noValidate>
       <AddressStep form={form} setForm={setForm} />
-      <PaymentStep total={cart.total} />
+      <PaymentStep total={cart.total} onMethodChange={setPaymentMethod} />
 
       <button
         className="btn btn-primary full-width"
