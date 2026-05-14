@@ -35,7 +35,7 @@ const ORDER_TABLE = process.env.SUPABASE_ORDERS_TABLE || "orders";
 const JWT_SECRET = process.env.JWT_SECRET || "";
 const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID || "";
 const ABACATEPAY_API_KEY = process.env.ABACATEPAY_API_KEY || "";
-const ABACATEPAY_API_URL = (process.env.ABACATEPAY_API_URL || "https://api.abacatepay.com/v2").replace(/\/$/, "");
+const ABACATEPAY_API_URL = (process.env.ABACATEPAY_API_URL || process.env.ABACATEPAY_BASE_URL || "https://api.abacatepay.com/v2").replace(/\/$/, "");
 const ABACATEPAY_WEBHOOK_SECRET = process.env.ABACATEPAY_WEBHOOK_SECRET || "";
 const ABACATEPAY_CARD_MAX_INSTALLMENTS = Math.min(12, Math.max(1, Number(process.env.ABACATEPAY_CARD_MAX_INSTALLMENTS || 6)));
 const STRIPE_SECRET_KEY = process.env.STRIPE_SECRET_KEY || "";
@@ -190,7 +190,7 @@ const loginLimiter = rateLimit({
 // Rate limiting para checkout
 const checkoutLimiter = rateLimit({
   windowMs: 60 * 1000,
-  max: 5,
+  max: process.env.NODE_ENV === "production" ? 10 : 60,
   standardHeaders: true,
   legacyHeaders: false,
   message: { error: "Muitas tentativas de checkout. Aguarde um momento." }
@@ -629,11 +629,11 @@ function maskPublicAddress(address = {}) {
 }
 
 function makeBaseUrl(req) {
-  return process.env.SITE_URL || `${req.protocol}://${req.get("host")}`;
+  return process.env.BACKEND_URL || process.env.SITE_URL || `${req.protocol}://${req.get("host")}`;
 }
 
 function makeCheckoutBaseUrl(req) {
-  return (process.env.STORE_URL || process.env.SITE_URL || `${req.protocol}://${req.get("host")}`).replace(/\/$/, "");
+  return (process.env.FRONTEND_URL || process.env.STORE_URL || process.env.SITE_URL || `${req.protocol}://${req.get("host")}`).replace(/\/$/, "");
 }
 
 function toAbsoluteHttpUrl(value, baseUrl) {
@@ -2087,6 +2087,11 @@ function buildMetadataForOrder(order) {
 
 async function createAbacatePixCharge(order) {
   const amount = Math.max(50, Math.round(normalizeNumber(order.amountTotal, 0) * 100));
+  console.info("[abacatepay] criando cobranca PIX", {
+    orderId: order.id,
+    orderNumber: order.orderNumberFormatted || order.orderNumber || "",
+    amount
+  });
   const response = await fetch(`${ABACATEPAY_API_URL}/transparents/create`, {
     method: "POST",
     headers: {
@@ -2108,6 +2113,13 @@ async function createAbacatePixCharge(order) {
     })
   });
   const payload = await response.json().catch(() => null);
+  console.info("[abacatepay] resposta PIX", {
+    ok: response.ok,
+    status: response.status,
+    id: payload?.data?.id || "",
+    hasBrCode: Boolean(payload?.data?.brCode),
+    hasQrCode: Boolean(payload?.data?.brCodeBase64)
+  });
   if (!response.ok || payload?.error) {
     const message = typeof payload?.error === "string"
       ? payload.error
@@ -2119,6 +2131,10 @@ async function createAbacatePixCharge(order) {
 
 async function createAbacateProductForCheckout(order) {
   const amount = Math.max(100, Math.round(normalizeNumber(order.amountTotal, 0) * 100));
+  console.info("[abacatepay] criando produto checkout", {
+    orderId: order.id,
+    amount
+  });
   const response = await fetch(`${ABACATEPAY_API_URL}/products/create`, {
     method: "POST",
     headers: {
@@ -2137,6 +2153,11 @@ async function createAbacateProductForCheckout(order) {
     })
   });
   const payload = await response.json().catch(() => null);
+  console.info("[abacatepay] resposta produto checkout", {
+    ok: response.ok,
+    status: response.status,
+    id: payload?.data?.id || ""
+  });
   if (!response.ok || payload?.error) {
     const message = typeof payload?.error === "string"
       ? payload.error
@@ -2151,6 +2172,12 @@ async function createAbacateCardCheckout(order, baseUrl) {
   const total = normalizeNumber(order.amountTotal, 0);
   const maxInstallments = Math.max(1, Math.min(ABACATEPAY_CARD_MAX_INSTALLMENTS, Math.floor(total / 10) || 1));
   const tracking = encodeURIComponent(order.trackingCode || order.orderNumberFormatted || order.id);
+  console.info("[abacatepay] criando checkout cartao", {
+    orderId: order.id,
+    productId: product.id,
+    total,
+    maxInstallments
+  });
   const response = await fetch(`${ABACATEPAY_API_URL}/checkouts/create`, {
     method: "POST",
     headers: {
@@ -2173,6 +2200,12 @@ async function createAbacateCardCheckout(order, baseUrl) {
     })
   });
   const payload = await response.json().catch(() => null);
+  console.info("[abacatepay] resposta checkout cartao", {
+    ok: response.ok,
+    status: response.status,
+    id: payload?.data?.id || "",
+    hasUrl: Boolean(payload?.data?.url)
+  });
   if (!response.ok || payload?.error) {
     const message = typeof payload?.error === "string"
       ? payload.error
@@ -2302,7 +2335,7 @@ app.post("/api/stripe/webhook", express.raw({ type: "application/json" }), async
   }
 });
 
-app.post("/api/abacatepay/webhook", express.raw({ type: "application/json" }), async (req, res) => {
+async function handleAbacatePayWebhook(req, res) {
   if (ABACATEPAY_WEBHOOK_SECRET && req.query.webhookSecret !== ABACATEPAY_WEBHOOK_SECRET) {
     return res.status(401).json({ error: "Unauthorized" });
   }
@@ -2344,7 +2377,10 @@ app.post("/api/abacatepay/webhook", express.raw({ type: "application/json" }), a
   } catch (error) {
     return res.status(400).json({ error: error.message });
   }
-});
+}
+
+app.post("/api/abacatepay/webhook", express.raw({ type: "application/json" }), handleAbacatePayWebhook);
+app.post("/api/payments/abacatepay/webhook", express.raw({ type: "application/json" }), handleAbacatePayWebhook);
 
 app.use(express.json({ limit: "2mb", verify: rawBodySaver }));
 app.use(express.urlencoded({ extended: true }));
@@ -3001,9 +3037,11 @@ app.post("/api/admin/uploads", authMiddleware, upload.fields([{ name: "image", m
   }
 });
 
-app.post("/api/checkout/session", checkoutLimiter, async (req, res) => {
+async function handlePaymentCheckout(req, res) {
   if (!USE_ABACATEPAY && !stripe && !MOCK_STRIPE) {
     return res.status(400).json({
+      success: false,
+      message: "Gateway de pagamento nao configurado. Defina ABACATEPAY_API_KEY no backend.",
       error: "Stripe não configurado. Defina STRIPE_SECRET_KEY ou STRIPE_MOCK."
     });
   }
@@ -3048,6 +3086,13 @@ app.post("/api/checkout/session", checkoutLimiter, async (req, res) => {
     const abacatePaymentMethod = ["card", "credit_card", "cartao", "cartao_credito", "card_checkout"].includes(paymentMethodRaw)
       ? "card"
       : "pix";
+
+    console.info("[checkout] iniciando pagamento", {
+      provider: USE_ABACATEPAY ? "abacatepay" : "stripe",
+      paymentMethod: USE_ABACATEPAY ? abacatePaymentMethod : paymentMethodRaw || "stripe",
+      itemCount: items.length,
+      deliveryMethod
+    });
 
     const normalizedItems = items.map((item) => {
       const quantity = Math.max(1, normalizeNumber(item.quantity, 1));
@@ -3154,11 +3199,17 @@ app.post("/api/checkout/session", checkoutLimiter, async (req, res) => {
         await upsertOrder(nextOrder);
         notifyOrderCreated(nextOrder);
         return res.json({
+          success: true,
           provider: "abacatepay",
+          paymentProvider: "abacatepay",
+          mode: "checkout",
           paymentMethod: "card",
           url: checkout.url || "",
+          checkoutUrl: checkout.url || "",
           id: checkout.id,
+          paymentId: checkout.id,
           orderId: nextOrder.id,
+          status: nextOrder.status || "pending",
           orderNumber: nextOrder.orderNumber || null,
           orderNumberFormatted: nextOrder.orderNumberFormatted || null,
           coupon: nextOrder.coupon || null,
@@ -3197,15 +3248,22 @@ app.post("/api/checkout/session", checkoutLimiter, async (req, res) => {
       await upsertOrder(nextOrder);
       notifyOrderCreated(nextOrder);
       return res.json({
+        success: true,
         provider: "abacatepay",
+        paymentProvider: "abacatepay",
+        mode: "pix",
         paymentMethod: "pix",
         url: charge.url || "",
         id: charge.id,
+        paymentId: charge.id,
         orderId: nextOrder.id,
+        status: nextOrder.status || "pending",
         orderNumber: nextOrder.orderNumber || null,
         orderNumberFormatted: nextOrder.orderNumberFormatted || null,
         brCode: charge.brCode || "",
         brCodeBase64: charge.brCodeBase64 || "",
+        pixCopyPaste: charge.brCode || "",
+        qrCode: charge.brCodeBase64 || "",
         expiresAt: charge.expiresAt || "",
         coupon: nextOrder.coupon || null,
         discountAmount: nextOrder.discountAmount || 0,
@@ -3297,9 +3355,15 @@ app.post("/api/checkout/session", checkoutLimiter, async (req, res) => {
     await upsertOrder(nextOrder);
     notifyOrderCreated(nextOrder);
     res.json({
+      success: true,
+      paymentProvider: "stripe",
+      mode: "checkout",
       url: session.url,
+      checkoutUrl: session.url,
       id: session.id,
+      paymentId: session.id,
       orderId: nextOrder.id,
+      status: nextOrder.status || "pending",
       orderNumber: nextOrder.orderNumber || null,
       orderNumberFormatted: nextOrder.orderNumberFormatted || null,
       coupon: nextOrder.coupon || null,
@@ -3311,9 +3375,17 @@ app.post("/api/checkout/session", checkoutLimiter, async (req, res) => {
       amountTotal: nextOrder.amountTotal
     });
   } catch (error) {
-    res.status(400).json({ error: error.message });
+    console.error("[checkout] erro ao criar pagamento:", error);
+    res.status(400).json({
+      success: false,
+      error: error.message,
+      message: error.message || "Nao foi possivel iniciar o pagamento."
+    });
   }
-});
+}
+
+app.post("/api/checkout/session", checkoutLimiter, handlePaymentCheckout);
+app.post("/api/payments/abacatepay/checkout", checkoutLimiter, handlePaymentCheckout);
 
 app.get("/healthz", (_req, res) => {
   res.json({

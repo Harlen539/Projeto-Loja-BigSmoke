@@ -1226,7 +1226,15 @@ async function detectApiBase() {
   for (const base of candidates) {
     try {
       const response = await fetch(new URL("/healthz", base).toString(), { method: "GET" });
-      if (response.ok) {
+      if (!response.ok) {
+        continue;
+      }
+      const contentType = response.headers.get("content-type") || "";
+      if (!contentType.includes("application/json")) {
+        continue;
+      }
+      const data = await response.json();
+      if (data?.ok === true) {
         apiBaseUrl = base;
         return;
       }
@@ -1235,7 +1243,8 @@ async function detectApiBase() {
     }
   }
 
-  apiBaseUrl = window.location.protocol === "file:" ? "http://localhost:3000" : window.location.origin;
+  const isLocalFrontend = /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/i.test(window.location.origin);
+  apiBaseUrl = (window.location.protocol === "file:" || isLocalFrontend) ? "http://localhost:3000" : window.location.origin;
 }
 
 function renderCategoryFilters() {
@@ -2160,9 +2169,10 @@ function validateCheckout(data) {
 function showPixPayment(data) {
   document.querySelector(".pix-payment-overlay")?.remove();
 
-  const brCode = String(data?.brCode || "");
-  const qrCode = safeUrl(data?.brCodeBase64 || "", { allowDataImage: true });
-  const tracking = encodeURIComponent(data?.id || data?.orderId || "");
+  const brCode = String(data?.pixCopyPaste || data?.brCode || "");
+  const qrCode = safeUrl(data?.qrCode || data?.brCodeBase64 || "", { allowDataImage: true });
+  const paymentId = data?.paymentId || data?.id || data?.orderId || "";
+  const tracking = encodeURIComponent(paymentId);
   const overlay = document.createElement("div");
   overlay.className = "pix-payment-overlay";
   overlay.style.cssText = "position:fixed;inset:0;z-index:5000;display:grid;place-items:center;padding:16px;background:rgba(0,0,0,.76);backdrop-filter:blur(8px);";
@@ -2175,12 +2185,14 @@ function showPixPayment(data) {
         </div>
         <button type="button" data-pix-close style="border:1px solid rgba(245,240,232,.16);border-radius:999px;background:transparent;color:#f5f0e8;width:36px;height:36px;">x</button>
       </div>
+      <p style="margin:0 0 14px;color:#b7b0a5;font-size:.9rem;">Escaneie o QR Code ou copie o código PIX abaixo para pagar.</p>
       ${qrCode ? `<img src="${qrCode}" alt="QR Code PIX" style="display:block;width:min(280px,100%);margin:0 auto 14px;border-radius:8px;background:#fff;padding:10px;">` : ""}
       <label style="display:grid;gap:8px;color:#b7b0a5;font-size:.85rem;">
         Copia e cola PIX
         <textarea readonly style="min-height:110px;resize:vertical;border:1px solid rgba(245,240,232,.16);border-radius:8px;background:#0d0d0d;color:#f5f0e8;padding:10px;">${sanitizeText(brCode)}</textarea>
       </label>
       <button type="button" data-pix-copy class="btn btn-primary full-width" style="margin-top:14px;">Copiar codigo PIX</button>
+      ${data?.expiresAt ? `<small style="display:block;margin-top:10px;color:#8f8a82;text-align:center;">Expira em ${sanitizeText(data.expiresAt)}</small>` : ""}
       <a href="/pedidos?tracking=${tracking}" class="btn btn-outline full-width" style="margin-top:10px;display:flex;align-items:center;justify-content:center;">Acompanhar pedido</a>
     </section>
   `;
@@ -2214,8 +2226,34 @@ function setPaymentMethodMessage(message = "") {
 
 function openCheckoutUrl(url) {
   if (!url) return false;
-  window.location.assign(url);
+  const targetUrl = String(url);
+  try {
+    window.location.assign(targetUrl);
+  } catch {
+    window.location.href = targetUrl;
+  }
+  window.setTimeout(() => {
+    if (document.hidden) return;
+    const link = document.createElement("a");
+    link.href = targetUrl;
+    link.rel = "noopener";
+    link.textContent = "Abrir checkout da AbacatePay";
+    link.style.cssText = "position:fixed;left:50%;bottom:18px;transform:translateX(-50%);z-index:6000;width:min(360px,calc(100vw - 32px));padding:14px 18px;border-radius:999px;background:#f5f0e8;color:#050505;text-align:center;font-weight:900;letter-spacing:.08em;text-transform:uppercase;text-decoration:none;box-shadow:0 18px 50px rgba(0,0,0,.45);";
+    document.body.appendChild(link);
+    link.click();
+  }, 600);
   return true;
+}
+
+function normalizePaymentResponse(result) {
+  return {
+    ...result,
+    checkoutUrl: result?.checkoutUrl || result?.url || "",
+    qrCode: result?.qrCode || result?.brCodeBase64 || "",
+    pixCopyPaste: result?.pixCopyPaste || result?.brCode || "",
+    paymentId: result?.paymentId || result?.id || "",
+    success: result?.success !== false
+  };
 }
 
 async function handleCheckoutSubmit() {
@@ -2246,7 +2284,7 @@ async function handleCheckoutSubmit() {
   button.textContent = currentLocale === "en" ? "Opening payment..." : currentLocale === "es" ? "Abriendo pago..." : "Abrindo pagamento...";
 
   try {
-    const response = await fetch(buildApiUrl("/api/checkout/session"), {
+    const response = await fetch(buildApiUrl("/api/payments/abacatepay/checkout"), {
       method: "POST",
       headers: {
         "Content-Type": "application/json"
@@ -2254,16 +2292,16 @@ async function handleCheckoutSubmit() {
       body: JSON.stringify(payload)
     });
 
-    const result = await readApiJson(response);
-    if (!response.ok || (!result?.url && !result?.brCode && !result?.brCodeBase64)) {
-      throw new Error(result?.error || (currentLocale === "en" ? "Could not start payment." : currentLocale === "es" ? "No fue posible iniciar el pago." : "Não foi possível iniciar o pagamento."));
+    const result = normalizePaymentResponse(await readApiJson(response));
+    if (!response.ok || !result.success || (!result.checkoutUrl && !result.pixCopyPaste && !result.qrCode)) {
+      throw new Error(result?.message || result?.error || (currentLocale === "en" ? "Could not start payment." : currentLocale === "es" ? "No fue posible iniciar el pago." : "Não foi possível iniciar o pagamento."));
     }
 
-    if (result.id) {
-      localStorage.setItem("bigsmoke-last-order-session", result.id);
+    if (result.paymentId) {
+      localStorage.setItem("bigsmoke-last-order-session", result.paymentId);
     }
-    if (result.url) {
-      openCheckoutUrl(result.url);
+    if (result.checkoutUrl) {
+      openCheckoutUrl(result.checkoutUrl);
       return;
     }
     showPixPayment(result);
@@ -2313,20 +2351,20 @@ async function redirectCartToStripe(button = null) {
   }
 
   try {
-    const response = await fetch(buildApiUrl("/api/checkout/session"), {
+    const response = await fetch(buildApiUrl("/api/payments/abacatepay/checkout"), {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload)
     });
-    const result = await readApiJson(response);
-    if (!response.ok || (!result?.url && !result?.brCode && !result?.brCodeBase64)) {
-      throw new Error(result?.error || "Não foi possível iniciar o pagamento.");
+    const result = normalizePaymentResponse(await readApiJson(response));
+    if (!response.ok || !result.success || (!result.checkoutUrl && !result.pixCopyPaste && !result.qrCode)) {
+      throw new Error(result?.message || result?.error || "Não foi possível iniciar o pagamento.");
     }
-    if (result.id) {
-      localStorage.setItem("bigsmoke-last-order-session", result.id);
+    if (result.paymentId) {
+      localStorage.setItem("bigsmoke-last-order-session", result.paymentId);
     }
-    if (result.url) {
-      openCheckoutUrl(result.url);
+    if (result.checkoutUrl) {
+      openCheckoutUrl(result.checkoutUrl);
       return;
     }
     showPixPayment(result);
