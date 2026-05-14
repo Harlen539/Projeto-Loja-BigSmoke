@@ -46,15 +46,19 @@ export function CartItem({ item, onQuantity, onRemove, onSize }) {
         </label>
       </div>
       <div className="cart-item-controls">
-        <div className="qty-controls">
-          <button aria-label="Diminuir quantidade" onClick={() => onQuantity(item.quantity - 1)} type="button">-</button>
-          <span className="qty-value">{item.quantity}</span>
-          <button aria-label="Aumentar quantidade" onClick={() => onQuantity(item.quantity + 1)} type="button">+</button>
+        <div className="cart-item-quantity">
+          <span className="cart-item-size-label">Quantidade</span>
+          <div className="qty-controls">
+            <button aria-label="Diminuir quantidade" onClick={() => onQuantity(item.quantity - 1)} type="button">-</button>
+            <span className="qty-value">{item.quantity}</span>
+            <button aria-label="Aumentar quantidade" onClick={() => onQuantity(item.quantity + 1)} type="button">+</button>
+          </div>
         </div>
         <button className="remove-item" onClick={onRemove} type="button" aria-label="Remover item">
           <TrashIcon />
+          <span>Remover</span>
         </button>
-        <span className="cart-item-price">R$ {(item.price * item.quantity).toFixed(2).replace(".", ",")}</span>
+        <span className="cart-item-price"><small>R$</small> {(item.price * item.quantity).toFixed(2).replace(".", ",")}</span>
       </div>
     </li>
   );

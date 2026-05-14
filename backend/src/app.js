@@ -1304,6 +1304,10 @@ async function lookupCep(cep) {
 }
 
 function estimateShipping({ deliveryMethod, address = {}, store = DEFAULT_STORE, cepData = null }) {
+  if (deliveryMethod === "pix_checkout" || deliveryMethod === "card_checkout" || deliveryMethod === "stripe_checkout") {
+    return { price: 0, label: "Checkout direto" };
+  }
+
   if (deliveryMethod === "retirada") {
     return { price: 0, label: "Retirada na loja" };
   }

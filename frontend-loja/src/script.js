@@ -611,11 +611,14 @@ function applyLocale(locale) {
   if (footerColumns[1]) {
     footerColumns[1].querySelector("strong").textContent = currentLocale === "pt" ? "Redes sociais" : currentLocale === "es" ? "Redes sociales" : "Social networks";
   }
-  setText(".cart .section-kicker", copy.cartKicker);
-  setText(".cart h2", copy.cartTitle);
-  setText(".cart .total-section span:first-child", copy.cartTotal);
-  setText("#checkout-button", copy.checkoutButton);
-  setText("#whatsapp", copy.cartLabel ? "WhatsApp" : "WhatsApp");
+  setText(".cart .section-kicker", "PEDIDO");
+  setText(".cart h2", "Carrinho");
+  setText(".cart-subtotal-row > span:first-child", "Subtotal");
+  setText(".cart-discount-row > span:first-child", "Desconto");
+  setText(".cart-total-row > span:first-child", "Total");
+  const checkoutButton = document.getElementById("checkout-button");
+  if (checkoutButton) checkoutButton.innerHTML = 'FINALIZAR COMPRA <span aria-hidden="true">&rsaquo;</span>';
+  setText("#whatsapp", "Comprar pelo WhatsApp");
   setText(".checkout-modal .section-kicker", copy.checkoutKicker);
   setText(".checkout-modal h2", copy.checkoutTitle);
   setText(".checkout-panel h3", copy.deliveryTitle);
@@ -1571,10 +1574,13 @@ function updateCartUI() {
         ${item.color ? `<div class="cart-item-color-row"><span class="cart-item-color-label">Cor</span><span class="cart-item-color-value">${sanitizeText(item.color)}</span></div>` : ""}
       </div>
       <div class="cart-item-controls">
-        <div class="qty-controls">
-          <button type="button" aria-label="${currentLocale === "en" ? "Decrease quantity" : currentLocale === "es" ? "Disminuir cantidad" : "Diminuir quantidade"}">−</button>
-          <span class="qty-value">${item.quantity}</span>
-          <button type="button" aria-label="${currentLocale === "en" ? "Increase quantity" : currentLocale === "es" ? "Aumentar cantidad" : "Aumentar quantidade"}">+</button>
+        <div class="cart-item-quantity">
+          <span class="cart-item-size-label">Quantidade</span>
+          <div class="qty-controls">
+            <button type="button" aria-label="${currentLocale === "en" ? "Decrease quantity" : currentLocale === "es" ? "Disminuir cantidad" : "Diminuir quantidade"}">−</button>
+            <span class="qty-value">${item.quantity}</span>
+            <button type="button" aria-label="${currentLocale === "en" ? "Increase quantity" : currentLocale === "es" ? "Aumentar cantidad" : "Aumentar quantidade"}">+</button>
+          </div>
         </div>
         <button class="remove-item" type="button" aria-label="${currentLocale === "en" ? "Remove item" : currentLocale === "es" ? "Eliminar artículo" : "Remover item"}">
           <svg viewBox="0 0 24 24" aria-hidden="true">
@@ -1583,8 +1589,9 @@ function updateCartUI() {
             <path d="M19 6l-1 14H6L5 6"/>
             <path d="M10 11v5M14 11v5"/>
           </svg>
+          <span>Remover</span>
         </button>
-        <span class="cart-item-price">${formatCurrency(item.price * item.quantity)}</span>
+        <span class="cart-item-price"><small>R$</small> ${Number(item.price * item.quantity).toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
       </div>
     `;
 
@@ -1611,7 +1618,7 @@ function updateCartUI() {
   emptyState.style.display = cart.length ? "none" : "block";
   emptyState.textContent = t("cartEmpty");
   whatsappBtn.href = getWhatsAppUrl(buildWhatsappMessage());
-  whatsappBtn.textContent = "WhatsApp";
+  whatsappBtn.textContent = "Comprar pelo WhatsApp";
   updateCheckoutSummary();
 }
 
@@ -1709,7 +1716,11 @@ function renderCouponSuggestions() {
     const root = document.getElementById(rootId);
     if (!root) return;
     root.innerHTML = "";
-    availableCoupons.slice(0, 3).forEach((coupon) => {
+    const suggestions = availableCoupons.length
+      ? availableCoupons.slice(0, 3)
+      : [{ code: "BIG10" }, { code: "STREET20" }];
+
+    suggestions.forEach((coupon) => {
       const button = document.createElement("button");
       button.type = "button";
       button.textContent = coupon.code;
@@ -1720,10 +1731,12 @@ function renderCouponSuggestions() {
         const cartInput = document.getElementById("cart-coupon-code");
         if (checkoutInput) checkoutInput.value = coupon.code;
         if (cartInput) cartInput.value = coupon.code;
-        appliedCoupon = coupon;
-        updateCouponMessage("Cupom aplicado.", "success");
-        updateCartUI();
-        updateCheckoutSummary();
+        if (coupon.id || coupon.value !== undefined || availableCoupons.some((item) => item.code === coupon.code)) {
+          appliedCoupon = coupon;
+          updateCouponMessage("Cupom aplicado.", "success");
+          updateCartUI();
+          updateCheckoutSummary();
+        }
       });
       root.appendChild(button);
     });
@@ -2199,6 +2212,12 @@ function setPaymentMethodMessage(message = "") {
   });
 }
 
+function openCheckoutUrl(url) {
+  if (!url) return false;
+  window.location.assign(url);
+  return true;
+}
+
 async function handleCheckoutSubmit() {
   if (!selectedPaymentMethod) {
     setPaymentMethodMessage(currentLocale === "en" ? "Choose PIX or credit card before finishing." : currentLocale === "es" ? "Elige PIX o tarjeta antes de finalizar." : "Escolha PIX ou cartão de crédito antes de finalizar.");
@@ -2244,7 +2263,7 @@ async function handleCheckoutSubmit() {
       localStorage.setItem("bigsmoke-last-order-session", result.id);
     }
     if (result.url) {
-      window.location.href = result.url;
+      openCheckoutUrl(result.url);
       return;
     }
     showPixPayment(result);
@@ -2307,7 +2326,7 @@ async function redirectCartToStripe(button = null) {
       localStorage.setItem("bigsmoke-last-order-session", result.id);
     }
     if (result.url) {
-      window.location.href = result.url;
+      openCheckoutUrl(result.url);
       return;
     }
     showPixPayment(result);
@@ -2715,7 +2734,7 @@ function setupCheckout() {
   document.querySelectorAll("[data-payment-method]").forEach((button) => {
     button.addEventListener("click", () => setPaymentMethod(button.dataset.paymentMethod));
   });
-  setPaymentMethod("pix");
+  setPaymentMethod("card");
   document.getElementById("apply-coupon")?.addEventListener("click", applyCouponCode);
   document.getElementById("apply-cart-coupon")?.addEventListener("click", () => applyCouponCode("cart"));
   document.getElementById("coupon-code")?.addEventListener("keydown", (event) => {

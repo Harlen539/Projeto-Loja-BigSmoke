@@ -1,5 +1,509 @@
 [
   {
+    "id": "order_56e07424-9b26-4116-8111-672fdbffa0bb",
+    "orderNumber": "73",
+    "orderNumberFormatted": "#00073",
+    "orderAccessCode": "#23b97b35",
+    "hiddenInAdmin": false,
+    "stripeSessionId": "bill_cRbBcRwmq1u31afhT50WcHWC",
+    "paymentIntentId": "bill_cRbBcRwmq1u31afhT50WcHWC",
+    "stripeEventId": "",
+    "status": "pending",
+    "currency": "brl",
+    "amountSubtotal": 84.9,
+    "shippingAmount": 0,
+    "amountTotal": 84.9,
+    "paymentConfirmed": false,
+    "inventoryDebitedAt": "",
+    "customer": {
+      "name": "Cliente Stripe",
+      "email": "",
+      "phone": ""
+    },
+    "address": {
+      "cep": "",
+      "street": "",
+      "number": "",
+      "neighborhood": "",
+      "city": "",
+      "state": "",
+      "complement": ""
+    },
+    "deliveryMethod": "card_checkout",
+    "shippingLabel": "Checkout direto",
+    "discountAmount": 0,
+    "productDiscountAmount": 0,
+    "shippingDiscountAmount": 0,
+    "coupon": null,
+    "trackingCode": "#2c1a7803",
+    "trackingUrl": "http://localhost:3000/loja/pedidos.html?tracking=%2323b97b35",
+    "items": [
+      {
+        "id": "preview-1777902029458",
+        "name": "Camiseta BigSmoke Smoke Identity",
+        "quantity": 1,
+        "price": 84.9,
+        "category": "Camisetas",
+        "image": "/uploads/1777901887119-cinza_1.webp",
+        "size": "P",
+        "color": ""
+      }
+    ],
+    "events": [
+      {
+        "type": "abacatepay.card.checkout.created",
+        "id": "bill_cRbBcRwmq1u31afhT50WcHWC",
+        "created": "2026-05-14T03:30:38.837Z"
+      }
+    ],
+    "sessionUrl": "https://app.abacatepay.com/pay/bill_cRbBcRwmq1u31afhT50WcHWC",
+    "paidAt": "",
+    "canceledAt": "",
+    "createdAt": "2026-05-14T03:30:38.449Z",
+    "updatedAt": "2026-05-14T03:30:38.837Z"
+  },
+  {
+    "id": "order_3e89a432-098c-423e-ada6-8d4c324fbeac",
+    "orderNumber": "72",
+    "orderNumberFormatted": "#00072",
+    "orderAccessCode": "#2c751fe4",
+    "hiddenInAdmin": false,
+    "stripeSessionId": "pix_char_uQyrhC2FnLNm6n1BBwnEgUst",
+    "paymentIntentId": "pix_char_uQyrhC2FnLNm6n1BBwnEgUst",
+    "stripeEventId": "",
+    "status": "pending",
+    "currency": "brl",
+    "amountSubtotal": 84.9,
+    "shippingAmount": 0,
+    "amountTotal": 84.9,
+    "paymentConfirmed": false,
+    "inventoryDebitedAt": "",
+    "customer": {
+      "name": "Cliente Stripe",
+      "email": "",
+      "phone": ""
+    },
+    "address": {
+      "cep": "",
+      "street": "",
+      "number": "",
+      "neighborhood": "",
+      "city": "",
+      "state": "",
+      "complement": ""
+    },
+    "deliveryMethod": "pix_checkout",
+    "shippingLabel": "Checkout direto",
+    "discountAmount": 0,
+    "productDiscountAmount": 0,
+    "shippingDiscountAmount": 0,
+    "coupon": null,
+    "trackingCode": "#5665d705",
+    "trackingUrl": "http://localhost:3000/loja/pedidos.html?tracking=%232c751fe4",
+    "items": [
+      {
+        "id": "preview-1777902029458",
+        "name": "Camiseta BigSmoke Smoke Identity",
+        "quantity": 1,
+        "price": 84.9,
+        "category": "Camisetas",
+        "image": "/uploads/1777901887119-cinza_1.webp",
+        "size": "P",
+        "color": ""
+      }
+    ],
+    "events": [
+      {
+        "type": "abacatepay.pix.created",
+        "id": "pix_char_uQyrhC2FnLNm6n1BBwnEgUst",
+        "created": "2026-05-14T03:30:38.591Z"
+      }
+    ],
+    "sessionUrl": "",
+    "paidAt": "",
+    "canceledAt": "",
+    "createdAt": "2026-05-14T03:30:38.314Z",
+    "updatedAt": "2026-05-14T03:30:38.591Z"
+  },
+  {
+    "id": "order_7f4e1dfa-3c9b-48ce-bcee-72c524d125c9",
+    "orderNumber": "71",
+    "orderNumberFormatted": "#00071",
+    "orderAccessCode": "#fe207788",
+    "hiddenInAdmin": false,
+    "stripeSessionId": "bill_sq0S3WYg3hjwxQCtg2tbTceQ",
+    "paymentIntentId": "bill_sq0S3WYg3hjwxQCtg2tbTceQ",
+    "stripeEventId": "",
+    "status": "pending",
+    "currency": "brl",
+    "amountSubtotal": 84.9,
+    "shippingAmount": 0,
+    "amountTotal": 84.9,
+    "paymentConfirmed": false,
+    "inventoryDebitedAt": "",
+    "customer": {
+      "name": "Cliente Stripe",
+      "email": "",
+      "phone": ""
+    },
+    "address": {
+      "cep": "",
+      "street": "",
+      "number": "",
+      "neighborhood": "",
+      "city": "",
+      "state": "",
+      "complement": ""
+    },
+    "deliveryMethod": "card_checkout",
+    "shippingLabel": "Checkout direto",
+    "discountAmount": 0,
+    "productDiscountAmount": 0,
+    "shippingDiscountAmount": 0,
+    "coupon": null,
+    "trackingCode": "#4edf5e35",
+    "trackingUrl": "http://localhost:3000/loja/pedidos.html?tracking=%23fe207788",
+    "items": [
+      {
+        "id": "preview-1777902029458",
+        "name": "Camiseta BigSmoke Smoke Identity",
+        "quantity": 1,
+        "price": 84.9,
+        "category": "Camisetas",
+        "image": "/uploads/1777901887119-cinza_1.webp",
+        "size": "P",
+        "color": ""
+      }
+    ],
+    "events": [
+      {
+        "type": "abacatepay.card.checkout.created",
+        "id": "bill_sq0S3WYg3hjwxQCtg2tbTceQ",
+        "created": "2026-05-14T03:26:54.374Z"
+      }
+    ],
+    "sessionUrl": "https://app.abacatepay.com/pay/bill_sq0S3WYg3hjwxQCtg2tbTceQ",
+    "paidAt": "",
+    "canceledAt": "",
+    "createdAt": "2026-05-14T03:26:53.517Z",
+    "updatedAt": "2026-05-14T03:26:54.374Z"
+  },
+  {
+    "id": "order_8dbde48e-b0ee-4764-9857-2a0ef2dda79c",
+    "orderNumber": "70",
+    "orderNumberFormatted": "#00070",
+    "orderAccessCode": "#e471b3c1",
+    "hiddenInAdmin": false,
+    "stripeSessionId": "bill_t0CFRfEKeMMsZLdYs1QwcsdE",
+    "paymentIntentId": "bill_t0CFRfEKeMMsZLdYs1QwcsdE",
+    "stripeEventId": "",
+    "status": "pending",
+    "currency": "brl",
+    "amountSubtotal": 84.9,
+    "shippingAmount": 0,
+    "amountTotal": 84.9,
+    "paymentConfirmed": false,
+    "inventoryDebitedAt": "",
+    "customer": {
+      "name": "Cliente Stripe",
+      "email": "",
+      "phone": ""
+    },
+    "address": {
+      "cep": "",
+      "street": "",
+      "number": "",
+      "neighborhood": "",
+      "city": "",
+      "state": "",
+      "complement": ""
+    },
+    "deliveryMethod": "card_checkout",
+    "shippingLabel": "Checkout direto",
+    "discountAmount": 0,
+    "productDiscountAmount": 0,
+    "shippingDiscountAmount": 0,
+    "coupon": null,
+    "trackingCode": "#318c3006",
+    "trackingUrl": "http://localhost:3000/loja/pedidos.html?tracking=%23e471b3c1",
+    "items": [
+      {
+        "id": "preview-1777902029458",
+        "name": "Camiseta BigSmoke Smoke Identity",
+        "quantity": 1,
+        "price": 84.9,
+        "category": "Camisetas",
+        "image": "/uploads/1777901887119-cinza_1.webp",
+        "size": "P",
+        "color": ""
+      }
+    ],
+    "events": [
+      {
+        "type": "abacatepay.card.checkout.created",
+        "id": "bill_t0CFRfEKeMMsZLdYs1QwcsdE",
+        "created": "2026-05-14T03:25:51.707Z"
+      }
+    ],
+    "sessionUrl": "https://app.abacatepay.com/pay/bill_t0CFRfEKeMMsZLdYs1QwcsdE",
+    "paidAt": "",
+    "canceledAt": "",
+    "createdAt": "2026-05-14T03:25:51.279Z",
+    "updatedAt": "2026-05-14T03:25:51.707Z"
+  },
+  {
+    "id": "order_9aebc28f-e35a-4318-9d5f-a1a0847e3aee",
+    "orderNumber": "69",
+    "orderNumberFormatted": "#00069",
+    "orderAccessCode": "#4fa37c12",
+    "hiddenInAdmin": false,
+    "stripeSessionId": "bill_fryakgCDa0MQR10KXakWxqLZ",
+    "paymentIntentId": "bill_fryakgCDa0MQR10KXakWxqLZ",
+    "stripeEventId": "",
+    "status": "pending",
+    "currency": "brl",
+    "amountSubtotal": 84.9,
+    "shippingAmount": 0,
+    "amountTotal": 84.9,
+    "paymentConfirmed": false,
+    "inventoryDebitedAt": "",
+    "customer": {
+      "name": "Cliente Stripe",
+      "email": "",
+      "phone": ""
+    },
+    "address": {
+      "cep": "",
+      "street": "",
+      "number": "",
+      "neighborhood": "",
+      "city": "",
+      "state": "",
+      "complement": ""
+    },
+    "deliveryMethod": "card_checkout",
+    "shippingLabel": "Checkout direto",
+    "discountAmount": 0,
+    "productDiscountAmount": 0,
+    "shippingDiscountAmount": 0,
+    "coupon": null,
+    "trackingCode": "#9a923646",
+    "trackingUrl": "http://localhost:3000/loja/pedidos.html?tracking=%234fa37c12",
+    "items": [
+      {
+        "id": "preview-1777902029458",
+        "name": "Camiseta BigSmoke Smoke Identity",
+        "quantity": 1,
+        "price": 84.9,
+        "category": "Camisetas",
+        "image": "/uploads/1777901887119-cinza_1.webp",
+        "size": "P",
+        "color": ""
+      }
+    ],
+    "events": [
+      {
+        "type": "abacatepay.card.checkout.created",
+        "id": "bill_fryakgCDa0MQR10KXakWxqLZ",
+        "created": "2026-05-14T03:16:58.502Z"
+      }
+    ],
+    "sessionUrl": "https://app.abacatepay.com/pay/bill_fryakgCDa0MQR10KXakWxqLZ",
+    "paidAt": "",
+    "canceledAt": "",
+    "createdAt": "2026-05-14T03:16:58.168Z",
+    "updatedAt": "2026-05-14T03:16:58.502Z"
+  },
+  {
+    "id": "order_ffacc7bd-dc24-4367-bbad-d3920ab167db",
+    "orderNumber": "69",
+    "orderNumberFormatted": "#00069",
+    "orderAccessCode": "#aa5d643f",
+    "hiddenInAdmin": false,
+    "stripeSessionId": "pix_char_txXMQxThSwQRxc5YKQSf6BFX",
+    "paymentIntentId": "pix_char_txXMQxThSwQRxc5YKQSf6BFX",
+    "stripeEventId": "",
+    "status": "pending",
+    "currency": "brl",
+    "amountSubtotal": 84.9,
+    "shippingAmount": 0,
+    "amountTotal": 84.9,
+    "paymentConfirmed": false,
+    "inventoryDebitedAt": "",
+    "customer": {
+      "name": "Cliente Stripe",
+      "email": "",
+      "phone": ""
+    },
+    "address": {
+      "cep": "",
+      "street": "",
+      "number": "",
+      "neighborhood": "",
+      "city": "",
+      "state": "",
+      "complement": ""
+    },
+    "deliveryMethod": "pix_checkout",
+    "shippingLabel": "Checkout direto",
+    "discountAmount": 0,
+    "productDiscountAmount": 0,
+    "shippingDiscountAmount": 0,
+    "coupon": null,
+    "trackingCode": "#21631dbc",
+    "trackingUrl": "http://localhost:3000/loja/pedidos.html?tracking=%23aa5d643f",
+    "items": [
+      {
+        "id": "preview-1777902029458",
+        "name": "Camiseta BigSmoke Smoke Identity",
+        "quantity": 1,
+        "price": 84.9,
+        "category": "Camisetas",
+        "image": "/uploads/1777901887119-cinza_1.webp",
+        "size": "P",
+        "color": ""
+      }
+    ],
+    "events": [
+      {
+        "type": "abacatepay.pix.created",
+        "id": "pix_char_txXMQxThSwQRxc5YKQSf6BFX",
+        "created": "2026-05-14T03:16:58.402Z"
+      }
+    ],
+    "sessionUrl": "",
+    "paidAt": "",
+    "canceledAt": "",
+    "createdAt": "2026-05-14T03:16:58.144Z",
+    "updatedAt": "2026-05-14T03:16:58.402Z"
+  },
+  {
+    "id": "order_801c9e96-6141-42f1-824c-777e3f1759bd",
+    "orderNumber": "67",
+    "orderNumberFormatted": "#00067",
+    "orderAccessCode": "#d7359670",
+    "hiddenInAdmin": false,
+    "stripeSessionId": "bill_wHK3a0rjnDS1WKJ5XDu4Z5zn",
+    "paymentIntentId": "bill_wHK3a0rjnDS1WKJ5XDu4Z5zn",
+    "stripeEventId": "",
+    "status": "pending",
+    "currency": "brl",
+    "amountSubtotal": 84.9,
+    "shippingAmount": 28,
+    "amountTotal": 112.9,
+    "paymentConfirmed": false,
+    "inventoryDebitedAt": "",
+    "customer": {
+      "name": "Cliente Stripe",
+      "email": "",
+      "phone": ""
+    },
+    "address": {
+      "cep": "",
+      "street": "",
+      "number": "",
+      "neighborhood": "",
+      "city": "",
+      "state": "",
+      "complement": ""
+    },
+    "deliveryMethod": "card_checkout",
+    "shippingLabel": "Envio nacional",
+    "discountAmount": 0,
+    "productDiscountAmount": 0,
+    "shippingDiscountAmount": 0,
+    "coupon": null,
+    "trackingCode": "#4785bef5",
+    "trackingUrl": "http://localhost:3000/loja/pedidos.html?tracking=%23d7359670",
+    "items": [
+      {
+        "id": "preview-1777902029458",
+        "name": "Camiseta BigSmoke Smoke Identity",
+        "quantity": 1,
+        "price": 84.9,
+        "category": "Camisetas",
+        "image": "/uploads/1777901887119-cinza_1.webp",
+        "size": "P",
+        "color": ""
+      }
+    ],
+    "events": [
+      {
+        "type": "abacatepay.card.checkout.created",
+        "id": "bill_wHK3a0rjnDS1WKJ5XDu4Z5zn",
+        "created": "2026-05-14T03:15:55.620Z"
+      }
+    ],
+    "sessionUrl": "https://app.abacatepay.com/pay/bill_wHK3a0rjnDS1WKJ5XDu4Z5zn",
+    "paidAt": "",
+    "canceledAt": "",
+    "createdAt": "2026-05-14T03:15:54.981Z",
+    "updatedAt": "2026-05-14T03:15:55.621Z"
+  },
+  {
+    "id": "order_84b57522-89a9-4d98-8ded-af3157cbcff2",
+    "orderNumber": "68",
+    "orderNumberFormatted": "#00068",
+    "orderAccessCode": "#14ef1375",
+    "hiddenInAdmin": false,
+    "stripeSessionId": "pix_char_ULTcq26hfDq1GnBajpTxubDW",
+    "paymentIntentId": "pix_char_ULTcq26hfDq1GnBajpTxubDW",
+    "stripeEventId": "",
+    "status": "pending",
+    "currency": "brl",
+    "amountSubtotal": 84.9,
+    "shippingAmount": 28,
+    "amountTotal": 112.9,
+    "paymentConfirmed": false,
+    "inventoryDebitedAt": "",
+    "customer": {
+      "name": "Cliente Stripe",
+      "email": "",
+      "phone": ""
+    },
+    "address": {
+      "cep": "",
+      "street": "",
+      "number": "",
+      "neighborhood": "",
+      "city": "",
+      "state": "",
+      "complement": ""
+    },
+    "deliveryMethod": "pix_checkout",
+    "shippingLabel": "Envio nacional",
+    "discountAmount": 0,
+    "productDiscountAmount": 0,
+    "shippingDiscountAmount": 0,
+    "coupon": null,
+    "trackingCode": "#950f1a03",
+    "trackingUrl": "http://localhost:3000/loja/pedidos.html?tracking=%2314ef1375",
+    "items": [
+      {
+        "id": "preview-1777902029458",
+        "name": "Camiseta BigSmoke Smoke Identity",
+        "quantity": 1,
+        "price": 84.9,
+        "category": "Camisetas",
+        "image": "/uploads/1777901887119-cinza_1.webp",
+        "size": "P",
+        "color": ""
+      }
+    ],
+    "events": [
+      {
+        "type": "abacatepay.pix.created",
+        "id": "pix_char_ULTcq26hfDq1GnBajpTxubDW",
+        "created": "2026-05-14T03:15:55.490Z"
+      }
+    ],
+    "sessionUrl": "",
+    "paidAt": "",
+    "canceledAt": "",
+    "createdAt": "2026-05-14T03:15:55.006Z",
+    "updatedAt": "2026-05-14T03:15:55.490Z"
+  },
+  {
     "id": "order_c8d31337-7814-4139-ad0b-f965d98845c7",
     "orderNumber": "66",
     "orderNumberFormatted": "#00066",

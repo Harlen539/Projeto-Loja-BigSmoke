@@ -13,17 +13,31 @@ function CartHeader({ onClose }) {
     <header className="cart-drawer-header">
       <div>
         <span>PEDIDO</span>
-        <h2>CARRINHO BIGSMOKE</h2>
+        <h2>Carrinho</h2>
       </div>
-      <button className="cart-close" onClick={onClose} type="button" aria-label="Fechar carrinho">×</button>
+      <button className="cart-close" onClick={onClose} type="button" aria-label="Fechar carrinho">x</button>
     </header>
   );
 }
 
+function TagIcon() {
+  return (
+    <svg aria-hidden="true" viewBox="0 0 24 24">
+      <path d="M20 12.5 12.5 20 4 11.5V4h7.5L20 12.5Z" />
+      <path d="M8.5 8.5h.01" />
+    </svg>
+  );
+}
+
 function CouponCard({ coupons, couponInput, couponMessage, hasAppliedCoupon, onApply, onInput, onPickCoupon }) {
+  const suggestions = coupons.length ? coupons.slice(0, 3) : [{ code: "BIG10" }, { code: "STREET20" }];
+
   return (
     <section className="coupon-box" aria-label="Cupom de desconto">
-      <label htmlFor="cart-coupon-code">APLIQUE O CUPOM DE DESCONTO</label>
+      <label htmlFor="cart-coupon-code">
+        <TagIcon />
+        <span>Cupom de desconto</span>
+      </label>
       <div className="coupon-input-row">
         <input
           autoComplete="off"
@@ -37,15 +51,13 @@ function CouponCard({ coupons, couponInput, couponMessage, hasAppliedCoupon, onA
         />
         <button onClick={onApply} type="button">Aplicar</button>
       </div>
-      {coupons.length ? (
-        <div className="coupon-suggestions" aria-label="Cupons sugeridos">
-          {coupons.slice(0, 3).map((coupon) => (
-            <button key={coupon.id || coupon.code} onClick={() => onPickCoupon(coupon)} type="button">
-              {coupon.code}
-            </button>
-          ))}
-        </div>
-      ) : null}
+      <div className="coupon-suggestions" aria-label="Cupons sugeridos">
+        {suggestions.map((coupon) => (
+          <button key={coupon.id || coupon.code} onClick={() => onPickCoupon(coupon)} type="button">
+            {coupon.code}
+          </button>
+        ))}
+      </div>
       {couponMessage ? <small className={hasAppliedCoupon ? "success" : "error"}>{couponMessage}</small> : null}
     </section>
   );
@@ -54,26 +66,29 @@ function CouponCard({ coupons, couponInput, couponMessage, hasAppliedCoupon, onA
 function PaymentMethodSelector({ paymentMethod, onSelect }) {
   return (
     <section className="payment-method-card" aria-label="Forma de pagamento">
-      <button
-        aria-pressed={paymentMethod === "card"}
-        className={paymentMethod === "card" ? "active" : ""}
-        data-payment-method="card"
-        onClick={() => onSelect("card")}
-        type="button"
-      >
-        <img className="payment-method-icon" src={cardIcon} alt="" aria-hidden="true" />
-        <span>Cartão</span>
-      </button>
-      <button
-        aria-pressed={paymentMethod === "pix"}
-        className={paymentMethod === "pix" ? "active" : ""}
-        data-payment-method="pix"
-        onClick={() => onSelect("pix")}
-        type="button"
-      >
-        <img className="payment-method-icon" src={pixIcon} alt="" aria-hidden="true" />
-        <span>PIX</span>
-      </button>
+      <h3>Forma de pagamento</h3>
+      <div className="payment-method-picker">
+        <button
+          aria-pressed={paymentMethod === "card"}
+          className={paymentMethod === "card" ? "active" : ""}
+          data-payment-method="card"
+          onClick={() => onSelect("card")}
+          type="button"
+        >
+          <img className="payment-method-icon" src={cardIcon} alt="" aria-hidden="true" />
+          <span>Cartao</span>
+        </button>
+        <button
+          aria-pressed={paymentMethod === "pix"}
+          className={paymentMethod === "pix" ? "active" : ""}
+          data-payment-method="pix"
+          onClick={() => onSelect("pix")}
+          type="button"
+        >
+          <img className="payment-method-icon" src={pixIcon} alt="" aria-hidden="true" />
+          <span>PIX</span>
+        </button>
+      </div>
     </section>
   );
 }
@@ -82,9 +97,9 @@ function CheckoutActions({ disabled, loading, paymentMethod, whatsappUrl, onChec
   return (
     <div className="checkout-actions">
       <button className="btn btn-primary full-width" disabled={disabled || loading} onClick={onCheckout} type="button">
-        {loading ? (paymentMethod === "card" ? "Abrindo cartão..." : "Gerando PIX...") : "FINALIZAR COMPRA"}
+        {loading ? (paymentMethod === "card" ? "Abrindo cartao..." : "Gerando PIX...") : <>FINALIZAR COMPRA <span aria-hidden="true">&gt;</span></>}
       </button>
-      <a className="btn btn-outline full-width cart-secondary-link" href={whatsappUrl} target="_blank" rel="noreferrer">WHATSAPP</a>
+      <a className="btn btn-outline full-width cart-secondary-link" href={whatsappUrl} target="_blank" rel="noreferrer">Comprar pelo WhatsApp</a>
     </div>
   );
 }
@@ -96,7 +111,7 @@ export function CartDrawer() {
   const [couponInput, setCouponInput] = useState("");
   const [appliedCoupon, setAppliedCoupon] = useState(null);
   const [couponMessage, setCouponMessage] = useState("");
-  const [paymentMethod, setPaymentMethod] = useState("pix");
+  const [paymentMethod, setPaymentMethod] = useState("card");
   const [paymentMessage, setPaymentMessage] = useState("");
 
   useEffect(() => {
@@ -141,8 +156,9 @@ export function CartDrawer() {
       setCouponMessage("");
       return;
     }
-    if (!coupon || coupon.active === false) {
+    if (!coupon || coupon.active === false || coupon.value === undefined) {
       setAppliedCoupon(null);
+      setCouponInput(code);
       setCouponMessage("Cupom nao encontrado ou inativo.");
       return;
     }
@@ -158,7 +174,7 @@ export function CartDrawer() {
 
   async function goToPayment() {
     if (!paymentMethod) {
-      setPaymentMessage("Escolha PIX ou cartão de crédito antes de finalizar.");
+      setPaymentMessage("Escolha PIX ou cartao de credito antes de finalizar.");
       return;
     }
     setPaymentMessage("");
@@ -200,7 +216,6 @@ export function CartDrawer() {
             onInput={setCouponInput}
             onPickCoupon={(coupon) => applyCoupon(coupon)}
           />
-          <CartSummary discount={discountPreview.totalDiscount} shippingDiscount={discountPreview.shippingDiscount} subtotal={cart.total} />
           <PaymentMethodSelector
             paymentMethod={paymentMethod}
             onSelect={(method) => {
@@ -208,7 +223,8 @@ export function CartDrawer() {
               setPaymentMessage("");
             }}
           />
-          <small className="payment-method-message">{paymentMessage || "Escolha PIX ou cartão de crédito antes de finalizar."}</small>
+          <CartSummary discount={discountPreview.totalDiscount} shippingDiscount={discountPreview.shippingDiscount} subtotal={cart.total} />
+          <small className="payment-method-message">{paymentMessage || "Escolha PIX ou cartao de credito antes de finalizar."}</small>
           <CheckoutActions
             disabled={!cart.items.length}
             loading={loading}

@@ -267,20 +267,39 @@
   <div class="cart-header">
     <div>
       <p class="section-kicker">PEDIDO</p>
-      <h2>CARRINHO BIGSMOKE</h2>
+      <h2>Carrinho</h2>
     </div>
     <button type="button" class="cart-close" onclick="toggleCart(false)" aria-label="Fechar carrinho">&times;</button>
   </div>
   <ul id="cart-items"></ul>
   <div class="empty-cart" id="empty-cart">Nenhuma peça adicionada ainda.</div>
   <div class="coupon-panel cart-coupon-panel">
-    <label for="cart-coupon-code">Aplique o cupom de desconto</label>
+    <label for="cart-coupon-code">
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M20 12.5 12.5 20 4 11.5V4h7.5L20 12.5Z"></path>
+        <path d="M8.5 8.5h.01"></path>
+      </svg>
+      <span>Cupom de desconto</span>
+    </label>
     <div class="coupon-input-row">
-      <input id="cart-coupon-code" type="text" placeholder="Ex: BIG10" autocomplete="off">
+      <input id="cart-coupon-code" type="text" placeholder="EX: BIG10" autocomplete="off">
       <button id="apply-cart-coupon" type="button">Aplicar</button>
     </div>
     <div id="cart-coupon-suggestions" class="coupon-suggestions"></div>
     <small id="cart-coupon-message" class="coupon-message"></small>
+  </div>
+  <div class="cart-payment-card">
+    <h3>Forma de pagamento</h3>
+    <div class="payment-method-picker legacy-payment-methods" aria-label="Forma de pagamento">
+      <button data-payment-method="card" type="button" aria-label="Cartão de crédito">
+        <img class="payment-method-icon" src="/src/imagens/icone_cartao_credito.png" alt="" aria-hidden="true">
+        <span>Cartão</span>
+      </button>
+      <button data-payment-method="pix" type="button" aria-label="PIX">
+        <img class="payment-method-icon" src="/src/imagens/icone_Pix.png" alt="" aria-hidden="true">
+        <span>PIX</span>
+      </button>
+    </div>
   </div>
   <div class="cart-summary-card" aria-label="Resumo do pedido">
     <div class="total-section cart-subtotal-row">
@@ -296,19 +315,9 @@
       <span>R$ <span id="total">0,00</span></span>
     </div>
   </div>
-  <div class="payment-method-picker legacy-payment-methods" aria-label="Forma de pagamento">
-    <button data-payment-method="card" type="button" aria-label="Cartão de crédito">
-      <img class="payment-method-icon" src="/src/imagens/icone_cartao_credito.png" alt="" aria-hidden="true">
-      <span>Cartão</span>
-    </button>
-    <button data-payment-method="pix" type="button" aria-label="PIX">
-      <img class="payment-method-icon" src="/src/imagens/icone_Pix.png" alt="" aria-hidden="true">
-      <span>PIX</span>
-    </button>
-  </div>
   <small class="payment-method-message" id="cart-payment-message" hidden></small>
-  <button id="checkout-button" type="button" class="btn btn-primary full-width">Finalizar compra</button>
-  <a id="whatsapp" target="_blank" rel="noopener" class="btn btn-outline full-width cart-secondary-link">Atendimento no WhatsApp</a>
+  <button id="checkout-button" type="button" class="btn btn-primary full-width">FINALIZAR COMPRA <span aria-hidden="true">›</span></button>
+  <a id="whatsapp" target="_blank" rel="noopener" class="btn btn-outline full-width cart-secondary-link">Comprar pelo WhatsApp</a>
 </aside>
 
 <div class="checkout-overlay" id="checkout-overlay" onclick="closeCheckout()"></div>
