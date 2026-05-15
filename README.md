@@ -1,171 +1,156 @@
-# BigSmoke Project
+# BigSmoke Style
 
-Loja de streetwear BigSmoke — React.js + Vite (frontend-loja e frontend-admin) com Node.js/Express (backend).
+Loja virtual de streetwear desenvolvida com **React + Vite** no frontend e **Node.js + Express** no backend. O projeto possui vitrine para clientes, painel administrativo, gerenciamento de produtos e pedidos, integração com pagamentos via **AbacatePay**, autenticação de administrador, suporte a login com Google, persistência com **Prisma/PostgreSQL/Supabase** e configuração de deploy para **Vercel** e **Render**.
 
-## Estrutura
-
-```text
-bigsmoke-project/
-├── backend/
-│   ├── server.js
-│   ├── package.json
-│   ├── test/
-│   └── src/
-│       ├── app.js
-│       ├── controllers/
-│       ├── middleware/
-│       ├── routes/
-│       ├── services/
-│       ├── data/
-│       ├── scripts/
-│       └── supabase/
-├── frontend-loja/
-│   ├── index.html
-│   ├── vite.config.js
-│   ├── public/
-│   └── src/
-│       ├── components/
-│       ├── context/
-│       ├── hooks/
-│       ├── locales/
-│       ├── pages/
-│       ├── services/
-│       └── styles/
-├── frontend-admin/
-│   ├── index.html
-│   ├── vite.config.js
-│   └── src/
-│       ├── components/
-│       ├── context/
-│       ├── hooks/
-│       ├── pages/
-│       ├── services/
-│       └── styles/
-├── .gitignore
-└── README.md
-```
-
-## Pré-requisitos
-
-- Node.js >= 18
-- npm >= 9
-- Conta no Supabase (obrigatório em produção)
-- Conta na AbacatePay (para PIX e checkout de cartao)
-
-## Setup local de desenvolvimento
-
-```bash
-# Backend
-cd backend
-npm install
-cp .env.example .env
-# Edite o .env com suas configurações locais
-npm run dev
-
-# Frontend da loja
-cd frontend-loja
-npm install
-cp .env.example .env
-npm run dev
-
-# Frontend admin
-cd frontend-admin
-npm install
-cp .env.example .env
-npm run dev
-```
-
-### URLs em desenvolvimento
-
-| Serviço | URL |
-|---------|-----|
-| Loja | http://localhost:5173 |
-| Admin | http://localhost:5174 |
-| API | http://localhost:3000 |
-
-### Login local (desenvolvimento)
-
-Quando não houver variáveis customizadas:
-
-- **E-mail:** `admin@bigsmoke.local`
-- **Senha:** defina `ADMIN_PASSWORD` no `.env` (mínimo 12 caracteres)
+![Node.js](https://img.shields.io/badge/Node.js-20+-339933?style=for-the-badge&logo=node.js&logoColor=white)
+![React](https://img.shields.io/badge/React-18-61DAFB?style=for-the-badge&logo=react&logoColor=black)
+![Vite](https://img.shields.io/badge/Vite-7-646CFF?style=for-the-badge&logo=vite&logoColor=white)
+![Express](https://img.shields.io/badge/Express-4-000000?style=for-the-badge&logo=express&logoColor=white)
+![Prisma](https://img.shields.io/badge/Prisma-6-2D3748?style=for-the-badge&logo=prisma&logoColor=white)
+![Supabase](https://img.shields.io/badge/Supabase-PostgreSQL-3ECF8E?style=for-the-badge&logo=supabase&logoColor=white)
 
 ---
 
-## ✅ Checklist de Deploy para Produção
+## Sobre o projeto
 
-Antes de subir em produção, confirme **todos** os itens abaixo:
+O **BigSmoke Style** é uma aplicação full stack para uma loja online de roupas/streetwear. A solução foi separada em três aplicações principais:
 
-### Segurança (obrigatório)
+1. **Loja do cliente**: vitrine de produtos, carrinho, checkout, perfil e pedidos.
+2. **Painel administrativo**: dashboard, produtos, pedidos, gráficos e configurações.
+3. **Backend/API**: autenticação, produtos, pedidos, checkout, pagamentos, upload de imagens e webhooks.
 
-- [ ] `JWT_SECRET` com pelo menos 64 caracteres aleatórios
-- [ ] `ADMIN_PASSWORD_HASH` gerado com bcrypt (não use `ADMIN_PASSWORD` em prod)
-- [ ] `ADMIN_EMAIL` trocado para o e-mail real
-- [ ] `ALLOWED_ORIGINS` com os domínios reais da loja e do admin
-- [ ] `NODE_ENV=production` definido no servidor
+O projeto foi preparado para funcionar localmente durante o desenvolvimento e também em produção com banco PostgreSQL, storage externo e backend público via HTTPS.
 
-### AbacatePay
+---
 
-- [ ] `ABACATEPAY_API_KEY` configurada somente no backend
-- [ ] `ABACATEPAY_WEBHOOK_SECRET` configurado no dashboard da AbacatePay
-- [ ] `ABACATEPAY_API_URL=https://api.abacatepay.com/v2`
-- [ ] Webhook da AbacatePay apontando para `https://seu-backend.onrender.com/api/webhooks/abacatepay`
+## Funcionalidades
 
-### Banco de dados (obrigatório em produção)
+### Loja do cliente
 
-- [ ] `SUPABASE_URL` e `SUPABASE_SERVICE_ROLE_KEY` configurados
-- [ ] Schema do Supabase aplicado (`backend/src/supabase/schema.sql`)
-- [ ] Bucket `product-images` criado no Supabase Storage
+- Listagem de produtos.
+- Página de detalhes do produto.
+- Carrinho de compras.
+- Checkout com endereço e método de pagamento.
+- Integração com AbacatePay para PIX e cartão, conforme configuração da conta.
+- Área de perfil do cliente.
+- Página de pedidos.
+- Suporte a múltiplos idiomas por arquivos de locale.
+- Assets próprios da marca BigSmoke.
+
+### Painel administrativo
+
+- Login administrativo com JWT.
+- Dashboard com indicadores.
+- Gerenciamento de produtos.
+- Upload de imagens de produtos.
+- Gerenciamento de pedidos.
+- Atualização de status dos pedidos.
+- Pedidos manuais.
+- Tela de gráficos com Recharts.
+- Configurações da loja.
+
+### Backend
+
+- API REST com Express.
+- Segurança com Helmet, CORS e rate limiting.
+- Autenticação com JWT.
+- Login com Google preparado via `google-auth-library`.
+- Integração com Prisma/PostgreSQL.
+- Suporte a Supabase para banco/storage.
+- Fallback local em JSON para desenvolvimento.
+- Integração com AbacatePay.
+- Recebimento de webhooks de pagamento.
+- Integração opcional com Twilio/WhatsApp.
+- Health checks para produção.
+
+---
+
+## Tecnologias utilizadas
 
 ### Frontend
 
-- [ ] `VITE_API_URL` nas duas frontends apontando para a URL de produção do backend
-- [ ] `sitemap.xml` com URLs reais (não localhost)
-- [ ] `manifest.webmanifest` com URLs reais e ícones de PWA
-- [ ] Logo convertida para WebP para melhor performance
-- [ ] Arquivos legados removidos de `frontend-loja/src/`: `script.js`, `produto.js`, `*.html` (exceto `index.html` na raiz)
-- [ ] Pastas duplicadas `src/imagens/` removidas (usar apenas `src/assets/`)
+- React 18
+- Vite 7
+- React Router DOM
+- Context API
+- CSS modular/arquivos de estilo do projeto
+- Recharts no painel admin
+- Supabase Client no frontend da loja
 
-### Build e deploy
+### Backend
 
-```bash
-# Build dos frontends
-cd frontend-loja && npm run build
-cd frontend-admin && npm run build
+- Node.js 20+
+- Express
+- Prisma ORM
+- PostgreSQL/Supabase
+- JWT
+- BcryptJS
+- Helmet
+- CORS
+- Express Rate Limit
+- Multer
+- Sharp
+- Google Auth Library
+- Twilio
 
-# Backend (produção)
-cd backend
-npm install --omit=dev
-npm start
-```
+### Deploy e infraestrutura
+
+- Vercel para os frontends
+- Render para o backend
+- Supabase para PostgreSQL e Storage
+- AbacatePay para pagamentos
+- Render Blueprint via `render.yaml`
 
 ---
 
-## Geração de hash de senha (bcrypt)
+## Estrutura do projeto
 
-```bash
-node -e "require('bcryptjs').hash('SUA_SENHA_AQUI', 12).then(h => console.log(h))"
-```
-
-## Geração de JWT_SECRET
-
-```bash
-node -e "console.log(require('crypto').randomBytes(64).toString('hex'))"
-```
-
-## Rodando os testes
-
-```bash
-cd backend
-npm test
-```
-
-## Prisma
-
-O backend usa Prisma automaticamente quando `DATABASE_URL` estiver definida. Sem `DATABASE_URL`, ele continua usando Supabase Client se estiver configurado; sem Supabase, usa os arquivos JSON locais.
-
-```bash
-cd backend
-npm run prisma:generate
-npm run prisma:migrate
-```
+```txt
+Projeto_Loja_BigSmoke/
+├── backend/
+│   ├── prisma/
+│   │   └── schema.prisma
+│   ├── src/
+│   │   ├── app.js
+│   │   ├── server.js
+│   │   ├── controllers/
+│   │   ├── data/
+│   │   ├── middleware/
+│   │   ├── routes/
+│   │   ├── scripts/
+│   │   ├── services/
+│   │   └── supabase/
+│   ├── .env.example
+│   ├── .env.production.example
+│   └── package.json
+│
+├── frontend-loja/
+│   ├── src/
+│   │   ├── assets/
+│   │   ├── components/
+│   │   ├── context/
+│   │   ├── hooks/
+│   │   ├── locales/
+│   │   ├── pages/
+│   │   ├── services/
+│   │   └── styles/
+│   ├── .env.example
+│   └── package.json
+│
+├── frontend-admin/
+│   ├── src/
+│   │   ├── assets/
+│   │   ├── components/
+│   │   ├── context/
+│   │   ├── hooks/
+│   │   ├── pages/
+│   │   ├── services/
+│   │   └── styles/
+│   ├── .env.example
+│   └── package.json
+│
+├── DEPLOY.md
+├── DEPLOY_RENDER.md
+├── PRODUCTION.md
+├── render.yaml
+└── README.md
