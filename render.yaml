@@ -1,33 +1,52 @@
 services:
   - type: web
-    name: bigsmokestyle-api
+    name: bigsmoke-backend
     runtime: node
-    plan: starter
-    branch: developers
+    plan: free
+    branch: main
     rootDir: backend
-    buildCommand: npm ci && npx prisma generate
-    preDeployCommand: npx prisma migrate deploy
+    buildCommand: npm install && npx prisma generate && npx prisma migrate deploy
     startCommand: npm start
-    healthCheckPath: /healthz
+    healthCheckPath: /health
     autoDeployTrigger: commit
     envVars:
       - key: NODE_ENV
         value: production
-      - key: BACKEND_URL
-        value: https://bigsmokestyle-api.onrender.com
-      - key: SITE_URL
-        value: https://bigsmokestyle.onrender.com
-      - key: STORE_URL
-        value: https://bigsmokestyle.onrender.com
+      - key: PORT
+        value: "3000"
+      - key: DATABASE_URL
+        sync: false
+      - key: DIRECT_URL
+        sync: false
       - key: FRONTEND_URL
-        value: https://bigsmokestyle.onrender.com
+        value: https://bigsmokestyle.vercel.app
       - key: ADMIN_URL
-        value: https://bigsmokestyle-admin.onrender.com
+        value: https://bigsmokestyle-admin.vercel.app
+      - key: PUBLIC_BACKEND_URL
+        sync: false
+      - key: SITE_URL
+        value: https://bigsmokestyle.vercel.app
+      - key: STORE_URL
+        value: https://bigsmokestyle.vercel.app
       - key: ALLOWED_ORIGINS
-        value: https://bigsmokestyle.onrender.com,https://bigsmokestyle-admin.onrender.com,https://bigsmokestyle.vercel.app,https://bigsmokestyle-admin.vercel.app
-      - key: ABACATEPAY_API_URL
-        value: https://api.abacatepay.com/v2
+        value: https://bigsmokestyle.vercel.app,https://bigsmokestyle-admin.vercel.app,http://localhost:5173,http://localhost:5174,http://localhost:3000
+      - key: ADMIN_EMAIL
+        sync: false
+      - key: ADMIN_PASSWORD
+        sync: false
+      - key: ADMIN_PASSWORD_HASH
+        sync: false
+      - key: JWT_SECRET
+        generateValue: true
+      - key: ABACATEPAY_API_KEY
+        sync: false
+      - key: ABACATEPAY_WEBHOOK_SECRET
+        sync: false
+      - key: ABACATEPAY_WEBHOOK_PUBLIC_KEY
+        sync: false
       - key: ABACATEPAY_BASE_URL
+        value: https://api.abacatepay.com/v1
+      - key: ABACATEPAY_API_URL
         value: https://api.abacatepay.com/v2
       - key: ABACATEPAY_CARD_MAX_INSTALLMENTS
         value: "6"
@@ -36,97 +55,36 @@ services:
       - key: STORE_STATE
         value: PB
       - key: STORE_ORIGIN_CEP
-        value: "58000000"
+        sync: false
       - key: WHATSAPP_NUMBER
-        value: "5583986494691"
+        sync: false
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_SERVICE_ROLE_KEY
+        sync: false
       - key: SUPABASE_BUCKET
         value: product-images
       - key: SUPABASE_PRODUCTS_TABLE
         value: products
       - key: SUPABASE_ORDERS_TABLE
         value: orders
+      - key: TWILIO_ACCOUNT_SID
+        sync: false
+      - key: TWILIO_AUTH_TOKEN
+        sync: false
+      - key: TWILIO_WHATSAPP_FROM
+        sync: false
+      - key: TWILIO_WHATSAPP_TO
+        sync: false
+      - key: TWILIO_MESSAGING_SERVICE_SID
+        sync: false
+      - key: TWILIO_WHATSAPP_CONTENT_SID
+        sync: false
       - key: TWILIO_CUSTOMER_CONFIRMATION_ENABLED
         value: "false"
-      - key: STRIPE_MOCK
-        value: "false"
-      - key: JWT_SECRET
-        generateValue: true
-      - key: ADMIN_EMAIL
+      - key: WHATSAPP_WEBHOOK_URL
         sync: false
-      - key: ADMIN_PASSWORD_HASH
+      - key: WHATSAPP_WEBHOOK_SECRET
         sync: false
-      - key: GOOGLE_CLIENT_ID
-        sync: false
-      - key: DATABASE_URL
-        sync: false
-      - key: SUPABASE_URL
-        sync: false
-      - key: SUPABASE_SERVICE_ROLE_KEY
-        sync: false
-      - key: ABACATEPAY_API_KEY
-        sync: false
-      - key: ABACATEPAY_WEBHOOK_SECRET
-        sync: false
-
-  - type: web
-    name: bigsmokestyle
-    runtime: static
-    branch: developers
-    rootDir: frontend-loja
-    buildCommand: npm ci && npm run build
-    staticPublishPath: ./dist
-    autoDeployTrigger: commit
-    envVars:
-      - key: VITE_BASE_PATH
-        value: /
-      - key: VITE_API_URL
-        value: https://bigsmokestyle-api.onrender.com
-      - key: VITE_WHATSAPP_NUMBER
-        value: "5583986494691"
-      - key: VITE_GOOGLE_CLIENT_ID
-        sync: false
-    routes:
-      - type: redirect
-        source: /loja
-        destination: /
-      - type: redirect
-        source: /loja/
-        destination: /
-      - type: redirect
-        source: /loja/produto.html
-        destination: /src/produto.html
-      - type: redirect
-        source: /loja/pedidos.html
-        destination: /src/pedidos.html
-      - type: redirect
-        source: /loja/perfil.html
-        destination: /src/perfil.html
-      - type: redirect
-        source: /loja/politica.html
-        destination: /src/politica.html
-      - type: redirect
-        source: /loja/*
-        destination: /*
-      - type: rewrite
-        source: /*
-        destination: /index.html
-
-  - type: web
-    name: bigsmokestyle-admin
-    runtime: static
-    branch: developers
-    rootDir: frontend-admin
-    buildCommand: npm ci && npm run build
-    staticPublishPath: ./dist
-    autoDeployTrigger: commit
-    envVars:
-      - key: VITE_BASE_PATH
-        value: /
-      - key: VITE_API_URL
-        value: https://bigsmokestyle-api.onrender.com
-      - key: VITE_STORE_URL
-        value: https://bigsmokestyle.onrender.com
-    routes:
-      - type: rewrite
-        source: /*
-        destination: /index.html
+      - key: WHATSAPP_WEBHOOK_TIMEOUT_MS
+        value: "8000"

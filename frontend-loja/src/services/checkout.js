@@ -2,9 +2,9 @@ import { apiFetch } from "./api.js";
 
 export function showPixPayment(data) {
   document.querySelector(".pix-payment-overlay")?.remove();
-  const pixCopyPaste = data.pixCopyPaste || data.brCode || "";
-  const qrCode = data.qrCode || data.brCodeBase64 || "";
-  const paymentId = data.paymentId || data.id || data.orderId || "";
+  const pixCopyPaste = data.pix?.copyPaste || data.pixCopyPaste || data.brCode || "";
+  const qrCode = data.pix?.qrCode || data.qrCode || data.brCodeBase64 || "";
+  const trackingToken = data.orderAccessCode || data.trackingCode || data.orderId || data.paymentId || data.id || "";
 
   const overlay = document.createElement("div");
   overlay.className = "pix-payment-overlay";
@@ -26,7 +26,7 @@ export function showPixPayment(data) {
       </label>
       <button type="button" data-pix-copy class="btn btn-primary full-width" style="margin-top:14px;">Copiar codigo PIX</button>
       ${data?.expiresAt ? `<small style="display:block;margin-top:10px;color:#8f8a82;text-align:center;">Expira em ${data.expiresAt}</small>` : ""}
-      <a href="/pedidos?tracking=${encodeURIComponent(paymentId)}" class="btn btn-outline full-width" style="margin-top:10px;display:flex;align-items:center;justify-content:center;">Acompanhar pedido</a>
+      <a href="/pedidos?tracking=${encodeURIComponent(trackingToken)}" class="btn btn-outline full-width" style="margin-top:10px;display:flex;align-items:center;justify-content:center;">Acompanhar pedido</a>
     </section>
   `;
   overlay.querySelector("[data-pix-close]")?.addEventListener("click", () => overlay.remove());
@@ -70,16 +70,18 @@ function openPaymentUrl(url) {
 function normalizePaymentResponse(data) {
   // CORREÇÃO: garante que checkoutUrl vem de qualquer campo que a AbacatePay retorne
   const checkoutUrl =
+    data?.paymentUrl ||
     data?.checkoutUrl ||
     data?.url ||
+    data?.data?.paymentUrl ||
     data?.data?.url ||
     data?.data?.checkoutUrl ||
     "";
   return {
     ...data,
     checkoutUrl,
-    qrCode: data?.qrCode || data?.brCodeBase64 || data?.data?.brCodeBase64 || "",
-    pixCopyPaste: data?.pixCopyPaste || data?.brCode || data?.data?.brCode || "",
+    qrCode: data?.pix?.qrCode || data?.qrCode || data?.brCodeBase64 || data?.data?.pix?.qrCode || data?.data?.brCodeBase64 || "",
+    pixCopyPaste: data?.pix?.copyPaste || data?.pixCopyPaste || data?.brCode || data?.data?.pix?.copyPaste || data?.data?.brCode || "",
     paymentId: data?.paymentId || data?.id || data?.data?.id || "",
     success: data?.success !== false,
   };
@@ -106,7 +108,7 @@ export async function startPaymentCheckout(items, couponCode = "", paymentMethod
 
   // CORREÇÃO: envia customer coletado no modal; address vazio é aceito pelo backend
   // para deliveryMethod card_checkout / pix_checkout (não exige CEP)
-  const rawData = await apiFetch("/api/payments/abacatepay/checkout", {
+  const rawData = await apiFetch("/api/checkout/session", {
     method: "POST",
     body: JSON.stringify({
       deliveryMethod: method === "card" ? "card_checkout" : "pix_checkout",
@@ -128,8 +130,8 @@ export async function startPaymentCheckout(items, couponCode = "", paymentMethod
     throw new Error(data.message || data.error || "Nao foi possivel iniciar o pagamento.");
   }
 
-  if (data.paymentId) {
-    localStorage.setItem("bigsmoke-last-order-session", data.paymentId);
+  if (data.orderAccessCode || data.orderId || data.paymentId) {
+    localStorage.setItem("bigsmoke-last-order-session", data.orderAccessCode || data.orderId || data.paymentId);
   }
 
   // CORREÇÃO: redireciona mesmo que checkoutUrl venha em data.url ou data.data.url
@@ -147,9 +149,7 @@ export async function startPaymentCheckout(items, couponCode = "", paymentMethod
   console.error("[checkout] resposta inesperada da API:", rawData);
   throw new Error(
     method === "card"
-      ? "Nao foi possivel iniciar o pagamento no cartao. Verifique a chave ABACATEPAY_API_KEY no backend."
+      ? "Nao foi possivel iniciar o pagamento no cartao. Verifique a configuracao de pagamento no backend."
       : "Nao foi possivel iniciar o pagamento PIX."
   );
 }
-
-export const startStripeCheckout = startPaymentCheckout;

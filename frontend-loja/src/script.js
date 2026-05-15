@@ -3,7 +3,7 @@
 };
 
 const DEFAULT_CONFIG = {
-  stripeConfigured: false,
+  abacatepayConfigured: false,
   whatsappNumber: "5583986494691",
   publicStore: {
     name: "BigSmoke",
@@ -136,7 +136,7 @@ const LOCALES = {
     totalFinal: "Total final",
     payButton: "Pagamento",
     checkoutNoteReady: "O PIX sera gerado aqui na loja. O frete e recalculado no servidor antes da cobranca.",
-    checkoutNoteConfig: "Configure ABACATEPAY_API_KEY no backend para habilitar o pagamento por PIX.",
+    checkoutNoteConfig: "Configure o provedor de pagamento no backend para habilitar PIX e cartao.",
     addToCart: "Adicionar ao carrinho",
     completeProduct: "Completar cadastro",
     noResultsKicker: "Sem resultado",
@@ -230,7 +230,7 @@ const LOCALES = {
     totalFinal: "Final total",
     payButton: "Payment",
     checkoutNoteReady: "PIX payment will be generated in the store. Shipping is recalculated on the server before payment.",
-    checkoutNoteConfig: "Set ABACATEPAY_API_KEY in the backend to enable PIX payment.",
+    checkoutNoteConfig: "Set the payment provider in the backend to enable PIX and card payments.",
     addToCart: "Add to cart",
     completeProduct: "Complete listing",
     noResultsKicker: "No results",
@@ -324,7 +324,7 @@ const LOCALES = {
     totalFinal: "Total final",
     payButton: "Pago",
     checkoutNoteReady: "El PIX se genera en la tienda. El envio se recalcula en el servidor antes del cobro.",
-    checkoutNoteConfig: "Configura ABACATEPAY_API_KEY en el backend para habilitar el pago por PIX.",
+    checkoutNoteConfig: "Configura el proveedor de pago en el backend para habilitar PIX y tarjeta.",
     addToCart: "Agregar al carrito",
     completeProduct: "Completar ficha",
     noResultsKicker: "Sin resultados",
@@ -652,7 +652,7 @@ function applyLocale(locale) {
   if (summarySpans[1]) summarySpans[1].textContent = copy.shipping;
   if (summarySpans[2]) summarySpans[2].textContent = copy.totalFinal;
   setText("#confirm-checkout", copy.payButton);
-  setText("#checkout-note", appConfig.stripeConfigured ? copy.checkoutNoteReady : copy.checkoutNoteConfig);
+  setText("#checkout-note", appConfig.abacatepayConfigured ? copy.checkoutNoteReady : copy.checkoutNoteConfig);
   setText(".empty-cart", copy.cartEmpty);
 
   syncLanguageSwitcher(currentLocale);
@@ -1122,7 +1122,7 @@ function renderTrackingOrder(order, { scrollIntoView = false } = {}) {
   if (order) syncVisibleTrackingState(order);
   container.innerHTML = renderOrderTracker(order);
   lastTrackedOrderSignature = getTrackedOrderSignature(order);
-  const sessionKey = order?.stripeSessionId || order?.id || "";
+  const sessionKey = order?.paymentId || order?.id || "";
   if (sessionKey) {
     startOrderTrackingPolling(sessionKey);
   }
@@ -1230,14 +1230,18 @@ function getSelectedValue(name) {
 }
 
 function buildApiUrl(path) {
-  const base = apiBaseUrl || (window.location.protocol === "file:" ? "http://localhost:3000" : window.location.origin);
-  return new URL(path, base).toString();
+  const normalizedPath = path.startsWith("/") ? path : `/${path}`;
+  const isLocalhost = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1";
+  const fallbackBase = window.location.protocol === "file:" || isLocalhost ? "http://localhost:3000" : "";
+  const base = apiBaseUrl || fallbackBase;
+  return base ? new URL(normalizedPath, base).toString() : normalizedPath;
 }
 
 async function detectApiBase() {
-  const candidates = window.location.protocol === "file:"
-    ? ["http://127.0.0.1:3000", "http://localhost:3000"]
-    : [CONFIGURED_API_BASE, window.location.origin, "http://127.0.0.1:3000", "http://localhost:3000"];
+  const isLocalhost = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1";
+  const candidates = window.location.protocol === "file:" || isLocalhost
+    ? [CONFIGURED_API_BASE, "http://127.0.0.1:3000", "http://localhost:3000"]
+    : [CONFIGURED_API_BASE];
 
   for (const base of [...new Set(candidates.filter(Boolean))]) {
     try {
@@ -1259,8 +1263,7 @@ async function detectApiBase() {
     }
   }
 
-  const isLocalFrontend = /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/i.test(window.location.origin);
-  apiBaseUrl = (window.location.protocol === "file:" || isLocalFrontend) ? "http://localhost:3000" : window.location.origin;
+  apiBaseUrl = (window.location.protocol === "file:" || isLocalhost) ? "http://localhost:3000" : "";
 }
 
 function renderCategoryFilters() {
@@ -1722,7 +1725,7 @@ function updateCheckoutSummary() {
     discountEl.textContent = `- ${formatCurrency(discount.totalDiscount)}`;
   }
   totalEl.textContent = formatCurrency(getCartTotal());
-  noteEl.textContent = appConfig.stripeConfigured
+  noteEl.textContent = appConfig.abacatepayConfigured
     ? t("checkoutNoteReady")
     : t("checkoutNoteConfig");
 }
@@ -2189,8 +2192,8 @@ function showPixPayment(data) {
 
   const brCode = String(data?.pixCopyPaste || data?.brCode || "");
   const qrCode = safeUrl(data?.qrCode || data?.brCodeBase64 || "", { allowDataImage: true });
-  const paymentId = data?.paymentId || data?.id || data?.orderId || "";
-  const tracking = encodeURIComponent(paymentId);
+  const trackingToken = data?.orderAccessCode || data?.trackingCode || data?.orderId || data?.paymentId || data?.id || "";
+  const tracking = encodeURIComponent(trackingToken);
   const overlay = document.createElement("div");
   overlay.className = "pix-payment-overlay";
   overlay.style.cssText = "position:fixed;inset:0;z-index:5000;display:grid;place-items:center;padding:16px;background:rgba(0,0,0,.76);backdrop-filter:blur(8px);";
@@ -2302,7 +2305,7 @@ async function handleCheckoutSubmit() {
   button.textContent = currentLocale === "en" ? "Opening payment..." : currentLocale === "es" ? "Abriendo pago..." : "Abrindo pagamento...";
 
   try {
-    const response = await fetch(buildApiUrl("/api/payments/abacatepay/checkout"), {
+    const response = await fetch(buildApiUrl("/api/checkout/session"), {
       method: "POST",
       headers: {
         "Content-Type": "application/json"
@@ -2315,8 +2318,8 @@ async function handleCheckoutSubmit() {
       throw new Error(result?.message || result?.error || (currentLocale === "en" ? "Could not start payment." : currentLocale === "es" ? "No fue posible iniciar el pago." : "Não foi possível iniciar o pagamento."));
     }
 
-    if (result.paymentId) {
-      localStorage.setItem("bigsmoke-last-order-session", result.paymentId);
+    if (result.orderAccessCode || result.orderId || result.paymentId) {
+      localStorage.setItem("bigsmoke-last-order-session", result.orderAccessCode || result.orderId || result.paymentId);
     }
     if (result.checkoutUrl) {
       openCheckoutUrl(result.checkoutUrl);
@@ -2331,10 +2334,10 @@ async function handleCheckoutSubmit() {
   }
 }
 
-let stripeRedirectInProgress = false;
+let paymentRedirectInProgress = false;
 
-async function redirectCartToStripe(button = null) {
-  if (stripeRedirectInProgress) return;
+async function redirectCartToPayment(button = null) {
+  if (paymentRedirectInProgress) return;
 
   if (!cart.length) {
     alert(currentLocale === "en" ? "Your cart is empty." : currentLocale === "es" ? "Tu carrito esta vacio." : "Seu carrinho esta vazio.");
@@ -2360,7 +2363,7 @@ async function redirectCartToStripe(button = null) {
   };
 
   const originalText = button?.textContent || "";
-  stripeRedirectInProgress = true;
+  paymentRedirectInProgress = true;
   if (button) {
     button.disabled = true;
     button.textContent = selectedPaymentMethod === "card"
@@ -2369,7 +2372,7 @@ async function redirectCartToStripe(button = null) {
   }
 
   try {
-    const response = await fetch(buildApiUrl("/api/payments/abacatepay/checkout"), {
+    const response = await fetch(buildApiUrl("/api/checkout/session"), {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload)
@@ -2378,21 +2381,21 @@ async function redirectCartToStripe(button = null) {
     if (!response.ok || !result.success || (!result.checkoutUrl && !result.pixCopyPaste && !result.qrCode)) {
       throw new Error(result?.message || result?.error || "Não foi possível iniciar o pagamento.");
     }
-    if (result.paymentId) {
-      localStorage.setItem("bigsmoke-last-order-session", result.paymentId);
+    if (result.orderAccessCode || result.orderId || result.paymentId) {
+      localStorage.setItem("bigsmoke-last-order-session", result.orderAccessCode || result.orderId || result.paymentId);
     }
     if (result.checkoutUrl) {
       openCheckoutUrl(result.checkoutUrl);
       return;
     }
     showPixPayment(result);
-    stripeRedirectInProgress = false;
+    paymentRedirectInProgress = false;
     if (button) {
       button.disabled = false;
       button.textContent = originalText;
     }
   } catch (error) {
-    stripeRedirectInProgress = false;
+    paymentRedirectInProgress = false;
     if (button) {
       button.disabled = false;
       button.textContent = originalText;
@@ -2519,7 +2522,7 @@ async function loadStoredOrderTracker() {
     if (!response.ok) return;
     const order = await readApiJson(response);
     renderStoredOrderTracker(order);
-    startOrderTrackingPolling(order.stripeSessionId || initialValue);
+    startOrderTrackingPolling(order.paymentId || initialValue);
   } catch {
     // Best effort only.
   }
@@ -2785,7 +2788,7 @@ function setupPaymentSuccessStyles() {
 }
 
 function setupCheckout() {
-  document.getElementById("checkout-button")?.addEventListener("click", (event) => redirectCartToStripe(event.currentTarget));
+  document.getElementById("checkout-button")?.addEventListener("click", (event) => redirectCartToPayment(event.currentTarget));
   document.getElementById("confirm-checkout")?.addEventListener("click", handleCheckoutSubmit);
   document.querySelectorAll("[data-payment-method]").forEach((button) => {
     button.addEventListener("click", () => setPaymentMethod(button.dataset.paymentMethod));

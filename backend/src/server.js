@@ -1,11 +1,10 @@
-const { app, start, __internals } = require("./app");
+const { start } = require("./app");
 
 if (require.main === module) {
-  start();
+  const PORT = Number(process.env.PORT || 3000);
+  start(PORT);
 }
 
 module.exports = {
-  app,
-  start,
-  __internals
+  start
 };

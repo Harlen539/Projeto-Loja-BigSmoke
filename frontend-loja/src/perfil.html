@@ -1963,11 +1963,11 @@
 <div class="top-ticker" aria-label="Informações da loja">
   <div class="ticker-track">
     <span>Frete para todo o Brasil</span>
-    <span>Cartão via Stripe</span>
+    <span>PIX ou cartão</span>
     <span>Streetwear autoral BigSmoke</span>
     <span>Atendimento direto pelo WhatsApp</span>
     <span>Frete para todo o Brasil</span>
-    <span>Cartão via Stripe</span>
+    <span>PIX ou cartão</span>
     <span>Streetwear autoral BigSmoke</span>
     <span>Atendimento direto pelo WhatsApp</span>
   </div>
@@ -2249,7 +2249,8 @@ window.BIGSMOKE_GOOGLE_CLIENT_ID = "%VITE_GOOGLE_CLIENT_ID%";
     return value && !value.includes('%VITE_') ? value.replace(/\/$/, '') : '';
   }
 
-  const API_BASE = runtimeValue('BIGSMOKE_API_URL') || (window.location.protocol === 'file:' ? 'http://localhost:3000' : window.location.origin);
+  const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+  const API_BASE = runtimeValue('BIGSMOKE_API_URL') || (window.location.protocol === 'file:' || isLocalhost ? 'http://localhost:3000' : '');
 
   /* helpers */
   function esc(v) {
@@ -2978,7 +2979,7 @@ window.BIGSMOKE_GOOGLE_CLIENT_ID = "%VITE_GOOGLE_CLIENT_ID%";
   function findFriendlyEventDate(order, step) {
     const events = Array.isArray(order?.events) ? order.events : [];
     const aliases = {
-      paid: ['paid', 'payment.paid', 'checkout.session.completed', 'pagamento confirmado'],
+      paid: ['paid', 'payment.paid', 'transparent.completed', 'checkout.completed', 'pagamento confirmado'],
       processing: ['processing', 'order.processing', 'em separa'],
       shipped: ['shipped', 'order.shipped', 'pedido enviado'],
       delivered: ['delivered', 'order.delivered', 'pedido entregue', 'entregue'],

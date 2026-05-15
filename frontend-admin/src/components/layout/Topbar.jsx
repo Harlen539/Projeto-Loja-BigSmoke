@@ -3,7 +3,10 @@ import { useNavigate } from "react-router-dom";
 import logo from "../../assets/logo.png";
 import { useAuth } from "../../hooks/useAuth.js";
 
-const storeUrl = import.meta.env.VITE_STORE_URL || "http://localhost:5173";
+const storeUrl =
+  window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1"
+    ? "http://localhost:5173"
+    : "https://bigsmokestyle.vercel.app";
 
 export function Topbar() {
   const { user } = useAuth();

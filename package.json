@@ -1,0 +1,7 @@
+{
+  "name": "bigsmoke-organizado",
+  "private": true,
+  "scripts": {
+    "build": "node scripts/vercel-build.mjs"
+  }
+}

@@ -904,7 +904,7 @@ body::before {
 }
 
 .soc-panel-head button,
-.soc-stripe-box button {
+.soc-payment-box button {
   min-height: 34px;
   border-radius: 8px;
   border: 1px solid rgba(245,240,232,.12);
@@ -1060,25 +1060,25 @@ body::before {
   color: var(--danger);
 }
 
-.soc-stripe-box {
+.soc-payment-box {
   border: 1px solid rgba(245,240,232,.11);
   border-radius: 10px;
   padding: 1rem;
   background: rgba(255,255,255,.025);
 }
 
-.soc-stripe-title {
+.soc-payment-title {
   display: flex;
   align-items: center;
   gap: .8rem;
 }
 
-.soc-stripe-title > strong {
+.soc-payment-title > strong {
   color: #7167ff;
   font-size: 1.6rem;
 }
 
-.soc-stripe-title i {
+.soc-payment-title i {
   width: 12px;
   height: 12px;
   border-radius: 999px;
@@ -1086,28 +1086,28 @@ body::before {
   box-shadow: 0 0 16px var(--success);
 }
 
-.soc-stripe-title span {
+.soc-payment-title span {
   display: grid;
   font-weight: 900;
 }
 
-.soc-stripe-title small {
+.soc-payment-title small {
   color: var(--success);
 }
 
-.soc-stripe-box p {
+.soc-payment-box p {
   margin: .55rem 0 1rem 4.3rem;
   color: #adc0c7;
 }
 
-.soc-stripe-stats {
+.soc-payment-stats {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   border-top: 1px solid rgba(245,240,232,.08);
   border-bottom: 1px solid rgba(245,240,232,.08);
 }
 
-.soc-stripe-stats span {
+.soc-payment-stats span {
   display: grid;
   gap: .35rem;
   padding: .9rem .65rem;
@@ -1116,11 +1116,11 @@ body::before {
   font-size: .76rem;
 }
 
-.soc-stripe-stats strong {
+.soc-payment-stats strong {
   color: var(--text);
 }
 
-.soc-stripe-box button {
+.soc-payment-box button {
   width: 100%;
   margin-top: .9rem;
   color: var(--cyan);
@@ -1182,7 +1182,7 @@ body::before {
   .soc-store-btn,
   .soc-new-btn,
   .soc-logout-btn { flex: 1; min-width: 130px; }
-.soc-stripe-stats { grid-template-columns: 1fr; }
+.soc-payment-stats { grid-template-columns: 1fr; }
 }
 
 /* ===== ADMIN FUNCTIONAL POLISH ===== */

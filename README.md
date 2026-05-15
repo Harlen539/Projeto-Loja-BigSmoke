@@ -50,7 +50,7 @@ bigsmoke-project/
 - Node.js >= 18
 - npm >= 9
 - Conta no Supabase (obrigatório em produção)
-- Conta no Stripe (para pagamentos)
+- Conta na AbacatePay (para PIX e checkout de cartao)
 
 ## Setup local de desenvolvimento
 
@@ -104,12 +104,12 @@ Antes de subir em produção, confirme **todos** os itens abaixo:
 - [ ] `ALLOWED_ORIGINS` com os domínios reais da loja e do admin
 - [ ] `NODE_ENV=production` definido no servidor
 
-### Stripe
+### AbacatePay
 
-- [ ] `STRIPE_SECRET_KEY` com chave live (`sk_live_...`)
-- [ ] `STRIPE_WEBHOOK_SECRET` configurado no dashboard Stripe
-- [ ] Webhook do Stripe apontando para `https://seu-dominio.com/api/stripe/webhook`
-- [ ] `STRIPE_MOCK=false`
+- [ ] `ABACATEPAY_API_KEY` configurada somente no backend
+- [ ] `ABACATEPAY_WEBHOOK_SECRET` configurado no dashboard da AbacatePay
+- [ ] `ABACATEPAY_API_URL=https://api.abacatepay.com/v2`
+- [ ] Webhook da AbacatePay apontando para `https://seu-backend.onrender.com/api/webhooks/abacatepay`
 
 ### Banco de dados (obrigatório em produção)
 

@@ -16,10 +16,12 @@ function runtimeValue(name) {
   return value && !value.includes("%VITE_") ? value.replace(/\/$/, "") : "";
 }
 
-const API_BASE = runtimeValue("BIGSMOKE_API_URL") || (window.location.protocol === "file:" ? "http://localhost:3000" : window.location.origin);
+const isLocalhost = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1";
+const API_BASE = runtimeValue("BIGSMOKE_API_URL") || (window.location.protocol === "file:" || isLocalhost ? "http://localhost:3000" : "");
 
 function apiUrl(path) {
-  return new URL(path, API_BASE).toString();
+  const normalizedPath = path.startsWith("/") ? path : `/${path}`;
+  return API_BASE ? new URL(normalizedPath, API_BASE).toString() : normalizedPath;
 }
 
 function escapeHtml(value) {

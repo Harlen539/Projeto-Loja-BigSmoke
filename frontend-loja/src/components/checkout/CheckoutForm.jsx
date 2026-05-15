@@ -22,9 +22,9 @@ const emptyForm = {
 function normalizeCheckoutData(data) {
   return {
     ...data,
-    checkoutUrl: data?.checkoutUrl || data?.url || data?.data?.checkoutUrl || data?.data?.url || data?.data?.paymentUrl || data?.data?.payment_url || "",
-    brCode: data?.brCode || data?.pixCopyPaste || data?.data?.brCode || data?.data?.pixCopyPaste || "",
-    brCodeBase64: data?.brCodeBase64 || data?.qrCode || data?.data?.brCodeBase64 || data?.data?.qrCode || "",
+    checkoutUrl: data?.paymentUrl || data?.checkoutUrl || data?.url || data?.data?.paymentUrl || data?.data?.checkoutUrl || data?.data?.url || data?.data?.payment_url || "",
+    brCode: data?.pix?.copyPaste || data?.brCode || data?.pixCopyPaste || data?.data?.pix?.copyPaste || data?.data?.brCode || data?.data?.pixCopyPaste || "",
+    brCodeBase64: data?.pix?.qrCode || data?.brCodeBase64 || data?.qrCode || data?.data?.pix?.qrCode || data?.data?.brCodeBase64 || data?.data?.qrCode || "",
     orderId: data?.orderId || data?.paymentId || data?.id || data?.data?.orderId || data?.data?.paymentId || data?.data?.id || "",
     orderNumberFormatted: data?.orderNumberFormatted || data?.data?.orderNumberFormatted || ""
   };
@@ -89,7 +89,7 @@ export function CheckoutForm() {
     setStatus("");
 
     try {
-      const data = normalizeCheckoutData(await apiFetch("/api/payments/abacatepay/checkout", {
+      const data = normalizeCheckoutData(await apiFetch("/api/checkout/session", {
         method: "POST",
         body: JSON.stringify({
           items: cart.items.map((item) => ({

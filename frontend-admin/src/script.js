@@ -57,7 +57,7 @@ let lastNotificationOrderIds = new Set(getStoredJson(NOTIFICATION_SEEN_KEY, []))
 let readNotificationIds = new Set(getStoredJson(NOTIFICATION_READ_KEY, []));
 let runtimeConfig = {
   paymentMetricsEnabled: false,
-  stripeConfigured: false,
+  abacatepayConfigured: false,
   dataMode: "local",
   whatsappNumber: "5583986494691"
 };
@@ -138,7 +138,7 @@ function formatCurrency(value) {
 }
 
 function buildInternalTrackingUrl(order) {
-  const trackingId = order?.orderNumberFormatted || order?.orderNumber || order?.stripeSessionId || order?.id;
+  const trackingId = order?.orderNumberFormatted || order?.orderNumber || order?.paymentId || order?.id;
   if (!trackingId) return "";
   const url = new URL("/loja/pedidos.html", window.location.origin);
   url.searchParams.set("tracking", trackingId);
@@ -235,7 +235,9 @@ function formatPercent(value) {
 }
 
 function buildUrl(path, params = {}) {
-  const url = new URL(path, apiBaseUrl || window.location.origin);
+  const isLocalhost = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1";
+  const base = apiBaseUrl || (isLocalhost ? "http://localhost:3000" : "");
+  const url = base ? new URL(path, base) : new URL(path, window.location.origin);
   Object.entries(params).forEach(([key, value]) => {
     if (value !== undefined && value !== null && String(value).length > 0) {
       url.searchParams.set(key, value);
@@ -731,13 +733,14 @@ function resetForm() {
 }
 
 async function detectApiBase() {
-  const candidates = [
-    window.location.origin,
-    "http://127.0.0.1:3000",
-    "http://localhost:3000"
-  ];
+  const configuredBase = String(window.BIGSMOKE_API_URL || "").trim();
+  const validConfiguredBase = configuredBase && !configuredBase.includes("%VITE_") ? configuredBase.replace(/\/$/, "") : "";
+  const isLocalhost = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1";
+  const candidates = isLocalhost
+    ? [validConfiguredBase, "http://127.0.0.1:3000", "http://localhost:3000"]
+    : [validConfiguredBase];
 
-  for (const base of candidates) {
+  for (const base of [...new Set(candidates.filter(Boolean))]) {
     try {
       const response = await fetch(`${base}/healthz`, { method: "GET" });
       if (response.ok) {
@@ -955,9 +958,9 @@ async function localApiFetch(path, options = {}) {
         state: "CE",
         originCep: "60000000"
       },
-      paymentProvider: "stripe",
+      paymentProvider: "abacatepay",
       paymentMetricsEnabled: false,
-      stripeConfigured: false,
+      abacatepayConfigured: false,
       webhookConfigured: false,
       twilioConfigured: false,
       twilioTemplateConfigured: false,
@@ -1146,7 +1149,7 @@ async function loadConfig() {
       ...runtimeConfig,
       ...config,
       paymentMetricsEnabled: Boolean(config.paymentMetricsEnabled),
-      stripeConfigured: Boolean(config.stripeConfigured),
+      abacatepayConfigured: Boolean(config.abacatepayConfigured),
       dataMode: config.dataMode || runtimeConfig.dataMode
     };
     uploadMode = config.dataMode || "local";
@@ -2177,7 +2180,7 @@ async function loadConfig() {
       ...runtimeConfig,
       ...config,
       paymentMetricsEnabled: Boolean(config.paymentMetricsEnabled),
-      stripeConfigured: Boolean(config.stripeConfigured),
+      abacatepayConfigured: Boolean(config.abacatepayConfigured),
       dataMode: config.dataMode || runtimeConfig.dataMode
     };
     uploadMode = config.dataMode || (apiAvailable ? "api" : "local");
@@ -2311,7 +2314,7 @@ function showAlert(type, title, desc, action) {
 }
 
 function getOrderNotificationId(order) {
-  return String(order?.id || order?.stripeSessionId || order?.orderNumberFormatted || "").trim();
+  return String(order?.id || order?.paymentId || order?.orderNumberFormatted || "").trim();
 }
 
 function getOrderDisplayCode(order) {
@@ -2522,7 +2525,7 @@ function renderSystemAlerts(config) {
     showAlert("info", "Modo local ativo", "Imagens armazenadas localmente. Configure um CDN para produção.");
   }
 
-  if (!runtimeConfig.abacatepayConfigured && !runtimeConfig.stripeConfigured) {
+  if (!runtimeConfig.abacatepayConfigured) {
     showAlert("warning", "Pagamento em modo teste", "Pagamentos reais desativados. Configure o provedor de pagamento no backend.");
   }
 

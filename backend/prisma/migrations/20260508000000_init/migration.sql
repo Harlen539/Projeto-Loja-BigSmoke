@@ -28,7 +28,7 @@ create table if not exists public.orders (
   total_amount       numeric(10,2) not null default 0,
   shipping_amount    numeric(10,2) not null default 0,
   delivery_method    text not null default 'retirada',
-  stripe_session_id  text,
+  payment_id         text,
   payment_intent_id  text,
   data               jsonb not null default '{}'::jsonb,
   created_at         timestamptz not null default now(),
@@ -47,7 +47,7 @@ create index if not exists products_active_idx on public.products (active) where
 create index if not exists products_category_idx on public.products (category);
 create index if not exists orders_updated_at_idx on public.orders (updated_at desc);
 create index if not exists orders_status_idx on public.orders (status);
-create index if not exists orders_session_idx on public.orders (stripe_session_id);
+create index if not exists orders_payment_idx on public.orders (payment_id);
 create index if not exists orders_customer_idx on public.orders (customer_email);
 create index if not exists orders_number_idx on public.orders (order_number);
 

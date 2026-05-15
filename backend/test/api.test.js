@@ -10,11 +10,63 @@ process.env.BIGSMOKE_UPLOADS_DIR = path.join(os.tmpdir(), `bigsmoke-uploads-${pr
 process.env.JWT_SECRET = "test-secret-with-at-least-32-characters";
 process.env.ADMIN_EMAIL = "admin@bigsmoke.local";
 process.env.ADMIN_PASSWORD = "admin123456789";
-process.env.STRIPE_SECRET_KEY = "sk_test_dummy";
-process.env.STRIPE_WEBHOOK_SECRET = "whsec_test_dummy";
-process.env.STRIPE_MOCK = "true";
+process.env.ABACATEPAY_API_KEY = "test_abacatepay_dummy";
+process.env.ABACATEPAY_WEBHOOK_SECRET = "test_webhook_secret";
+process.env.ABACATEPAY_API_URL = "https://api.abacatepay.com/v2";
 
-const { start, __internals } = require("../src/server");
+const originalFetch = global.fetch;
+let abacateRequestCount = 0;
+global.fetch = async (url, options = {}) => {
+  const requestUrl = String(url);
+  if (requestUrl.startsWith("https://api.abacatepay.com/v2")) {
+    abacateRequestCount += 1;
+    const body = options.body ? JSON.parse(options.body) : {};
+    if (requestUrl.endsWith("/transparents/create")) {
+      return new Response(JSON.stringify({
+        success: true,
+        error: null,
+        data: {
+          id: `pix_test_${abacateRequestCount}`,
+          amount: body.data?.amount || 100,
+          status: "PENDING",
+          brCode: "pix-copia-e-cola-teste",
+          brCodeBase64: "data:image/png;base64,AAAA",
+          expiresAt: "2026-05-15T12:00:00.000Z",
+          externalId: body.data?.externalId || ""
+        }
+      }), { status: 200, headers: { "Content-Type": "application/json" } });
+    }
+    if (requestUrl.endsWith("/products/create")) {
+      return new Response(JSON.stringify({
+        success: true,
+        error: null,
+        data: {
+          id: `prod_test_${abacateRequestCount}`,
+          externalId: body.externalId,
+          name: body.name,
+          price: body.price,
+          currency: "BRL",
+          status: "ACTIVE"
+        }
+      }), { status: 200, headers: { "Content-Type": "application/json" } });
+    }
+    if (requestUrl.endsWith("/checkouts/create")) {
+      return new Response(JSON.stringify({
+        success: true,
+        error: null,
+        data: {
+          id: `checkout_test_${abacateRequestCount}`,
+          externalId: body.externalId,
+          url: "https://app.abacatepay.com/pay/checkout_test",
+          status: "PENDING"
+        }
+      }), { status: 200, headers: { "Content-Type": "application/json" } });
+    }
+  }
+  return originalFetch(url, options);
+};
+
+const { start } = require("../src/server");
 
 let server;
 let baseUrl;
@@ -53,6 +105,7 @@ test.after(async () => {
   if (server) {
     await new Promise((resolve) => server.close(resolve));
   }
+  global.fetch = originalFetch;
 });
 
 test("login returns a token", async () => {
@@ -349,6 +402,7 @@ test("checkout session creates a pending order", async () => {
         state: "CE"
       },
       deliveryMethod: "retirada",
+      paymentMethod: "pix",
       items: [
         {
           id: "camiseta-oversized",
@@ -360,7 +414,9 @@ test("checkout session creates a pending order", async () => {
 
   assert.equal(response.status, 200);
   const data = await response.json();
-  assert.ok(data.url);
+  assert.equal(data.provider, "abacatepay");
+  assert.equal(data.method, "pix");
+  assert.ok(data.pix.copyPaste);
   assert.ok(data.orderId);
 
   const ordersResponse = await fetch(`${baseUrl}/api/admin/orders?query=cliente&page=1&limit=10`, {
@@ -372,7 +428,36 @@ test("checkout session creates a pending order", async () => {
   assert.ok(ordersData.items.some((order) => order.id === data.orderId));
 });
 
-test("stripe webhook marks order as paid", async () => {
+test("checkout session creates a card payment URL", async () => {
+  const response = await fetch(`${baseUrl}/api/checkout/session`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      customer: {
+        name: "Cliente Cartao",
+        email: "cartao@teste.com",
+        phone: "5583986494691"
+      },
+      deliveryMethod: "retirada",
+      paymentMethod: "card",
+      items: [
+        {
+          id: "moletom-classic",
+          quantity: 1
+        }
+      ]
+    })
+  });
+
+  assert.equal(response.status, 200);
+  const data = await response.json();
+  assert.equal(data.provider, "abacatepay");
+  assert.equal(data.method, "card");
+  assert.ok(data.paymentUrl);
+  assert.ok(data.orderId);
+});
+
+test("abacatepay webhook marks order as paid", async () => {
   const sessionResponse = await fetch(`${baseUrl}/api/checkout/session`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -388,6 +473,7 @@ test("stripe webhook marks order as paid", async () => {
         state: "CE"
       },
       deliveryMethod: "retirada",
+      paymentMethod: "pix",
       items: [
         {
           id: "moletom-classic",
@@ -399,27 +485,22 @@ test("stripe webhook marks order as paid", async () => {
 
   const sessionData = await sessionResponse.json();
   const payload = JSON.stringify({
-    id: "evt_test_checkout_completed",
-    type: "checkout.session.completed",
-    created: Math.floor(Date.now() / 1000),
+    id: "evt_test_transparent_completed",
+    event: "transparent.completed",
     data: {
-      object: {
+      transparent: {
         id: sessionData.id,
-        payment_intent: "pi_test_123"
+        externalId: sessionData.orderId,
+        receiptUrl: "https://app.abacatepay.com/receipt/test"
       }
     }
   });
 
-  const signature = __internals.stripe.webhooks.generateTestHeaderString({
-    payload,
-    secret: __internals.WEBHOOK_SECRET
-  });
-
-  const webhookResponse = await fetch(`${baseUrl}/api/stripe/webhook`, {
+  const webhookResponse = await fetch(`${baseUrl}/api/webhooks/abacatepay`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      "Stripe-Signature": signature
+      "x-webhook-secret": "test_webhook_secret"
     },
     body: payload
   });
@@ -433,13 +514,28 @@ test("stripe webhook marks order as paid", async () => {
   });
   const order = await orderResponse.json();
   assert.equal(order.status, "paid");
-  assert.equal(order.paymentIntentId, "pi_test_123");
+  assert.equal(order.paymentId, sessionData.id);
+  assert.equal(order.paymentProvider, "abacatepay");
 });
 
 test("security headers include baseline XSS protections", async () => {
+  const response = await fetch(`${baseUrl}/health`);
+
+  assert.equal(response.status, 200);
+  const payload = await response.json();
+  assert.deepEqual(payload, {
+    status: "ok",
+    service: "bigsmoke-backend"
+  });
+});
+
+test("healthz returns deployment diagnostics", async () => {
   const response = await fetch(`${baseUrl}/healthz`);
 
   assert.equal(response.status, 200);
+  const payload = await response.json();
+  assert.equal(payload.status, "ok");
+  assert.equal(payload.service, "bigsmoke-backend");
   assert.match(response.headers.get("content-security-policy") || "", /object-src 'none'/);
   assert.equal(response.headers.get("x-content-type-options"), "nosniff");
   assert.equal(response.headers.get("x-frame-options"), "SAMEORIGIN");
@@ -522,6 +618,7 @@ test("admin can manage coupons and checkout applies product discounts", async ()
         state: "CE"
       },
       deliveryMethod: "retirada",
+      paymentMethod: "pix",
       items: [{ id: "moletom-classic", quantity: 1 }]
     })
   });
@@ -569,6 +666,7 @@ test("checkout applies shipping coupons only to freight", async () => {
         state: "CE"
       },
       deliveryMethod: "national",
+      paymentMethod: "pix",
       items: [{ id: "moletom-classic", quantity: 1 }]
     })
   });
@@ -633,6 +731,7 @@ test("order and checkout customer input is sanitized before storage", async () =
         state: "CE"
       },
       deliveryMethod: "retirada",
+      paymentMethod: "pix",
       items: [{ id: "moletom-classic", quantity: 1 }]
     })
   });

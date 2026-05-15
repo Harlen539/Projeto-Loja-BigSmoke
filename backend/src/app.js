@@ -13,10 +13,15 @@ const jwt = require("jsonwebtoken");
 const multer = require("multer");
 const sharp = require("sharp");
 const Twilio = require("twilio");
-const Stripe = require("stripe");
 const { createClient } = require("@supabase/supabase-js");
 require("dotenv").config();
+const {
+  createAbacatePayment,
+  isConfigured: isAbacatePayConfigured,
+  verifyWebhookSignature
+} = require("./services/abacatepay");
 const { prisma, usePrisma } = require("./services/prismaService");
+const SERVICE_NAME = "bigsmoke-backend";
 
 const repoRoot = path.resolve(__dirname, "..", "..");
 const frontendLojaDir = path.join(repoRoot, "frontend-loja", "src");
@@ -34,18 +39,7 @@ const PRODUCT_TABLE = process.env.SUPABASE_PRODUCTS_TABLE || "products";
 const ORDER_TABLE = process.env.SUPABASE_ORDERS_TABLE || "orders";
 const JWT_SECRET = process.env.JWT_SECRET || "";
 const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID || "";
-const ABACATEPAY_API_KEY = process.env.ABACATEPAY_API_KEY || "";
-const ABACATEPAY_API_URL = (process.env.ABACATEPAY_API_URL || process.env.ABACATEPAY_BASE_URL || "https://api.abacatepay.com/v2").replace(/\/$/, "");
 const ABACATEPAY_WEBHOOK_SECRET = process.env.ABACATEPAY_WEBHOOK_SECRET || "";
-const ABACATEPAY_CARD_MAX_INSTALLMENTS = Math.min(12, Math.max(1, Number(process.env.ABACATEPAY_CARD_MAX_INSTALLMENTS || 6)));
-const STRIPE_SECRET_KEY = process.env.STRIPE_SECRET_KEY || "";
-const WEBHOOK_SECRET = process.env.STRIPE_WEBHOOK_SECRET || "";
-const MOCK_STRIPE = process.env.STRIPE_MOCK === "true";
-const USE_ABACATEPAY = Boolean(ABACATEPAY_API_KEY) && !MOCK_STRIPE;
-const STRIPE_LIVE_MODE = STRIPE_SECRET_KEY.startsWith("sk_live_") && !MOCK_STRIPE;
-const stripe = process.env.STRIPE_SECRET_KEY
-  ? new Stripe(STRIPE_SECRET_KEY, { apiVersion: "2026-02-25.clover" })
-  : null;
 const googleOAuthClient = GOOGLE_CLIENT_ID ? new OAuth2Client(GOOGLE_CLIENT_ID) : null;
 
 const supabase = process.env.SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY
@@ -54,8 +48,8 @@ const supabase = process.env.SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_K
 
 const useSupabase = Boolean(supabase) && !usePrisma;
 const DEFAULT_STORE = {
-  city: process.env.STORE_CITY || "Fortaleza",
-  state: process.env.STORE_STATE || "CE",
+  city: process.env.STORE_CITY || "Joao Pessoa",
+  state: process.env.STORE_STATE || "PB",
   originCep: process.env.STORE_ORIGIN_CEP || "60000000"
 };
 const FREE_SHIPPING_CITIES = new Set(["joao pessoa", "joão pessoa", "bayeux", "cabedelo"]);
@@ -116,12 +110,12 @@ app.use(helmet({
       "base-uri": ["'self'"],
       "object-src": ["'none'"],
       "frame-ancestors": ["'self'"],
-      "script-src": ["'self'", "'unsafe-inline'", "https://js.stripe.com", "https://accounts.google.com"],
+      "script-src": ["'self'", "'unsafe-inline'", "https://accounts.google.com"],
       "style-src": ["'self'", "'unsafe-inline'", "https:"],
       "img-src": ["'self'", "data:", "blob:", "https:"],
-      "connect-src": ["'self'", "https://api.stripe.com", "https://viacep.com.br", "https://accounts.google.com"],
-      "frame-src": ["'self'", "https://js.stripe.com", "https://checkout.stripe.com", "https://accounts.google.com"],
-      "form-action": ["'self'", "https://checkout.stripe.com"],
+      "connect-src": ["'self'", "https://viacep.com.br", "https://accounts.google.com"],
+      "frame-src": ["'self'", "https://accounts.google.com"],
+      "form-action": ["'self'"],
       "upgrade-insecure-requests": []
     }
   },
@@ -144,6 +138,7 @@ function validateRuntimeConfig() {
 
   const adminPassword = process.env.ADMIN_PASSWORD || "";
   const adminPasswordHash = process.env.ADMIN_PASSWORD_HASH || "";
+  const adminEmail = normalizeText(process.env.ADMIN_EMAIL || "");
 
   if (!adminPasswordHash && !adminPassword) {
     issues.push("ADMIN_PASSWORD ou ADMIN_PASSWORD_HASH deve ser definido.");
@@ -152,11 +147,17 @@ function validateRuntimeConfig() {
   }
 
   if (isProduction) {
-    if (!usePrisma && (!process.env.SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY)) {
-      issues.push("Em produção, defina DATABASE_URL para Prisma ou SUPABASE_URL e SUPABASE_SERVICE_ROLE_KEY para persistência de dados.");
+    if (!adminEmail) {
+      issues.push("Em produÃ§Ã£o, ADMIN_EMAIL deve ser definido.");
+    }
+    if (!process.env.DATABASE_URL) {
+      issues.push("Em produção, DATABASE_URL deve apontar para o PostgreSQL do Supabase via Prisma.");
     }
     if (!process.env.ALLOWED_ORIGINS) {
       issues.push("Em produção, ALLOWED_ORIGINS deve ser definido para restringir o CORS.");
+    }
+    if (!process.env.ABACATEPAY_API_KEY) {
+      issues.push("Em produção, ABACATEPAY_API_KEY deve ser definido para habilitar pagamentos.");
     }
   }
 
@@ -166,6 +167,16 @@ function validateRuntimeConfig() {
       throw new Error(message);
     }
     console.warn(message);
+  }
+}
+
+function isProductionEnvironment() {
+  return process.env.NODE_ENV === "production";
+}
+
+function assertProductionDatabaseMode(resourceName) {
+  if (isProductionEnvironment() && !usePrisma) {
+    throw new Error(`Em produÃ§Ã£o, ${resourceName} exige Prisma com DATABASE_URL; fallback local estÃ¡ desabilitado.`);
   }
 }
 
@@ -327,58 +338,6 @@ function getCouponDiscount(coupon, subtotal, shippingAmount) {
   };
 }
 
-function expandDiscountedLineItems(items, productDiscount, baseUrl) {
-  const units = [];
-  items.forEach((item) => {
-    const quantity = Math.max(1, Math.floor(normalizeNumber(item.quantity, 1)));
-    const unitAmount = Math.max(0, Math.round(normalizeNumber(item.price, 0) * 100));
-    for (let index = 0; index < quantity; index += 1) {
-      units.push({ item, unitAmount, discount: 0 });
-    }
-  });
-
-  const subtotalCents = units.reduce((sum, unit) => sum + unit.unitAmount, 0);
-  const discountCents = Math.min(subtotalCents, Math.max(0, Math.round(productDiscount * 100)));
-  if (subtotalCents > 0 && discountCents > 0) {
-    let assigned = 0;
-    const allocations = units.map((unit, index) => {
-      const exact = (discountCents * unit.unitAmount) / subtotalCents;
-      const floor = Math.floor(exact);
-      assigned += floor;
-      return { index, floor, remainder: exact - floor };
-    });
-    allocations
-      .sort((a, b) => b.remainder - a.remainder)
-      .slice(0, discountCents - assigned)
-      .forEach((allocation) => { allocation.floor += 1; });
-    allocations.forEach((allocation) => {
-      units[allocation.index].discount = allocation.floor;
-    });
-  }
-
-  return units
-    .map(({ item, unitAmount, discount }) => ({
-      item,
-      amount: Math.max(0, unitAmount - discount)
-    }))
-    .filter(({ amount }) => amount > 0)
-    .map(({ item, amount }) => ({
-      price_data: {
-        currency: "brl",
-        product_data: {
-          name: item.size ? `${item.name} - ${item.size}` : item.name,
-          description: item.size ? `${item.category} - Tamanho ${item.size}` : item.category,
-          images: (() => {
-            const imageUrl = toAbsoluteHttpUrl(item.image, baseUrl);
-            return imageUrl ? [imageUrl] : [];
-          })()
-        },
-        unit_amount: amount
-      },
-      quantity: 1
-    }));
-}
-
 function sendServerError(res) {
   return res.status(500).json({ error: "Erro interno do servidor." });
 }
@@ -439,6 +398,7 @@ function normalizeColors(input, fallback) {
 function normalizeOrderStatus(value, fallback = "pending") {
   const raw = normalizeText(value).toLowerCase();
   const aliases = {
+    waiting_payment: "pending",
     pending_payment: "pending",
     pending: "pending",
     paid: "paid",
@@ -451,6 +411,35 @@ function normalizeOrderStatus(value, fallback = "pending") {
     refunded: "canceled"
   };
   return aliases[raw] || aliases[normalizeText(fallback).toLowerCase()] || "pending";
+}
+
+function normalizePaymentStatus(value, fallback = "pending") {
+  const raw = normalizeText(value).toLowerCase();
+  const aliases = {
+    pending: "pending",
+    waiting_payment: "pending",
+    unpaid: "pending",
+    paid: "paid",
+    confirmed: "paid",
+    approved: "paid",
+    processing: "processing",
+    refunded: "refunded",
+    canceled: "canceled",
+    cancelled: "canceled",
+    failed: "failed"
+  };
+  return aliases[raw] || aliases[normalizeText(fallback).toLowerCase()] || "pending";
+}
+
+function normalizePaymentMethod(value, fallback = "PIX") {
+  const raw = normalizeText(value).toLowerCase();
+  if (["card", "credit_card", "cartao", "cartao_credito"].includes(raw)) {
+    return "CARD";
+  }
+  if (["pix", "pix_checkout"].includes(raw)) {
+    return "PIX";
+  }
+  return normalizeText(fallback).toUpperCase() || "PIX";
 }
 
 function orderStatusDebitsInventory(status) {
@@ -526,9 +515,12 @@ function normalizeOrder(input = {}, current = {}) {
     orderNumberFormatted: sanitizePlainText(input.orderNumberFormatted || current.orderNumberFormatted || formatOrderNumberValue(orderNumber), 40),
     orderAccessCode: sanitizePlainText(input.orderAccessCode || current.orderAccessCode, 40) || null,
     hiddenInAdmin: normalizeBoolean(input.hiddenInAdmin, current.hiddenInAdmin || false),
-    stripeSessionId: sanitizePlainText(input.stripeSessionId, 180) || current.stripeSessionId || "",
+    paymentId: sanitizePlainText(input.paymentId, 180) || current.paymentId || "",
     paymentIntentId: sanitizePlainText(input.paymentIntentId, 180) || current.paymentIntentId || "",
-    stripeEventId: sanitizePlainText(input.stripeEventId, 180) || current.stripeEventId || "",
+    paymentEventId: sanitizePlainText(input.paymentEventId, 180) || current.paymentEventId || "",
+    paymentProvider: sanitizePlainText(input.paymentProvider, 40) || current.paymentProvider || "",
+    paymentMethod: sanitizePlainText(input.paymentMethod, 40) || current.paymentMethod || "",
+    paymentStatus: normalizePaymentStatus(input.paymentStatus || current.paymentStatus || (current.paymentConfirmed ? "paid" : "pending")),
     status,
     currency: sanitizePlainText(input.currency, 10) || current.currency || "brl",
     amountSubtotal: normalizeNumber(input.amountSubtotal, current.amountSubtotal || 0),
@@ -556,6 +548,9 @@ function normalizeOrder(input = {}, current = {}) {
     productDiscountAmount: normalizeNumber(input.productDiscountAmount, current.productDiscountAmount || 0),
     shippingDiscountAmount: normalizeNumber(input.shippingDiscountAmount, current.shippingDiscountAmount || 0),
     coupon: input.coupon ? normalizeCoupon(input.coupon) : current.coupon || null,
+    paymentQrCode: sanitizePlainText(input.paymentQrCode || current.paymentQrCode, 4000),
+    paymentCopyPaste: sanitizePlainText(input.paymentCopyPaste || current.paymentCopyPaste, 8000),
+    paymentCheckoutUrl: sanitizeSafeUrl(input.paymentCheckoutUrl || current.paymentCheckoutUrl || input.sessionUrl || current.sessionUrl),
     trackingCode: sanitizePlainText(input.trackingCode || input.tracking_code || current.trackingCode, 120),
     trackingUrl: sanitizeSafeUrl(input.trackingUrl || input.tracking_url || current.trackingUrl),
     items: sanitizeOrderItems(Array.isArray(input.items) ? input.items : Array.isArray(current.items) ? current.items : []),
@@ -563,6 +558,8 @@ function normalizeOrder(input = {}, current = {}) {
     sessionUrl: sanitizeSafeUrl(input.sessionUrl || current.sessionUrl),
     paidAt: sanitizePlainText(input.paidAt || current.paidAt, 40),
     canceledAt: sanitizePlainText(input.canceledAt || current.canceledAt, 40),
+    origin: sanitizePlainText(input.origin || current.origin, 120),
+    notes: sanitizePlainText(input.notes || current.notes, 1000),
     createdAt: current.createdAt || input.createdAt || nowIso(),
     updatedAt: nowIso()
   };
@@ -629,7 +626,7 @@ function maskPublicAddress(address = {}) {
 }
 
 function makeBaseUrl(req) {
-  return process.env.BACKEND_URL || process.env.SITE_URL || `${req.protocol}://${req.get("host")}`;
+  return process.env.PUBLIC_BACKEND_URL || process.env.BACKEND_URL || process.env.SITE_URL || `${req.protocol}://${req.get("host")}`;
 }
 
 function makeCheckoutBaseUrl(req) {
@@ -674,18 +671,23 @@ function normalizeOriginValue(value) {
 function getAllowedOrigins() {
   const raw = [
     process.env.SITE_URL,
-    process.env.ADMIN_URL,
-    "http://localhost:3000",
-    "http://127.0.0.1:3000",
-    "http://localhost:5173",
-    "http://127.0.0.1:5173",
-    "http://localhost:5174",
-    "http://127.0.0.1:5174",
-    "http://localhost:4173",
-    "http://127.0.0.1:4173",
-    "http://localhost:4174",
-    "http://127.0.0.1:4174"
+    process.env.ADMIN_URL
   ];
+
+  if (process.env.NODE_ENV !== "production") {
+    raw.push(
+      "http://localhost:3000",
+      "http://127.0.0.1:3000",
+      "http://localhost:5173",
+      "http://127.0.0.1:5173",
+      "http://localhost:5174",
+      "http://127.0.0.1:5174",
+      "http://localhost:4173",
+      "http://127.0.0.1:4173",
+      "http://localhost:4174",
+      "http://127.0.0.1:4174"
+    );
+  }
 
   if (process.env.ALLOWED_ORIGINS) {
     process.env.ALLOWED_ORIGINS.split(",").forEach((origin) => {
@@ -705,31 +707,37 @@ function getAllowedOrigins() {
     });
 }
 
-function createCorsOptions() {
+function allowRequestWithoutOrigin(req) {
+  if (!req) return false;
+  const pathname = String(req.path || "");
+  return pathname === "/health"
+    || pathname === "/healthz"
+    || pathname === "/api/webhooks/abacatepay"
+    || pathname === "/api/abacatepay/webhook"
+    || pathname === "/api/payments/abacatepay/webhook";
+}
+
+function createCorsOptions(req, callback) {
   const allowedOrigins = new Set(getAllowedOrigins());
-  return {
-    origin(origin, callback) {
+  callback(null, {
+    origin(origin, corsCallback) {
       if (!origin) {
-        callback(null, true);
+        corsCallback(null, !isProductionEnvironment() || allowRequestWithoutOrigin(req));
         return;
       }
-      if (process.env.NODE_ENV !== "production") {
-        callback(null, true);
+      if (!isProductionEnvironment()) {
+        corsCallback(null, true);
         return;
       }
       const normalizedOrigin = String(origin).replace(/\/$/, "");
       if (allowedOrigins.has(origin) || allowedOrigins.has(normalizedOrigin)) {
-        callback(null, true);
+        corsCallback(null, true);
         return;
       }
-      if (process.env.NODE_ENV !== "production" && /^https?:\/\/(localhost|127\.0\.0\.1)/.test(origin)) {
-        callback(null, true);
-        return;
-      }
-      callback(new Error("Origin not allowed by CORS"));
+      corsCallback(new Error("Origin not allowed by CORS"));
     },
     credentials: true
-  };
+  });
 }
 
 function rawBodySaver(req, _res, buf) {
@@ -738,9 +746,57 @@ function rawBodySaver(req, _res, buf) {
   }
 }
 
+async function checkDatabaseHealth() {
+  if (usePrisma) {
+    await prisma.$queryRawUnsafe("SELECT 1");
+    return "connected";
+  }
+
+  if (useSupabase) {
+    const { error } = await supabase.from(PRODUCT_TABLE).select("id", { head: true, count: "exact" }).limit(1);
+    if (error) {
+      throw new Error(error.message);
+    }
+    return "connected";
+  }
+
+  return "local";
+}
+
 async function ensureDataFiles() {
-  await fs.mkdir(dataDir, { recursive: true });
   await fs.mkdir(uploadsDir, { recursive: true });
+
+  if (usePrisma) {
+    await prisma.orderCounter.upsert({
+      where: { id: "orders" },
+      create: { id: "orders", next: 1 },
+      update: {}
+    });
+
+    await prisma.storeSetting.upsert({
+      where: { key: "public" },
+      create: { key: "public", data: DEFAULT_PUBLIC_SETTINGS },
+      update: {}
+    });
+
+    for (const coupon of defaultCoupons.map((item) => normalizeCoupon(item))) {
+      await prisma.coupon.upsert({
+        where: { id: coupon.id },
+        create: couponToPrismaData(coupon),
+        update: {}
+      });
+    }
+
+    const productCount = await prisma.product.count();
+    if (productCount === 0) {
+      for (const product of seedProducts.map((item) => normalizeProduct(item, item))) {
+        await prisma.product.create({ data: productToPrismaData(product) });
+      }
+    }
+    return;
+  }
+
+  await fs.mkdir(dataDir, { recursive: true });
 
   try {
     await fs.access(couponsFile);
@@ -819,6 +875,16 @@ function normalizeStoreSettings(store = {}) {
 }
 
 async function readPublicSettings() {
+  if (usePrisma) {
+    const saved = await prisma.storeSetting.findUnique({ where: { key: "public" } });
+    const payload = saved?.data && typeof saved.data === "object" ? saved.data : DEFAULT_PUBLIC_SETTINGS;
+    return {
+      ...DEFAULT_PUBLIC_SETTINGS,
+      ...payload,
+      store: normalizeStoreSettings({ ...DEFAULT_PUBLIC_SETTINGS.store, ...(payload.store || {}) })
+    };
+  }
+
   const saved = await readJsonValue(settingsFile, DEFAULT_PUBLIC_SETTINGS);
   return {
     ...DEFAULT_PUBLIC_SETTINGS,
@@ -834,11 +900,27 @@ async function writePublicSettings(settings) {
     ...settings,
     store: normalizeStoreSettings({ ...current.store, ...(settings.store || {}) })
   };
+  if (usePrisma) {
+    await prisma.storeSetting.upsert({
+      where: { key: "public" },
+      create: { key: "public", data: next },
+      update: { data: next }
+    });
+    return next;
+  }
   await writeJsonFile(settingsFile, next);
   return next;
 }
 
 async function readCoupons({ activeOnly = false } = {}) {
+  if (usePrisma) {
+    const rows = await prisma.coupon.findMany({
+      where: activeOnly ? { active: true } : undefined,
+      orderBy: { updatedAt: "desc" }
+    });
+    return rows.map(couponFromPrismaRow).filter((coupon) => coupon.code);
+  }
+
   const coupons = await readJsonFile(couponsFile, defaultCoupons);
   const normalized = coupons.map((coupon) => normalizeCoupon(coupon)).filter((coupon) => coupon.code);
   return activeOnly ? normalized.filter((coupon) => coupon.active) : normalized;
@@ -846,6 +928,22 @@ async function readCoupons({ activeOnly = false } = {}) {
 
 async function writeCoupons(coupons) {
   const normalized = coupons.map((coupon) => normalizeCoupon(coupon)).filter((coupon) => coupon.code);
+  if (usePrisma) {
+    await prisma.$transaction(async (tx) => {
+      const ids = normalized.map((coupon) => coupon.id);
+      await tx.coupon.deleteMany({
+        where: ids.length ? { id: { notIn: ids } } : {}
+      });
+      for (const coupon of normalized) {
+        await tx.coupon.upsert({
+          where: { id: coupon.id },
+          create: couponToPrismaData(coupon),
+          update: couponToPrismaData(coupon)
+        });
+      }
+    });
+    return normalized;
+  }
   await writeJsonFile(couponsFile, normalized);
   return normalized;
 }
@@ -883,23 +981,179 @@ function productToPrismaData(product) {
   };
 }
 
+function couponToPrismaData(coupon) {
+  const normalized = normalizeCoupon(coupon);
+  return {
+    id: normalized.id,
+    code: normalized.code,
+    type: normalized.type,
+    target: normalized.target,
+    value: normalizeNumber(normalized.value, 0),
+    active: normalizeBoolean(normalized.active, true),
+    minOrderValue: normalizeNumber(normalized.minOrderValue, 0),
+    usageLimit: Math.max(0, Math.floor(normalizeNumber(normalized.usageLimit, 0))),
+    data: normalized
+  };
+}
+
+function couponFromPrismaRow(row) {
+  return normalizeCoupon({
+    ...(row?.data && typeof row.data === "object" ? row.data : {}),
+    id: row?.id,
+    code: row?.code,
+    type: row?.type,
+    target: row?.target,
+    value: normalizeNumber(row?.value, 0),
+    active: row?.active !== false,
+    minOrderValue: normalizeNumber(row?.minOrderValue, 0),
+    usageLimit: Math.max(0, Math.floor(normalizeNumber(row?.usageLimit, 0)))
+  });
+}
+
 function orderToPrismaData(order) {
   return {
     id: order.id,
     orderNumber: order.orderNumber ? String(order.orderNumber) : null,
+    orderNumberFormatted: order.orderNumberFormatted || null,
+    orderAccessCode: order.orderAccessCode || null,
     status: normalizeOrderStatus(order.status, "pending"),
+    paymentStatus: normalizePaymentStatus(order.paymentStatus, order.paymentConfirmed ? "paid" : "pending"),
+    paymentMethod: normalizePaymentMethod(order.paymentMethod),
+    paymentProvider: order.paymentProvider || "abacatepay",
     customerName: order.customer?.name || "",
     customerEmail: order.customer?.email || "",
     customerPhone: order.customer?.phone || "",
+    currency: order.currency || "brl",
+    amountSubtotal: normalizeNumber(order.amountSubtotal, 0),
     totalAmount: normalizeNumber(order.amountTotal, 0),
     shippingAmount: normalizeNumber(order.shippingAmount, 0),
+    discountAmount: normalizeNumber(order.discountAmount, 0),
+    productDiscountAmount: normalizeNumber(order.productDiscountAmount, 0),
+    shippingDiscountAmount: normalizeNumber(order.shippingDiscountAmount, 0),
     deliveryMethod: order.deliveryMethod || "retirada",
-    stripeSessionId: order.stripeSessionId || null,
+    shippingLabel: order.shippingLabel || "",
+    paymentId: order.paymentId || null,
     paymentIntentId: order.paymentIntentId || null,
+    paymentEventId: order.paymentEventId || null,
+    trackingCode: order.trackingCode || null,
+    trackingUrl: order.trackingUrl || null,
+    sessionUrl: order.sessionUrl || order.paymentCheckoutUrl || null,
+    hiddenInAdmin: Boolean(order.hiddenInAdmin),
+    paymentConfirmed: Boolean(order.paymentConfirmed),
+    paidAt: toDateOrUndefined(order.paidAt),
+    canceledAt: toDateOrUndefined(order.canceledAt),
+    inventoryDebitedAt: toDateOrUndefined(order.inventoryDebitedAt),
+    couponCode: order.coupon?.code || null,
     data: order,
     createdAt: toDateOrUndefined(order.createdAt),
     updatedAt: toDateOrUndefined(order.updatedAt)
   };
+}
+
+function orderItemsToPrismaData(order) {
+  return sanitizeOrderItems(order.items || []).map((item, index) => ({
+    id: sanitizeIdentifier(`${order.id}_${index + 1}_${item.id || "item"}`, `${order.id}_item_${index + 1}`),
+    productId: sanitizeIdentifier(item.id) || null,
+    name: item.name || "",
+    category: item.category || "",
+    image: item.image || "",
+    size: item.size || "",
+    color: item.color || "",
+    quantity: Math.max(1, Math.floor(normalizeNumber(item.quantity, 1))),
+    price: normalizeNumber(item.price, 0),
+    data: item,
+    createdAt: toDateOrUndefined(item.createdAt || order.createdAt),
+    updatedAt: toDateOrUndefined(item.updatedAt || order.updatedAt)
+  }));
+}
+
+function orderPaymentsToPrismaData(order) {
+  const paymentId = sanitizeIdentifier(order.paymentId || order.paymentIntentId || "", "");
+  if (!paymentId) {
+    return [];
+  }
+
+  return [{
+    id: paymentId,
+    provider: order.paymentProvider || "abacatepay",
+    method: normalizePaymentMethod(order.paymentMethod),
+    status: normalizePaymentStatus(order.paymentStatus, order.paymentConfirmed ? "paid" : "pending"),
+    externalId: order.paymentId || order.paymentIntentId || null,
+    amount: normalizeNumber(order.amountTotal, 0),
+    qrCode: order.paymentQrCode || null,
+    copyPaste: order.paymentCopyPaste || null,
+    checkoutUrl: order.paymentCheckoutUrl || order.sessionUrl || null,
+    webhookPayload: null,
+    data: {
+      paymentId: order.paymentId || "",
+      paymentIntentId: order.paymentIntentId || "",
+      paymentEventId: order.paymentEventId || ""
+    },
+    createdAt: toDateOrUndefined(order.createdAt),
+    updatedAt: toDateOrUndefined(order.updatedAt)
+  }];
+}
+
+function prismaOrderRowToOrder(row) {
+  const payload = row?.data && typeof row.data === "object" ? row.data : {};
+  const payment = Array.isArray(row?.payments) && row.payments.length ? row.payments[0] : null;
+  return normalizeOrder(
+    {
+      ...payload,
+      id: row.id,
+      orderNumber: row.orderNumber || payload.orderNumber,
+      orderNumberFormatted: row.orderNumberFormatted || payload.orderNumberFormatted,
+      orderAccessCode: row.orderAccessCode || payload.orderAccessCode,
+      status: row.status || payload.status,
+      paymentStatus: row.paymentStatus || payload.paymentStatus,
+      paymentMethod: row.paymentMethod || payload.paymentMethod,
+      paymentProvider: row.paymentProvider || payload.paymentProvider,
+      currency: row.currency || payload.currency,
+      amountSubtotal: normalizeNumber(row.amountSubtotal, payload.amountSubtotal || 0),
+      amountTotal: normalizeNumber(row.totalAmount, payload.amountTotal || 0),
+      shippingAmount: normalizeNumber(row.shippingAmount, payload.shippingAmount || 0),
+      discountAmount: normalizeNumber(row.discountAmount, payload.discountAmount || 0),
+      productDiscountAmount: normalizeNumber(row.productDiscountAmount, payload.productDiscountAmount || 0),
+      shippingDiscountAmount: normalizeNumber(row.shippingDiscountAmount, payload.shippingDiscountAmount || 0),
+      deliveryMethod: row.deliveryMethod || payload.deliveryMethod,
+      shippingLabel: row.shippingLabel || payload.shippingLabel,
+      paymentId: row.paymentId || payment?.externalId || payload.paymentId,
+      paymentIntentId: row.paymentIntentId || payload.paymentIntentId,
+      paymentEventId: row.paymentEventId || payload.paymentEventId,
+      paymentQrCode: payment?.qrCode || payload.paymentQrCode,
+      paymentCopyPaste: payment?.copyPaste || payload.paymentCopyPaste,
+      paymentCheckoutUrl: payment?.checkoutUrl || payload.paymentCheckoutUrl || row.sessionUrl,
+      trackingCode: row.trackingCode || payload.trackingCode,
+      trackingUrl: row.trackingUrl || payload.trackingUrl,
+      sessionUrl: row.sessionUrl || payload.sessionUrl,
+      hiddenInAdmin: row.hiddenInAdmin,
+      paymentConfirmed: row.paymentConfirmed,
+      paidAt: row.paidAt?.toISOString?.() || payload.paidAt,
+      canceledAt: row.canceledAt?.toISOString?.() || payload.canceledAt,
+      inventoryDebitedAt: row.inventoryDebitedAt?.toISOString?.() || payload.inventoryDebitedAt,
+      coupon: payload.coupon || (row.couponCode ? { code: row.couponCode } : null),
+      customer: {
+        ...(payload.customer || {}),
+        name: row.customerName || payload.customer?.name,
+        email: row.customerEmail || payload.customer?.email,
+        phone: row.customerPhone || payload.customer?.phone
+      },
+      items: Array.isArray(row.items) && row.items.length
+        ? row.items.map((item) => ({
+          ...(item.data && typeof item.data === "object" ? item.data : {}),
+          id: item.productId || item.id,
+          name: item.name,
+          category: item.category,
+          image: item.image,
+          size: item.size,
+          color: item.color,
+          quantity: item.quantity,
+          price: normalizeNumber(item.price, 0)
+        }))
+        : payload.items
+    },
+    payload
+  );
 }
 
 async function readProducts() {
@@ -916,6 +1170,7 @@ async function readProducts() {
     return (data || []).map((row) => row.data).filter((product) => product && !REMOVED_PRODUCT_IDS.has(String(product.id || "").trim()));
   }
 
+  assertProductionDatabaseMode("produtos");
   const products = await readJsonFile(productsFile, seedProducts);
   return Array.isArray(products)
     ? products.filter((product) => product && !REMOVED_PRODUCT_IDS.has(String(product.id || "").trim()))
@@ -954,6 +1209,7 @@ async function writeProducts(products) {
     return;
   }
 
+  assertProductionDatabaseMode("produtos");
   await writeJsonFile(productsFile, products);
 }
 
@@ -1008,8 +1264,11 @@ async function deleteProductById(id) {
 
 async function readOrders() {
   if (usePrisma) {
-    const rows = await prisma.order.findMany({ orderBy: { updatedAt: "desc" } });
-    return rows.map((row) => row.data).filter(Boolean);
+    const rows = await prisma.order.findMany({
+      orderBy: { updatedAt: "desc" },
+      include: { items: true, payments: true }
+    });
+    return rows.map(prismaOrderRowToOrder).filter(Boolean);
   }
 
   if (useSupabase) {
@@ -1018,6 +1277,7 @@ async function readOrders() {
     return (data || []).map((row) => row.data).filter(Boolean);
   }
 
+  assertProductionDatabaseMode("pedidos");
   return readJsonFile(ordersFile, []);
 }
 
@@ -1030,10 +1290,26 @@ async function writeOrders(orders) {
       });
       for (const order of orders) {
         const payload = orderToPrismaData(order);
+        const items = orderItemsToPrismaData(order);
+        const payments = orderPaymentsToPrismaData(order);
         await tx.order.upsert({
           where: { id: order.id },
-          create: payload,
-          update: payload
+          create: {
+            ...payload,
+            items: items.length ? { create: items } : undefined,
+            payments: payments.length ? { create: payments } : undefined
+          },
+          update: {
+            ...payload,
+            items: {
+              deleteMany: {},
+              ...(items.length ? { create: items } : {})
+            },
+            payments: {
+              deleteMany: {},
+              ...(payments.length ? { create: payments } : {})
+            }
+          }
         });
       }
     });
@@ -1045,7 +1321,7 @@ async function writeOrders(orders) {
       id: order.id,
       data: order,
       status: order.status,
-      stripe_session_id: order.stripeSessionId,
+      payment_id: order.paymentId,
       payment_intent_id: order.paymentIntentId,
       created_at: order.createdAt,
       updated_at: order.updatedAt
@@ -1056,16 +1332,33 @@ async function writeOrders(orders) {
     return;
   }
 
+  assertProductionDatabaseMode("pedidos");
   await writeJsonFile(ordersFile, orders);
 }
 
 async function upsertOrder(order) {
   if (usePrisma) {
     const payload = orderToPrismaData(order);
+    const items = orderItemsToPrismaData(order);
+    const payments = orderPaymentsToPrismaData(order);
     await prisma.order.upsert({
       where: { id: order.id },
-      create: payload,
-      update: payload
+      create: {
+        ...payload,
+        items: items.length ? { create: items } : undefined,
+        payments: payments.length ? { create: payments } : undefined
+      },
+      update: {
+        ...payload,
+        items: {
+          deleteMany: {},
+          ...(items.length ? { create: items } : {})
+        },
+        payments: {
+          deleteMany: {},
+          ...(payments.length ? { create: payments } : {})
+        }
+      }
     });
     return order;
   }
@@ -1081,9 +1374,24 @@ async function upsertOrder(order) {
   return order;
 }
 
-async function findOrderBySessionId(stripeSessionId) {
+async function findOrderByPaymentId(paymentId) {
+  if (usePrisma) {
+    const row = await prisma.order.findFirst({
+      where: {
+        OR: [
+          { paymentId },
+          { paymentIntentId: paymentId },
+          { payments: { some: { externalId: paymentId } } },
+          { payments: { some: { id: paymentId } } }
+        ]
+      },
+      include: { items: true, payments: true }
+    });
+    return row ? prismaOrderRowToOrder(row) : null;
+  }
+
   const orders = await readOrders();
-  return orders.find((order) => order.stripeSessionId === stripeSessionId) || null;
+  return orders.find((order) => order.paymentId === paymentId || order.paymentIntentId === paymentId) || null;
 }
 
 function normalizeTrackingCodeValue(value) {
@@ -1093,7 +1401,7 @@ function normalizeTrackingCodeValue(value) {
 }
 
 function deriveTrackingCodeSeed(order) {
-  return normalizeText(order?.id || order?.orderNumberFormatted || order?.orderNumber || order?.stripeSessionId || "");
+  return normalizeText(order?.id || order?.orderNumberFormatted || order?.orderNumber || order?.paymentId || "");
 }
 
 function computeTrackingCode(order) {
@@ -1147,44 +1455,26 @@ async function findOrderByTrackingCode(code) {
 }
 
 async function findOrderById(id) {
+  if (usePrisma) {
+    const row = await prisma.order.findUnique({
+      where: { id },
+      include: { items: true, payments: true }
+    });
+    return row ? prismaOrderRowToOrder(row) : null;
+  }
+
   const orders = await readOrders();
   return orders.find((order) => order.id === id) || null;
 }
 
-async function syncOrderFromStripeSession(order) {
-  if (!stripe || !order?.stripeSessionId) return order;
-
-  try {
-    const session = await stripe.checkout.sessions.retrieve(order.stripeSessionId);
-    if (!session) return order;
-    const next = normalizeOrder(
-      {
-        ...order,
-        customer: {
-          ...order.customer,
-          name: normalizeText(session.customer_details?.name || order.customer?.name),
-          email: normalizeText(session.customer_details?.email || order.customer?.email),
-          phone: normalizeText(session.customer_details?.phone || order.customer?.phone)
-        },
-        sessionUrl: normalizeText(session.url || order.sessionUrl)
-      },
-      order
-    );
-    if (!next.trackingUrl) {
-      next.trackingUrl = buildInternalTrackingUrl(next);
-    }
-    if (next.sessionUrl !== order.sessionUrl || next.customer?.name !== order.customer?.name || next.customer?.email !== order.customer?.email || next.customer?.phone !== order.customer?.phone) {
-      await updateOrderById(order.id, next);
-    }
-    return next;
-  } catch (error) {
-    console.warn("Falha ao sincronizar pedido com Stripe:", error.message);
+async function updateOrderById(id, nextOrder) {
+  if (usePrisma) {
+    const current = await prisma.order.findUnique({ where: { id } });
+    if (!current) return null;
+    await upsertOrder(nextOrder);
+    return nextOrder;
   }
 
-  return order;
-}
-
-async function updateOrderById(id, nextOrder) {
   const orders = await readOrders();
   const index = orders.findIndex((order) => order.id === id);
   if (index === -1) return null;
@@ -1207,7 +1497,7 @@ async function resetOrderById(id) {
       paidAt: "",
       canceledAt: "",
       paymentConfirmed: false,
-      stripeEventId: "",
+      paymentEventId: "",
       inventoryDebitedAt: "",
       events: [
         ...(current.events || []),
@@ -1229,6 +1519,16 @@ async function resetOrderById(id) {
 }
 
 async function deleteOrderById(id) {
+  if (usePrisma) {
+    try {
+      await prisma.order.delete({ where: { id } });
+      return true;
+    } catch (error) {
+      if (error.code === "P2025") return false;
+      throw error;
+    }
+  }
+
   const orders = await readOrders();
   const nextOrders = orders.filter((order) => order.id !== id);
   if (nextOrders.length === orders.length) return false;
@@ -1304,7 +1604,7 @@ async function lookupCep(cep) {
 }
 
 function estimateShipping({ deliveryMethod, address = {}, store = DEFAULT_STORE, cepData = null }) {
-  if (deliveryMethod === "pix_checkout" || deliveryMethod === "card_checkout" || deliveryMethod === "stripe_checkout") {
+  if (deliveryMethod === "pix_checkout" || deliveryMethod === "card_checkout") {
     return { price: 0, label: "Checkout direto" };
   }
 
@@ -1349,16 +1649,6 @@ function estimateShipping({ deliveryMethod, address = {}, store = DEFAULT_STORE,
   if (northeast.includes(targetState)) return { price: 29, label: "Envio Nordeste" };
   if (north.includes(targetState)) return { price: 42, label: "Envio Norte" };
   return { price: 35, label: "Envio nacional" };
-}
-
-function createMockSession(payload) {
-  const id = `cs_test_${crypto.randomUUID()}`;
-  const storeUrl = (process.env.STORE_URL || process.env.SITE_URL || "http://localhost:3000/loja").replace(/\/$/, "");
-  return {
-    id,
-    url: `${storeUrl}/?mock_session=${id}`,
-    payload
-  };
 }
 
 async function createImageUrl(file) {
@@ -1465,7 +1755,7 @@ function buildOrderNotificationSummary(order) {
   const orderLink = order.trackingUrl
     || order.sessionUrl
     || buildInternalTrackingUrl(order)
-    || (process.env.SITE_URL ? `${process.env.SITE_URL.replace(/\/$/, "")}/loja/?session_id=${encodeURIComponent(order.stripeSessionId || order.id)}` : "");
+    || (process.env.SITE_URL ? `${process.env.SITE_URL.replace(/\/$/, "")}/loja/?payment_id=${encodeURIComponent(order.paymentId || order.id)}` : "");
 
   return {
     customerName: name,
@@ -1680,7 +1970,7 @@ function filterOrders(orders, { query = "", status = "all", showHidden = "false"
       String(order.orderNumber || ""),
       computeOrderAccessCode(order),
       computeTrackingCode(order),
-      order.stripeSessionId,
+      order.paymentId,
       order.customer?.name,
       order.customer?.email,
       order.customer?.phone,
@@ -1696,9 +1986,7 @@ function filterOrders(orders, { query = "", status = "all", showHidden = "false"
 
 function buildAnalytics(products, orders) {
   const normalizedOrders = orders.map((order) => normalizeOrder(order, order));
-  const paidOrders = STRIPE_LIVE_MODE
-    ? normalizedOrders.filter((order) => order.status === "paid" && normalizeBoolean(order.paymentConfirmed, false))
-    : [];
+  const paidOrders = normalizedOrders.filter((order) => order.status === "paid" && normalizeBoolean(order.paymentConfirmed, false));
   const pendingOrders = normalizedOrders.filter((order) => order.status === "pending");
   const processingOrders = normalizedOrders.filter((order) => order.status === "processing");
   const shippedOrders = normalizedOrders.filter((order) => order.status === "shipped");
@@ -1852,6 +2140,7 @@ async function getNextOrderNumber() {
     return Math.max(1, Math.floor(Number(counter.next) || 2) - 1);
   }
 
+  assertProductionDatabaseMode("numeraÃ§Ã£o de pedidos");
   let counter = { next: 1 };
   try {
     counter = JSON.parse(await fs.readFile(orderCounterFile, "utf8"));
@@ -1884,7 +2173,7 @@ function normalizeOrderAccessCodeValue(value) {
 }
 
 function deriveOrderAccessCodeSeed(order) {
-  return normalizeText(order?.id || order?.orderNumberFormatted || order?.orderNumber || order?.stripeSessionId || "");
+  return normalizeText(order?.id || order?.orderNumberFormatted || order?.orderNumber || order?.paymentId || "");
 }
 
 function computeOrderAccessCode(order) {
@@ -1917,7 +2206,7 @@ async function getNextOrderAccessCode() {
 }
 
 function buildInternalTrackingUrl(order, baseUrl = process.env.SITE_URL || "http://localhost:3000") {
-  const identifier = normalizeText(computeOrderAccessCode(order) || computeTrackingCode(order) || formatOrderNumberValue(order?.orderNumberFormatted || order?.orderNumber) || order?.stripeSessionId || order?.id);
+  const identifier = normalizeText(computeOrderAccessCode(order) || computeTrackingCode(order) || formatOrderNumberValue(order?.orderNumberFormatted || order?.orderNumber) || order?.paymentId || order?.id);
   if (!identifier) return "";
   const url = new URL("/loja/pedidos.html", baseUrl);
   url.searchParams.set("tracking", identifier);
@@ -1965,12 +2254,14 @@ function decorateOrderForResponse(order, baseUrl = process.env.SITE_URL || "http
   };
 }
 
-async function buildOrderPayloadFromCheckout({ sessionId, items, customer, address, deliveryMethod, shipping, subtotal, total, sessionUrl }) {
+async function buildOrderPayloadFromCheckout({ paymentId, paymentProvider, paymentMethod, items, customer, address, deliveryMethod, shipping, subtotal, total, sessionUrl }) {
   const orderNumber = await getNextOrderNumber();
   const orderAccessCode = await getNextOrderAccessCode();
   const trackingCode = await getNextTrackingCode();
   return normalizeOrder({
-    stripeSessionId: sessionId,
+    paymentId,
+    paymentProvider,
+    paymentMethod,
     orderNumber,
     orderNumberFormatted: formatOrderNumber(orderNumber),
     orderAccessCode,
@@ -2064,174 +2355,15 @@ async function applyStockDelta(items, direction, options = {}) {
   return nextProducts;
 }
 
-function buildMetadataForOrder(order) {
-  return {
-    order_id: order.id,
-    order_number: order.orderNumberFormatted || "",
-    order_access_code: order.orderAccessCode || "",
-    order_status: order.status || "pending",
-    customer_name: order.customer?.name || "",
-    customer_phone: order.customer?.phone || "",
-    delivery_method: order.deliveryMethod || "",
-    shipping_label: order.shippingLabel || "",
-    shipping_amount: String(order.shippingAmount || 0),
-    amount_total: String(order.amountTotal || 0),
-    coupon_code: order.coupon?.code || "",
-    discount_amount: String(order.discountAmount || 0),
-    address_city: order.address?.city || "",
-    address_state: order.address?.state || "",
-    address_cep: order.address?.cep || "",
-    tracking_code: order.trackingCode || ""
-  };
-}
-
-async function createAbacatePixCharge(order) {
-  const amount = Math.max(50, Math.round(normalizeNumber(order.amountTotal, 0) * 100));
-  console.info("[abacatepay] criando cobranca PIX", {
-    orderId: order.id,
-    orderNumber: order.orderNumberFormatted || order.orderNumber || "",
-    amount
-  });
-  const response = await fetch(`${ABACATEPAY_API_URL}/transparents/create`, {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${ABACATEPAY_API_KEY}`,
-      "Content-Type": "application/json"
-    },
-    body: JSON.stringify({
-      method: "PIX",
-      data: {
-        amount,
-        externalId: order.id,
-        expiresIn: 3600,
-        description: `Pedido ${order.orderNumberFormatted || order.id} - BigSmoke`,
-        metadata: {
-          orderId: order.id,
-          orderNumber: order.orderNumberFormatted || "",
-          provider: "abacatepay"
-        }
-      }
-    })
-  });
-  const payload = await response.json().catch(() => null);
-  console.info("[abacatepay] resposta PIX", {
-    ok: response.ok,
-    status: response.status,
-    id: payload?.data?.id || "",
-    hasBrCode: Boolean(payload?.data?.brCode),
-    hasQrCode: Boolean(payload?.data?.brCodeBase64)
-  });
-  if (!response.ok || payload?.error) {
-    const message = typeof payload?.error === "string"
-      ? payload.error
-      : payload?.error?.message || "Nao foi possivel criar o PIX na Abacate Pay.";
-    throw new Error(message);
-  }
-  return payload?.data || {};
-}
-
-async function createAbacateProductForCheckout(order) {
-  const amount = Math.max(100, Math.round(normalizeNumber(order.amountTotal, 0) * 100));
-  console.info("[abacatepay] criando produto checkout", {
-    orderId: order.id,
-    amount
-  });
-  const response = await fetch(`${ABACATEPAY_API_URL}/products/create`, {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${ABACATEPAY_API_KEY}`,
-      "Content-Type": "application/json"
-    },
-    body: JSON.stringify({
-      externalId: order.id,
-      name: `Pedido ${order.orderNumberFormatted || order.id} - BigSmoke`,
-      description: (order.items || [])
-        .map((item) => `${item.quantity}x ${item.name}${item.size ? ` ${item.size}` : ""}`)
-        .join(", ")
-        .slice(0, 500),
-      price: amount,
-      currency: "BRL"
-    })
-  });
-  const payload = await response.json().catch(() => null);
-  console.info("[abacatepay] resposta produto checkout", {
-    ok: response.ok,
-    status: response.status,
-    id: payload?.data?.id || ""
-  });
-  if (!response.ok || payload?.error) {
-    const message = typeof payload?.error === "string"
-      ? payload.error
-      : payload?.error?.message || "Nao foi possivel criar o produto na Abacate Pay.";
-    throw new Error(message);
-  }
-  return payload?.data || {};
-}
-
-async function createAbacateCardCheckout(order, baseUrl) {
-  const product = await createAbacateProductForCheckout(order);
-  const total = normalizeNumber(order.amountTotal, 0);
-  const maxInstallments = Math.max(1, Math.min(ABACATEPAY_CARD_MAX_INSTALLMENTS, Math.floor(total / 10) || 1));
-  const tracking = encodeURIComponent(order.trackingCode || order.orderNumberFormatted || order.id);
-  console.info("[abacatepay] criando checkout cartao", {
-    orderId: order.id,
-    productId: product.id,
-    total,
-    maxInstallments
-  });
-  const response = await fetch(`${ABACATEPAY_API_URL}/checkouts/create`, {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${ABACATEPAY_API_KEY}`,
-      "Content-Type": "application/json"
-    },
-    body: JSON.stringify({
-      items: [{ id: product.id, quantity: 1 }],
-      externalId: order.id,
-      returnUrl: `${baseUrl}/`,
-      completionUrl: `${baseUrl}/pedidos?tracking=${tracking}`,
-      methods: ["CARD"],
-      card: { maxInstallments },
-      metadata: {
-        orderId: order.id,
-        orderNumber: order.orderNumberFormatted || "",
-        provider: "abacatepay",
-        paymentMethod: "card"
-      }
-    })
-  });
-  const payload = await response.json().catch(() => null);
-  // CORRECAO: loga payload completo para diagnosticar URL ausente
-  console.info("[abacatepay] resposta checkout cartao", {
-    ok: response.ok,
-    status: response.status,
-    id: payload?.data?.id || "",
-    hasUrl: Boolean(payload?.data?.url),
-    url: payload?.data?.url || "",
-    rawPayload: JSON.stringify(payload || {}).slice(0, 600)
-  });
-  if (!response.ok || payload?.error) {
-    const message = typeof payload?.error === "string"
-      ? payload.error
-      : payload?.error?.message || "Nao foi possivel criar o checkout de cartao na Abacate Pay.";
-    throw new Error(message);
-  }
-  // CORRECAO: normaliza url independente do campo retornado pela AbacatePay
-  const checkoutData = payload?.data || {};
-  return {
-    ...checkoutData,
-    url: checkoutData.url || checkoutData.checkoutUrl || checkoutData.paymentUrl || checkoutData.payment_url || "",
-  };
-}
-
 function setOrderPaid(order, event) {
   return normalizeOrder(
     {
       ...order,
       status: "paid",
+      paymentStatus: "paid",
       paidAt: nowIso(),
-      paymentIntentId: event?.data?.object?.payment_intent || order.paymentIntentId,
-      stripeEventId: event?.id || order.stripeEventId,
+      paymentIntentId: event?.data?.object?.payment_id || event?.data?.object?.paymentIntentId || order.paymentIntentId,
+      paymentEventId: event?.id || order.paymentEventId,
       inventoryDebitedAt: order.inventoryDebitedAt || nowIso(),
       paymentConfirmed: Boolean(event?.livemode) || String(event?.type || "").endsWith(".completed"),
       events: [
@@ -2252,6 +2384,7 @@ function setOrderCancelled(order, event) {
     {
       ...order,
       status: "canceled",
+      paymentStatus: String(event?.type || "").includes("refunded") ? "refunded" : "canceled",
       canceledAt: nowIso(),
       inventoryDebitedAt: "",
       events: [
@@ -2268,126 +2401,93 @@ function setOrderCancelled(order, event) {
 }
 
 app.use("/api", generalLimiter);
-app.use(cors(createCorsOptions()));
-
-app.post("/api/stripe/webhook", express.raw({ type: "application/json" }), async (req, res) => {
-  if (!stripe) {
-    return res.status(400).json({ error: "Stripe não configurado." });
-  }
-  if (!WEBHOOK_SECRET) {
-    return res.status(400).json({ error: "STRIPE_WEBHOOK_SECRET não configurado." });
-  }
-
-  try {
-    const signature = req.headers["stripe-signature"];
-    const event = stripe.webhooks.constructEvent(req.body, signature, WEBHOOK_SECRET);
-
-    switch (event.type) {
-      case "checkout.session.completed": {
-        const session = event.data.object;
-        const order = await findOrderBySessionId(session.id);
-        if (order) {
-          if ((order.stripeEventId && order.stripeEventId === event.id) || (order.status === "paid" && order.paymentConfirmed)) {
-            break;
-          }
-
-          const customerDetails = session.customer_details || {};
-          const shippingDetails = session.shipping_details || {};
-          await applyStockDelta(order.items || [], -1);
-          const next = setOrderPaid(
-            {
-              ...order,
-              customer: {
-                ...order.customer,
-                name: normalizeText(customerDetails.name || order.customer?.name),
-                email: normalizeText(customerDetails.email || order.customer?.email),
-                phone: normalizeText(customerDetails.phone || order.customer?.phone)
-              },
-              address: {
-                ...order.address,
-                street: normalizeText(shippingDetails.address?.line1 || order.address?.street),
-                complement: normalizeText(shippingDetails.address?.line2 || order.address?.complement),
-                city: normalizeText(shippingDetails.address?.city || order.address?.city),
-                state: normalizeText(shippingDetails.address?.state || order.address?.state),
-                cep: normalizeText(shippingDetails.address?.postal_code || order.address?.cep)
-              },
-              shippingLabel: normalizeText(shippingDetails.name || order.shippingLabel),
-              sessionUrl: normalizeText(session.url || order.sessionUrl),
-              stripeEventId: event.id,
-              inventoryDebitedAt: order.inventoryDebitedAt || nowIso()
-            },
-            event
-          );
-          await updateOrderById(order.id, next);
-        }
-        break;
-      }
-      case "checkout.session.expired": {
-        const session = event.data.object;
-        const order = await findOrderBySessionId(session.id);
-        if (order) {
-          if (order.status !== "paid") {
-            await applyStockDelta(order.items || [], 1);
-          }
-          const next = setOrderCancelled(order, event);
-          await updateOrderById(order.id, next);
-        }
-        break;
-      }
-      default:
-        break;
-    }
-
-    return res.json({ received: true });
-  } catch (error) {
-    return res.status(400).json({ error: error.message });
-  }
-});
+app.use(cors(createCorsOptions));
 
 async function handleAbacatePayWebhook(req, res) {
-  if (ABACATEPAY_WEBHOOK_SECRET && req.query.webhookSecret !== ABACATEPAY_WEBHOOK_SECRET) {
+  const secretFromHeader = normalizeText(req.headers["x-webhook-secret"] || "");
+  const secretFromAuthorization = normalizeText(req.headers.authorization || "").replace(/^Bearer\s+/i, "");
+  const secretFromQuery = normalizeText(req.query.webhookSecret || "");
+  const providedWebhookSecret = secretFromHeader || secretFromAuthorization || secretFromQuery;
+
+  if (ABACATEPAY_WEBHOOK_SECRET && providedWebhookSecret !== ABACATEPAY_WEBHOOK_SECRET) {
     return res.status(401).json({ error: "Unauthorized" });
   }
 
   try {
-    const event = JSON.parse(Buffer.isBuffer(req.body) ? req.body.toString("utf8") : "{}");
-    const payment = event?.data?.transparent || event?.data?.checkout || {};
-    const paymentId = normalizeText(payment.id);
-    const externalId = normalizeText(payment.externalId);
-    const order = paymentId
-      ? await findOrderBySessionId(paymentId)
-      : null;
+    const rawBody = Buffer.isBuffer(req.body)
+      ? req.body
+      : Buffer.from(req.rawBody || JSON.stringify(req.body || {}), "utf8");
+    const signature = req.headers["x-webhook-signature"] || req.headers["x-abacate-signature"];
+    const shouldVerifySignature = Boolean(process.env.ABACATEPAY_WEBHOOK_PUBLIC_KEY) && Boolean(signature);
+    if (shouldVerifySignature && !verifyWebhookSignature(rawBody, signature)) {
+      return res.status(401).json({ error: "Invalid signature" });
+    }
+
+    const event = JSON.parse(rawBody.toString("utf8") || "{}");
+    const eventType = normalizeText(event.event || event.type);
+    const payment = event?.data?.transparent || event?.data?.checkout || event?.data?.billing || event?.data?.payment || {};
+    const paymentId = normalizeText(payment.id || payment.paymentId);
+    const externalId = normalizeText(payment.externalId || payment.referenceId || payment.metadata?.orderId);
+    const eventId = normalizeText(event.id || `${eventType}:${paymentId || externalId}`);
+    const order = paymentId ? await findOrderByPaymentId(paymentId) : null;
     const fallbackOrder = !order && externalId ? await findOrderById(externalId) : null;
     const targetOrder = order || fallbackOrder;
 
-    if (targetOrder && ["transparent.completed", "checkout.completed"].includes(event.event)) {
-      if (!(targetOrder.status === "paid" && targetOrder.paymentConfirmed)) {
+    console.info("[abacatepay:webhook] evento recebido", {
+      eventType,
+      paymentId,
+      externalId,
+      orderId: targetOrder?.id || null
+    });
+
+    if (targetOrder && ["transparent.completed", "checkout.completed"].includes(eventType)) {
+      const alreadyProcessed = eventId && targetOrder.paymentEventId === eventId;
+      if (!alreadyProcessed && !(targetOrder.status === "paid" && targetOrder.paymentConfirmed)) {
         await applyStockDelta(targetOrder.items || [], -1);
         const next = setOrderPaid(
           {
             ...targetOrder,
             paymentIntentId: paymentId || targetOrder.paymentIntentId,
-            stripeEventId: normalizeText(event.id || `${event.event}:${paymentId}`),
+            paymentId: paymentId || targetOrder.paymentId,
+            paymentEventId: eventId,
+            paymentProvider: "abacatepay",
+            paymentMethod: targetOrder.paymentMethod || (eventType.startsWith("checkout.") ? "CARD" : "PIX"),
+            paymentQrCode: normalizeText(payment.brCodeBase64 || payment.qrCode || payment.qr_code || targetOrder.paymentQrCode),
+            paymentCopyPaste: normalizeText(payment.brCode || payment.copyPaste || payment.copy_paste || targetOrder.paymentCopyPaste),
             sessionUrl: normalizeText(payment.receiptUrl || targetOrder.sessionUrl),
             inventoryDebitedAt: targetOrder.inventoryDebitedAt || nowIso()
           },
           {
-            id: normalizeText(event.id || `${event.event}:${paymentId}`),
-            type: event.event,
+            id: eventId,
+            type: eventType,
             created: Math.floor(Date.now() / 1000),
-            data: { object: { payment_intent: paymentId } }
+            data: { object: { payment_id: paymentId } }
           }
         );
+        await updateOrderById(targetOrder.id, next);
+      }
+    } else if (targetOrder && ["checkout.refunded", "transparent.refunded", "checkout.lost", "transparent.lost"].includes(eventType)) {
+      if (targetOrder.inventoryDebitedAt) {
+        await applyStockDelta(targetOrder.items || [], 1, { ignoreMissingProducts: true });
+      }
+      if (targetOrder.status !== "canceled") {
+        const next = setOrderCancelled(targetOrder, {
+          id: eventId,
+          type: eventType,
+          created: Math.floor(Date.now() / 1000)
+        });
         await updateOrderById(targetOrder.id, next);
       }
     }
 
     return res.json({ received: true });
   } catch (error) {
+    console.error("[abacatepay:webhook] erro", { message: error.message });
     return res.status(400).json({ error: error.message });
   }
 }
 
+app.post("/api/webhooks/abacatepay", express.raw({ type: "application/json" }), handleAbacatePayWebhook);
 app.post("/api/abacatepay/webhook", express.raw({ type: "application/json" }), handleAbacatePayWebhook);
 app.post("/api/payments/abacatepay/webhook", express.raw({ type: "application/json" }), handleAbacatePayWebhook);
 
@@ -2470,11 +2570,10 @@ app.get("/api/config", async (_req, res) => {
     store: DEFAULT_STORE,
     publicStore: publicSettings.store,
     whatsappNumber: publicSettings.store.whatsapp || DEFAULT_WHATSAPP,
-    paymentProvider: USE_ABACATEPAY ? "abacatepay" : "stripe",
-    abacatepayConfigured: USE_ABACATEPAY,
-    stripeConfigured: Boolean(process.env.STRIPE_SECRET_KEY),
-    paymentMetricsEnabled: STRIPE_LIVE_MODE,
-    webhookConfigured: USE_ABACATEPAY ? Boolean(ABACATEPAY_WEBHOOK_SECRET) : Boolean(WEBHOOK_SECRET),
+    paymentProvider: "abacatepay",
+    abacatepayConfigured: isAbacatePayConfigured(),
+    paymentMethods: ["pix", "card"],
+    webhookConfigured: Boolean(ABACATEPAY_WEBHOOK_SECRET),
     twilioConfigured: canSendTwilioWhatsApp(),
     twilioTemplateConfigured: Boolean(TWILIO_WHATSAPP_CONTENT_SID),
     twilioCustomerConfirmationEnabled: TWILIO_CUSTOMER_CONFIRMATION_ENABLED,
@@ -2482,7 +2581,8 @@ app.get("/api/config", async (_req, res) => {
     adminConfigured: Boolean(process.env.ADMIN_EMAIL || process.env.ADMIN_PASSWORD || process.env.ADMIN_PASSWORD_HASH),
     supabaseConfigured: useSupabase,
     prismaConfigured: usePrisma,
-    dataMode: usePrisma ? "prisma" : useSupabase ? "supabase" : "local"
+    dataMode: usePrisma ? "prisma" : useSupabase ? "supabase" : "local",
+    publicBackendUrl: process.env.PUBLIC_BACKEND_URL || process.env.BACKEND_URL || ""
   });
 });
 
@@ -2635,13 +2735,12 @@ app.get("/api/orders/public/:sessionId", async (req, res) => {
       return res.status(400).json({ error: "Session id ausente." });
     }
 
-    let order = await findOrderByTrackingCode(sessionId)
-      || await findOrderBySessionId(sessionId)
+    const order = await findOrderByTrackingCode(sessionId)
+      || await findOrderByPaymentId(sessionId)
       || await findOrderById(sessionId);
     if (!order) {
       return res.status(404).json({ error: "Pedido não encontrado." });
     }
-    order = await syncOrderFromStripeSession(order);
     const responseOrder = decorateOrderForResponse(order, makeBaseUrl(req));
     const publicCustomer = maskPublicCustomer(responseOrder.customer);
     const publicAddress = maskPublicAddress(responseOrder.address);
@@ -2715,6 +2814,7 @@ app.post("/api/admin/orders", authMiddleware, async (req, res) => {
     const total = normalizeNumber(body.amountTotal, subtotal + shippingAmount);
     const status = normalizeOrderStatus(body.status || "pending", "pending");
     const inventoryDebitedAt = orderStatusDebitsInventory(status) ? nowIso() : "";
+    const paymentStatus = inventoryDebitedAt ? "paid" : "pending";
     const order = normalizeOrder({
       orderNumber,
       orderNumberFormatted: formatOrderNumber(orderNumber),
@@ -2722,6 +2822,7 @@ app.post("/api/admin/orders", authMiddleware, async (req, res) => {
       trackingCode,
       trackingUrl: buildInternalTrackingUrl({ orderAccessCode, trackingCode, orderNumberFormatted: formatOrderNumber(orderNumber) }),
       status,
+      paymentStatus,
       currency: "brl",
       amountSubtotal: subtotal,
       shippingAmount,
@@ -2767,10 +2868,12 @@ app.post("/api/admin/orders/manual", authMiddleware, async (req, res) => {
     const total = normalizeNumber(body.amountTotal, subtotal + shippingAmount);
     const status = normalizeOrderStatus(body.status || "pending", "pending");
     const inventoryDebitedAt = orderStatusDebitsInventory(status) ? nowIso() : "";
+    const paymentStatus = inventoryDebitedAt ? "paid" : "pending";
     const order = normalizeOrder({
       orderNumber, orderNumberFormatted: formatOrderNumber(orderNumber), orderAccessCode, trackingCode,
       trackingUrl: buildInternalTrackingUrl({ orderAccessCode, trackingCode, orderNumberFormatted: formatOrderNumber(orderNumber) }),
       status,
+      paymentStatus,
       currency: "brl", amountSubtotal: subtotal, shippingAmount, amountTotal: total,
       inventoryDebitedAt, paidAt: inventoryDebitedAt,
       customer: { name: normalizeText(body.customer?.name), email: normalizeText(body.customer?.email), phone: normalizeText(body.customer?.phone) },
@@ -2961,6 +3064,9 @@ async function updateOrderStatusHandler(req, res) {
     const inventoryDebitedAt = shouldDebitInventory
       ? current.inventoryDebitedAt || nowIso()
       : "";
+    const nextPaymentStatus = nextStatus === "canceled"
+      ? (current.paymentConfirmed ? "refunded" : "canceled")
+      : (shouldDebitInventory || current.paymentConfirmed ? "paid" : current.paymentStatus || "pending");
 
     if (shouldDebitInventory && !wasInventoryDebited) {
       await applyStockDelta(current.items || [], -1, { ignoreMissingProducts: true });
@@ -2972,6 +3078,7 @@ async function updateOrderStatusHandler(req, res) {
       {
         ...current,
         status: nextStatus,
+        paymentStatus: nextPaymentStatus,
         trackingCode,
         trackingUrl: trackingUrl || (!current.trackingUrl || isInternalTrackingUrl(current.trackingUrl) ? buildInternalTrackingUrl({ ...current, trackingCode, orderAccessCode: current.orderAccessCode || computeOrderAccessCode(current) }) : current.trackingUrl),
         hiddenInAdmin,
@@ -3047,11 +3154,10 @@ app.post("/api/admin/uploads", authMiddleware, upload.fields([{ name: "image", m
 });
 
 async function handlePaymentCheckout(req, res) {
-  if (!USE_ABACATEPAY && !stripe && !MOCK_STRIPE) {
+  if (!isAbacatePayConfigured()) {
     return res.status(400).json({
       success: false,
-      message: "Gateway de pagamento nao configurado. Defina ABACATEPAY_API_KEY no backend.",
-      error: "Stripe não configurado. Defina STRIPE_SECRET_KEY ou STRIPE_MOCK."
+      message: "Gateway de pagamento nao configurado. Defina ABACATEPAY_API_KEY no backend."
     });
   }
 
@@ -3069,14 +3175,14 @@ async function handlePaymentCheckout(req, res) {
 
     // Validações obrigatórias do cliente
     const customerEmail = normalizeText(customer.email).toLowerCase();
-    const customerName = normalizeText(customer.name) || "Cliente Stripe";
+    const customerName = normalizeText(customer.name) || "Cliente BigSmoke";
     const customerPhone = normalizeText(customer.phone);
     if (customerEmail && (!customerEmail.includes("@") || !customerEmail.includes("."))) {
       return res.status(400).json({ error: "E-mail do cliente invalido." });
     }
 
     // Validação do endereço para entrega nacional
-    const deliveryMethodRaw = normalizeText(req.body?.deliveryMethod) || "stripe_checkout";
+    const deliveryMethodRaw = normalizeText(req.body?.deliveryMethod) || "pix_checkout";
     if (deliveryMethodRaw === "national" || deliveryMethodRaw === "entrega") {
       const cep = normalizeText(address.cep).replace(/\D/g, "");
       if (!cep || cep.length !== 8) {
@@ -3094,11 +3200,17 @@ async function handlePaymentCheckout(req, res) {
     const paymentMethodRaw = normalizeText(req.body?.paymentMethod || req.body?.method || deliveryMethodRaw).toLowerCase();
     const abacatePaymentMethod = ["card", "credit_card", "cartao", "cartao_credito", "card_checkout"].includes(paymentMethodRaw)
       ? "card"
-      : "pix";
+      : ["pix", "pix_checkout"].includes(paymentMethodRaw)
+        ? "pix"
+        : "";
+
+    if (!abacatePaymentMethod) {
+      return res.status(400).json({ success: false, message: "Escolha PIX ou cartao antes de finalizar." });
+    }
 
     console.info("[checkout] iniciando pagamento", {
-      provider: USE_ABACATEPAY ? "abacatepay" : "stripe",
-      paymentMethod: USE_ABACATEPAY ? abacatePaymentMethod : paymentMethodRaw || "stripe",
+      provider: "abacatepay",
+      paymentMethod: abacatePaymentMethod,
       itemCount: items.length,
       deliveryMethod
     });
@@ -3155,7 +3267,9 @@ async function handlePaymentCheckout(req, res) {
     };
 
     const order = await buildOrderPayloadFromCheckout({
-      sessionId: "",
+      paymentId: "",
+      paymentProvider: "abacatepay",
+      paymentMethod: abacatePaymentMethod,
       items: normalizedItems,
       customer: {
         name: customerName,
@@ -3176,178 +3290,37 @@ async function handlePaymentCheckout(req, res) {
       order.shippingDiscountAmount = shippingDiscount;
     }
 
-    if (USE_ABACATEPAY) {
-      if (total < 0.5) {
-        return res.status(400).json({ error: "O total do pedido precisa ser maior que R$ 0,50 para pagamento." });
-      }
-      if (abacatePaymentMethod === "card") {
-        const checkout = await createAbacateCardCheckout(order, baseUrl);
-        const nextOrder = normalizeOrder(
-          {
-            ...order,
-            stripeSessionId: checkout.id,
-            paymentIntentId: checkout.id,
-            sessionUrl: checkout.url || "",
-            items: normalizedItems,
-            amountSubtotal: subtotal,
-            shippingAmount: discountedShipping,
-            amountTotal: total,
-            coupon: couponDiscount?.coupon || null,
-            discountAmount: couponDiscount?.totalDiscount || 0,
-            productDiscountAmount: productDiscount,
-            shippingDiscountAmount: shippingDiscount,
-            status: "pending",
-            events: [
-              ...(order.events || []),
-              { type: "abacatepay.card.checkout.created", id: checkout.id, created: nowIso() }
-            ]
-          },
-          order
-        );
+    if (total < 0.5) {
+      return res.status(400).json({ success: false, message: "O total do pedido precisa ser maior que R$ 0,50 para pagamento." });
+    }
 
-        await upsertOrder(nextOrder);
-        notifyOrderCreated(nextOrder);
-        return res.json({
-          success: true,
-          provider: "abacatepay",
-          paymentProvider: "abacatepay",
-          mode: "checkout",
-          paymentMethod: "card",
-          url: checkout.url || "",
-          checkoutUrl: checkout.url || "",
-          id: checkout.id,
-          paymentId: checkout.id,
-          orderId: nextOrder.id,
-          status: nextOrder.status || "pending",
-          orderNumber: nextOrder.orderNumber || null,
-          orderNumberFormatted: nextOrder.orderNumberFormatted || null,
-          coupon: nextOrder.coupon || null,
-          discountAmount: nextOrder.discountAmount || 0,
-          productDiscountAmount: nextOrder.productDiscountAmount || 0,
-          shippingDiscountAmount: nextOrder.shippingDiscountAmount || 0,
-          amountSubtotal: nextOrder.amountSubtotal,
-          shippingAmount: nextOrder.shippingAmount,
-          amountTotal: nextOrder.amountTotal
+    let payment;
+    try {
+      payment = await createAbacatePayment(order, abacatePaymentMethod, { baseUrl });
+    } catch (error) {
+      if (abacatePaymentMethod === "card") {
+        return res.status(400).json({
+          success: false,
+          message: "Pagamento com cartao ainda nao esta disponivel nesta integracao.",
+          error: error.message
         });
       }
-      const charge = await createAbacatePixCharge(order);
-      const nextOrder = normalizeOrder(
-        {
-          ...order,
-          stripeSessionId: charge.id,
-          paymentIntentId: charge.id,
-          sessionUrl: charge.url || "",
-          items: normalizedItems,
-          amountSubtotal: subtotal,
-          shippingAmount: discountedShipping,
-          amountTotal: total,
-          coupon: couponDiscount?.coupon || null,
-          discountAmount: couponDiscount?.totalDiscount || 0,
-          productDiscountAmount: productDiscount,
-          shippingDiscountAmount: shippingDiscount,
-          status: "pending",
-          events: [
-            ...(order.events || []),
-            { type: "abacatepay.pix.created", id: charge.id, created: nowIso() }
-          ]
-        },
-        order
-      );
-
-      await upsertOrder(nextOrder);
-      notifyOrderCreated(nextOrder);
-      return res.json({
-        success: true,
-        provider: "abacatepay",
-        paymentProvider: "abacatepay",
-        mode: "pix",
-        paymentMethod: "pix",
-        url: charge.url || "",
-        id: charge.id,
-        paymentId: charge.id,
-        orderId: nextOrder.id,
-        status: nextOrder.status || "pending",
-        orderNumber: nextOrder.orderNumber || null,
-        orderNumberFormatted: nextOrder.orderNumberFormatted || null,
-        brCode: charge.brCode || "",
-        brCodeBase64: charge.brCodeBase64 || "",
-        pixCopyPaste: charge.brCode || "",
-        qrCode: charge.brCodeBase64 || "",
-        expiresAt: charge.expiresAt || "",
-        coupon: nextOrder.coupon || null,
-        discountAmount: nextOrder.discountAmount || 0,
-        productDiscountAmount: nextOrder.productDiscountAmount || 0,
-        shippingDiscountAmount: nextOrder.shippingDiscountAmount || 0,
-        amountSubtotal: nextOrder.amountSubtotal,
-        shippingAmount: nextOrder.shippingAmount,
-        amountTotal: nextOrder.amountTotal
-      });
+      throw error;
     }
 
-    const lineItems = normalizedItems.map((item) => ({
-      price_data: {
-        currency: "brl",
-        product_data: {
-          name: item.size ? `${item.name} - ${item.size}` : item.name,
-          description: item.size ? `${item.category} • Tamanho ${item.size}` : item.category,
-          images: (() => {
-            const imageUrl = toAbsoluteHttpUrl(item.image, baseUrl);
-            return imageUrl ? [imageUrl] : [];
-          })()
-        },
-        unit_amount: Math.round(item.price * 100)
-      },
-      quantity: item.quantity
-    }));
-    lineItems.splice(0, lineItems.length, ...expandDiscountedLineItems(normalizedItems, productDiscount, baseUrl));
-
-    if (discountedShipping > 0) {
-      lineItems.push({
-        price_data: {
-          currency: "brl",
-          product_data: {
-            name: shipping.label
-          },
-          unit_amount: Math.round(discountedShipping * 100)
-        },
-        quantity: 1
-      });
-    }
-
-    if (!lineItems.length || total < 0.5) {
-      return res.status(400).json({ error: "O total do pedido precisa ser maior que R$ 0,50 para pagamento via Stripe." });
-    }
-
-    let session;
-
-    if (MOCK_STRIPE) {
-      session = createMockSession({ lineItems, order });
-    } else {
-      session = await stripe.checkout.sessions.create({
-        mode: "payment",
-        line_items: lineItems,
-        customer_creation: "always",
-        customer_email: customerEmail || undefined,
-        billing_address_collection: "required",
-        phone_number_collection: { enabled: true },
-        name_collection: {
-          individual: { enabled: true, optional: false }
-        },
-        shipping_address_collection: {
-          allowed_countries: ["BR"]
-        },
-        success_url: `${baseUrl}/?checkout=success&session_id={CHECKOUT_SESSION_ID}`,
-        cancel_url: `${baseUrl}/?checkout=cancelled`,
-        locale: "pt-BR",
-        metadata: buildMetadataForOrder(order)
-      });
-    }
-
+    const paymentId = payment.id || "";
     const nextOrder = normalizeOrder(
       {
         ...order,
-        stripeSessionId: session.id,
-        sessionUrl: session.url,
+        paymentId,
+        paymentIntentId: paymentId,
+        paymentProvider: "abacatepay",
+        paymentMethod: abacatePaymentMethod,
+        paymentStatus: "pending",
+        paymentQrCode: payment.pix?.qrCode || "",
+        paymentCopyPaste: payment.pix?.copyPaste || "",
+        paymentCheckoutUrl: payment.url || "",
+        sessionUrl: payment.url || "",
         items: normalizedItems,
         amountSubtotal: subtotal,
         shippingAmount: discountedShipping,
@@ -3356,23 +3329,31 @@ async function handlePaymentCheckout(req, res) {
         discountAmount: couponDiscount?.totalDiscount || 0,
         productDiscountAmount: productDiscount,
         shippingDiscountAmount: shippingDiscount,
-        status: "pending"
+        status: "pending",
+        events: [
+          ...(order.events || []),
+          { type: `abacatepay.${abacatePaymentMethod}.created`, id: paymentId, created: nowIso() }
+        ]
       },
       order
     );
 
     await upsertOrder(nextOrder);
     notifyOrderCreated(nextOrder);
-    res.json({
+
+    const baseResponse = {
       success: true,
-      paymentProvider: "stripe",
-      mode: "checkout",
-      url: session.url,
-      checkoutUrl: session.url,
-      id: session.id,
-      paymentId: session.id,
+      provider: "abacatepay",
+      paymentProvider: "abacatepay",
+      method: abacatePaymentMethod,
+      paymentMethod: abacatePaymentMethod,
+      id: paymentId,
+      paymentId,
       orderId: nextOrder.id,
-      status: nextOrder.status || "pending",
+      orderAccessCode: nextOrder.orderAccessCode || null,
+      trackingCode: nextOrder.orderAccessCode || nextOrder.trackingCode || null,
+      status: "waiting_payment",
+      paymentStatus: nextOrder.paymentStatus || "pending",
       orderNumber: nextOrder.orderNumber || null,
       orderNumberFormatted: nextOrder.orderNumberFormatted || null,
       coupon: nextOrder.coupon || null,
@@ -3382,7 +3363,33 @@ async function handlePaymentCheckout(req, res) {
       amountSubtotal: nextOrder.amountSubtotal,
       shippingAmount: nextOrder.shippingAmount,
       amountTotal: nextOrder.amountTotal
+    };
+
+    if (abacatePaymentMethod === "pix") {
+      return res.json({
+        ...baseResponse,
+        mode: "pix",
+        url: payment.url || "",
+        pix: {
+          qrCode: payment.pix?.qrCode || "",
+          copyPaste: payment.pix?.copyPaste || ""
+        },
+        qrCode: payment.pix?.qrCode || "",
+        brCodeBase64: payment.pix?.qrCode || "",
+        pixCopyPaste: payment.pix?.copyPaste || "",
+        brCode: payment.pix?.copyPaste || "",
+        expiresAt: payment.expiresAt || ""
+      });
+    }
+
+    return res.json({
+      ...baseResponse,
+      mode: "checkout",
+      url: payment.url || "",
+      checkoutUrl: payment.url || "",
+      paymentUrl: payment.url || ""
     });
+
   } catch (error) {
     console.error("[checkout] erro ao criar pagamento:", error);
     res.status(400).json({
@@ -3396,20 +3403,48 @@ async function handlePaymentCheckout(req, res) {
 app.post("/api/checkout/session", checkoutLimiter, handlePaymentCheckout);
 app.post("/api/payments/abacatepay/checkout", checkoutLimiter, handlePaymentCheckout);
 
-app.get("/healthz", (_req, res) => {
-  res.json({
-    ok: true,
-    timestamp: nowIso(),
-    mode: usePrisma ? "prisma" : useSupabase ? "supabase" : "local",
-    prisma: usePrisma,
-    supabase: useSupabase,
-    paymentProvider: USE_ABACATEPAY ? "abacatepay" : "stripe",
-    abacatepay: USE_ABACATEPAY,
-    stripe: Boolean(stripe),
-    paymentMetricsEnabled: STRIPE_LIVE_MODE,
-    webhookConfigured: USE_ABACATEPAY ? Boolean(ABACATEPAY_WEBHOOK_SECRET) : Boolean(WEBHOOK_SECRET)
-  });
-});
+async function healthHandler(_req, res) {
+  try {
+    await checkDatabaseHealth();
+    res.json({
+      status: "ok",
+      service: SERVICE_NAME
+    });
+  } catch (error) {
+    res.status(503).json({
+      status: "error",
+      service: SERVICE_NAME,
+      error: error.message
+    });
+  }
+}
+
+async function healthzHandler(_req, res) {
+  try {
+    const database = await checkDatabaseHealth();
+    res.json({
+      status: "ok",
+      service: SERVICE_NAME,
+      database,
+      timestamp: nowIso(),
+      mode: usePrisma ? "prisma" : useSupabase ? "supabase" : "local",
+      paymentProvider: "abacatepay",
+      abacatepayConfigured: isAbacatePayConfigured(),
+      webhookConfigured: Boolean(ABACATEPAY_WEBHOOK_SECRET)
+    });
+  } catch (error) {
+    res.status(503).json({
+      status: "error",
+      service: SERVICE_NAME,
+      database: "disconnected",
+      timestamp: nowIso(),
+      error: error.message
+    });
+  }
+}
+
+app.get("/health", healthHandler);
+app.get("/healthz", healthzHandler);
 
 app.use((err, _req, res, _next) => {
   console.error("Erro não tratado:", err.message);
@@ -3424,10 +3459,15 @@ app.use((req, res) => {
 });
 
 async function start(port = Number(process.env.PORT || 3000)) {
+  const PORT = Number(port ?? process.env.PORT ?? 3000);
   validateRuntimeConfig();
   await ensureDataFiles();
-  return app.listen(port, () => {
-    console.log(`BigSmoke rodando em http://localhost:${port}`);
+  return new Promise((resolve, reject) => {
+    const server = app.listen(PORT, "0.0.0.0", () => {
+      console.log(`Server running on port ${server.address()?.port || PORT}`);
+      resolve(server);
+    });
+    server.on("error", reject);
   });
 }
 
@@ -3435,9 +3475,8 @@ module.exports = {
   app,
   start,
   __internals: {
-    stripe,
-    WEBHOOK_SECRET,
     readOrders,
-    readProducts
+    readProducts,
+    verifyWebhookSignature
   }
 };

@@ -3,8 +3,9 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
 }
 
 model Product {
@@ -31,27 +32,95 @@ model Product {
 }
 
 model Order {
-  id              String   @id
-  orderNumber     String?  @map("order_number")
-  status          String   @default("pending")
-  customerName    String   @default("") @map("customer_name")
-  customerEmail   String   @default("") @map("customer_email")
-  customerPhone   String   @default("") @map("customer_phone")
-  totalAmount     Decimal  @default(0) @map("total_amount") @db.Decimal(10, 2)
-  shippingAmount  Decimal  @default(0) @map("shipping_amount") @db.Decimal(10, 2)
-  deliveryMethod  String   @default("retirada") @map("delivery_method")
-  stripeSessionId String?  @map("stripe_session_id")
-  paymentIntentId String?  @map("payment_intent_id")
-  data            Json     @default("{}")
-  createdAt       DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
-  updatedAt       DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+  id                     String      @id
+  orderNumber            String?     @map("order_number")
+  orderNumberFormatted   String?     @map("order_number_formatted")
+  orderAccessCode        String?     @map("order_access_code")
+  status                 String      @default("pending")
+  paymentStatus          String      @default("pending") @map("payment_status")
+  paymentMethod          String      @default("PIX") @map("payment_method")
+  paymentProvider        String      @default("abacatepay") @map("payment_provider")
+  customerName           String      @default("") @map("customer_name")
+  customerEmail          String      @default("") @map("customer_email")
+  customerPhone          String      @default("") @map("customer_phone")
+  currency               String      @default("brl")
+  amountSubtotal         Decimal     @default(0) @map("amount_subtotal") @db.Decimal(10, 2)
+  totalAmount            Decimal     @default(0) @map("total_amount") @db.Decimal(10, 2)
+  shippingAmount         Decimal     @default(0) @map("shipping_amount") @db.Decimal(10, 2)
+  discountAmount         Decimal     @default(0) @map("discount_amount") @db.Decimal(10, 2)
+  productDiscountAmount  Decimal     @default(0) @map("product_discount_amount") @db.Decimal(10, 2)
+  shippingDiscountAmount Decimal     @default(0) @map("shipping_discount_amount") @db.Decimal(10, 2)
+  deliveryMethod         String      @default("retirada") @map("delivery_method")
+  shippingLabel          String?     @map("shipping_label")
+  paymentId              String?     @map("payment_id")
+  paymentIntentId        String?     @map("payment_intent_id")
+  paymentEventId         String?     @map("payment_event_id")
+  trackingCode           String?     @map("tracking_code")
+  trackingUrl            String?     @map("tracking_url")
+  sessionUrl             String?     @map("session_url")
+  hiddenInAdmin          Boolean     @default(false) @map("hidden_in_admin")
+  paymentConfirmed       Boolean     @default(false) @map("payment_confirmed")
+  paidAt                 DateTime?   @map("paid_at") @db.Timestamptz(6)
+  canceledAt             DateTime?   @map("canceled_at") @db.Timestamptz(6)
+  inventoryDebitedAt     DateTime?   @map("inventory_debited_at") @db.Timestamptz(6)
+  couponCode             String?     @map("coupon_code")
+  data                   Json        @default("{}")
+  createdAt              DateTime    @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt              DateTime    @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+  items                  OrderItem[]
+  payments               Payment[]
 
   @@index([updatedAt(sort: Desc)], map: "orders_updated_at_idx")
   @@index([status], map: "orders_status_idx")
-  @@index([stripeSessionId], map: "orders_session_idx")
+  @@index([paymentId], map: "orders_payment_idx")
   @@index([customerEmail], map: "orders_customer_idx")
   @@index([orderNumber], map: "orders_number_idx")
+  @@index([paymentStatus], map: "orders_payment_status_idx")
   @@map("orders")
+}
+
+model OrderItem {
+  id        String   @id
+  orderId   String   @map("order_id")
+  productId String?  @map("product_id")
+  name      String   @default("")
+  category  String   @default("")
+  image     String   @default("")
+  size      String   @default("")
+  color     String   @default("")
+  quantity  Int      @default(1)
+  price     Decimal  @default(0) @db.Decimal(10, 2)
+  data      Json     @default("{}")
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+  order     Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@index([orderId], map: "order_items_order_id_idx")
+  @@index([productId], map: "order_items_product_id_idx")
+  @@map("order_items")
+}
+
+model Payment {
+  id             String   @id
+  orderId        String   @map("order_id")
+  provider       String   @default("abacatepay")
+  method         String   @default("PIX")
+  status         String   @default("pending")
+  externalId     String?  @map("external_id")
+  amount         Decimal  @default(0) @db.Decimal(10, 2)
+  qrCode         String?  @map("qr_code")
+  copyPaste      String?  @map("copy_paste")
+  checkoutUrl    String?  @map("checkout_url")
+  webhookPayload Json?    @map("webhook_payload")
+  data           Json     @default("{}")
+  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt      DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+  order          Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@index([orderId], map: "payments_order_id_idx")
+  @@index([externalId], map: "payments_external_id_idx")
+  @@index([status], map: "payments_status_idx")
+  @@map("payments")
 }
 
 model OrderCounter {
@@ -61,4 +130,46 @@ model OrderCounter {
   updatedAt DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
 
   @@map("order_counters")
+}
+
+model Coupon {
+  id            String   @id
+  code          String   @unique
+  type          String   @default("percent")
+  target        String   @default("products")
+  value         Decimal  @default(0) @db.Decimal(10, 2)
+  active        Boolean  @default(true)
+  minOrderValue Decimal  @default(0) @map("min_order_value") @db.Decimal(10, 2)
+  usageLimit    Int      @default(0) @map("usage_limit")
+  data          Json     @default("{}")
+  createdAt     DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt     DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  @@index([active], map: "coupons_active_idx")
+  @@map("coupons")
+}
+
+model StoreSetting {
+  key       String   @id
+  data      Json     @default("{}")
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  @@map("store_settings")
+}
+
+model User {
+  id           String   @id
+  email        String   @unique
+  role         String   @default("customer")
+  passwordHash String?  @map("password_hash")
+  firstName    String?  @map("first_name")
+  lastName     String?  @map("last_name")
+  provider     String?  @map("provider")
+  avatarUrl    String?  @map("avatar_url")
+  data         Json     @default("{}")
+  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt    DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  @@map("users")
 }

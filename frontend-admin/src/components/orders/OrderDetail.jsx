@@ -13,8 +13,10 @@ const STATUS_OPTIONS = [
 const EVENTS_LABELS = {
   "admin.order.updated": "Status atualizado",
   "admin.order.reset": "Pedido redefinido",
-  "checkout.session.completed": "Pagamento recebido",
-  "checkout.session.expired": "Sessão expirada",
+  "checkout.completed": "Pagamento recebido",
+  "transparent.completed": "Pagamento recebido",
+  "checkout.refunded": "Pagamento reembolsado",
+  "transparent.refunded": "Pagamento reembolsado",
 };
 
 function StatusIcon({ status }) {
