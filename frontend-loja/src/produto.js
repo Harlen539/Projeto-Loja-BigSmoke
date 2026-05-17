@@ -458,7 +458,7 @@ async function carregarProduto() {
   }
 
   if (!produto) {
-    window.location.href = "/loja/";
+    window.location.href = "/";
     return;
   }
 
@@ -932,7 +932,7 @@ async function carregarProduto() {
   }
 
   if (!produto) {
-    window.location.href = "/loja/";
+    window.location.href = "/";
     return;
   }
 

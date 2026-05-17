@@ -1975,13 +1975,13 @@
 
 <!-- NAVBAR -->
 <header class="navbar" id="top">
-  <a class="brand" href="/loja/" aria-label="Voltar para a loja BigSmoke">
+  <a class="brand" href="/" aria-label="Voltar para a loja BigSmoke">
     <img src="/src/imagens/logo_sem_fundo.png" class="logo-img" alt="Logo BigSmoke">
   </a>
   <nav class="nav-links" aria-label="Navegação principal">
-    <a href="/loja/#products">Drops</a>
-    <a href="/loja/#about">Marca</a>
-    <a href="/loja/#contact">Contato</a>
+    <a href="/#products">Drops</a>
+    <a href="/#about">Marca</a>
+    <a href="/#contact">Contato</a>
     <a href="/src/politica.html">Privacidade</a>
   </nav>
   <div class="header-actions">
@@ -1992,7 +1992,7 @@
       </button>
       <div class="profile-menu" id="profile-menu" role="menu" hidden>
         <a role="menuitem" href="https://wa.me/5583986494691" target="_blank" rel="noopener">WhatsApp</a>
-        <a role="menuitem" href="/loja/">Ver catálogo</a>
+        <a role="menuitem" href="/">Ver catálogo</a>
         <button role="menuitem" type="button" id="switch-account">Trocar conta</button>
         <button role="menuitem" type="button" id="logout-account">Sair</button>
       </div>
@@ -2130,7 +2130,7 @@
     </div>
 
     <div class="quick-cards" aria-label="Atalhos da conta">
-      <a class="quick-card" href="/loja/">
+      <a class="quick-card" href="/">
         <span class="quick-icon"><svg viewBox="0 0 24 24"><path d="M5 9h14l-1.2 11H6.2L5 9Z"/><path d="M8 9V7a4 4 0 0 1 8 0v2"/><path d="M9 14h6"/></svg></span>
         <span><strong>Cupons</strong><small>Você ainda não possui cupons.</small><em>Ver cupons disponíveis</em></span>
       </a>
@@ -2231,7 +2231,7 @@
   </div>
   <div class="site-footer-col">
     <strong>Atalhos</strong>
-    <a href="/loja/">Loja</a>
+    <a href="/">Loja</a>
     <a href="/src/perfil.html">Meu Perfil</a>
     <a href="/src/pedidos.html">Rastrear Pedido</a>
     <a href="https://wa.me/5583986494691" target="_blank" rel="noopener">WhatsApp</a>
@@ -2496,7 +2496,7 @@ window.BIGSMOKE_GOOGLE_CLIENT_ID = "%VITE_GOOGLE_CLIENT_ID%";
       addressCard.innerHTML = `<div class="empty-state" style="padding:1.5rem 1rem;">
         <h3>ENDEREÇOS</h3>
         <p>Entre na sua conta para ver seus endereços.</p>
-        <a href="/loja/?login=1" class="btn btn-primary" style="margin-top:0.5rem;font-size:0.85rem;">Entrar</a>
+        <a href="/?login=1" class="btn btn-primary" style="margin-top:0.5rem;font-size:0.85rem;">Entrar</a>
       </div>`;
       return;
     }
@@ -2600,7 +2600,7 @@ window.BIGSMOKE_GOOGLE_CLIENT_ID = "%VITE_GOOGLE_CLIENT_ID%";
 
   function logoutAccount(redirectToLogin = false) {
     localStorage.removeItem('bigsmoke_customer');
-    const next = redirectToLogin ? '/loja/?login=1' : '/loja/';
+    const next = redirectToLogin ? '/?login=1' : '/';
     window.location.href = next;
   }
 
@@ -3162,7 +3162,7 @@ window.BIGSMOKE_GOOGLE_CLIENT_ID = "%VITE_GOOGLE_CLIENT_ID%";
               : `<button class="btn btn-outline" disabled aria-disabled="true">Rastrear envio</button>`
             }
             <a class="btn btn-primary" href="${esc(wurl)}" target="_blank" rel="noopener">WhatsApp</a>
-            <a class="btn btn-outline" href="/loja/">Ver catálogo</a>
+            <a class="btn btn-outline" href="/">Ver catálogo</a>
           </div>
         </div>
       </article>`;
@@ -3390,7 +3390,7 @@ window.BIGSMOKE_GOOGLE_CLIENT_ID = "%VITE_GOOGLE_CLIENT_ID%";
         <h3>Você ainda não fez nenhum pedido</h3>
         <p>Entre na sua conta para ver seus pedidos, acompanhar status e rastrear suas compras.</p>
         <div class="empty-actions">
-          <a href="/loja/?login=1" class="btn btn-primary">Entrar na conta</a>
+          <a href="/?login=1" class="btn btn-primary">Entrar na conta</a>
           <a href="/src/pedidos.html" class="btn btn-outline">RASTREAR PEDIDO</a>
         </div>
       </div>`;
@@ -3400,7 +3400,7 @@ window.BIGSMOKE_GOOGLE_CLIENT_ID = "%VITE_GOOGLE_CLIENT_ID%";
         <h3>Você ainda não fez nenhum pedido</h3>
         <p>Quando você realizar uma compra, ela aparecerá aqui. Acompanhe o status, rastreie e gerencie seus pedidos com facilidade.</p>
         <div class="empty-actions">
-          <a href="/loja/" class="btn btn-primary">VER CATÁLOGO</a>
+          <a href="/" class="btn btn-primary">VER CATÁLOGO</a>
           <a href="/src/pedidos.html" class="btn btn-outline">RASTREAR PEDIDO</a>
         </div>
       </div>`;
@@ -3414,13 +3414,13 @@ window.BIGSMOKE_GOOGLE_CLIENT_ID = "%VITE_GOOGLE_CLIENT_ID%";
       histContainer.innerHTML = `<div class="empty-state" style="margin-top:1rem;">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><path d="M12 8v5"/><path d="M12 16h.01"/></svg>
         <p>Nenhum histórico para mostrar sem login.</p>
-        <a href="/loja/?login=1" class="btn btn-primary" style="margin-top:0.5rem;font-size:0.85rem;">Entrar</a>
+        <a href="/?login=1" class="btn btn-primary" style="margin-top:0.5rem;font-size:0.85rem;">Entrar</a>
       </div>`;
     } else {
       histContainer.innerHTML = `<div class="empty-state" style="margin-top:1rem;">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
         <p>Nenhum pedido entregue ainda. Faça sua primeira compra!</p>
-        <a href="/loja/" class="btn btn-primary" style="margin-top:0.5rem;font-size:0.85rem;">Comprar agora</a>
+        <a href="/" class="btn btn-primary" style="margin-top:0.5rem;font-size:0.85rem;">Comprar agora</a>
       </div>`;
     }
 

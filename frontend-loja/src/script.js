@@ -49,11 +49,6 @@ const LOCALE_KEY = "bigsmoke-language";
 const AUTH_USERS_KEY = "bigsmoke_users";
 const AUTH_CUSTOMER_KEY = "bigsmoke_customer";
 const AUTH_CUSTOMER_TOKEN_KEY = "bigsmoke_customer_token";
-const LANGUAGE_FLAGS = {
-  pt: new URL("./imagens/bandeira_BRA.jpg", import.meta.url).href,
-  en: new URL("./imagens/bandeira_EUA.jpg", import.meta.url).href,
-  es: new URL("./imagens/bandeira_ESP.png", import.meta.url).href
-};
 
 function getRuntimeValue(name) {
   const value = String(window[name] || "").trim();
@@ -481,7 +476,12 @@ function setAllPlaceholder(selector, value) {
 }
 
 function getLanguageFlag(locale) {
-  return LANGUAGE_FLAGS[locale] || LANGUAGE_FLAGS.pt;
+  const flags = {
+    pt: "/src/imagens/bandeira_BRA.jpg",
+    en: "/src/imagens/bandeira_EUA.jpg",
+    es: "/src/imagens/bandeira_ESP.png"
+  };
+  return flags[locale] || flags.pt;
 }
 
 function closeLanguageMenu() {
@@ -523,8 +523,8 @@ function syncHeaderNav(copy) {
   if (!nav) return;
 
   const path = window.location.pathname.replace(/\/+$/, "");
-  const onStoreHome = path === "" || path === "/" || path === "/loja" || path.endsWith("/index.html");
-  const homePath = path === "/loja" || path.startsWith("/loja/") ? "/loja/" : "/";
+  const onStoreHome = path === "" || path === "/" || path.endsWith("/index.html");
+  const homePath = "/";
   const links = [
     { label: copy.nav[0] || "Drops", href: onStoreHome ? "#products" : `${homePath}#products` },
     { label: copy.nav[1] || "Marca", href: onStoreHome ? "#about" : `${homePath}#about` },
@@ -1088,10 +1088,7 @@ function isTrackingPage() {
 
 function storePagePath(fileName) {
   const cleanName = String(fileName || "").replace(/^\/+/, "");
-  const path = window.location.pathname.replace(/\/+$/, "");
-  return path === "/loja" || path.startsWith("/loja/")
-    ? `/loja/${cleanName}`
-    : `/src/${cleanName}`;
+  return `/src/${cleanName}`;
 }
 
 function isPrivateCheckoutSession(value) {
@@ -2528,7 +2525,7 @@ async function handlePaymentReturn() {
 async function loadStoredOrderTracker() {
   if (!document.getElementById(TRACKING_SECTION_ID)) {
     const queryValue = getTrackingQueryValue() || getTrackedOrderSessionId();
-    if (queryValue && window.location.pathname.includes("/loja/") && !window.location.pathname.endsWith("pedidos.html")) {
+    if (queryValue && window.location.search.includes("tracking=") && !window.location.pathname.endsWith("pedidos.html")) {
       window.location.replace(getTrackingPageUrl(queryValue));
     }
     return;
