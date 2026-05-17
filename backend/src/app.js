@@ -47,6 +47,7 @@ const supabase = process.env.SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_K
   : null;
 
 const useSupabase = Boolean(supabase) && !usePrisma;
+const useSupabaseStorage = Boolean(supabase);
 const DEFAULT_STORE = {
   city: process.env.STORE_CITY || "Joao Pessoa",
   state: process.env.STORE_STATE || "PB",
@@ -446,23 +447,24 @@ function orderStatusDebitsInventory(status) {
   return ["paid", "processing", "shipped", "delivered"].includes(normalizeOrderStatus(status, "pending"));
 }
 
-function toPublicProduct(product) {
-  const images = Array.isArray(product.images) ? product.images.map((url) => normalizeText(url)).filter(Boolean) : [];
-  const image = normalizeText(product.image || product.image_url || images[0] || "");
+function toPublicProduct(product, baseUrl) {
+  const decorated = decorateProductImages(product, baseUrl);
+  const images = Array.isArray(decorated.images) ? decorated.images.map((url) => normalizeText(url)).filter(Boolean) : [];
+  const image = normalizeText(decorated.image || decorated.image_url || images[0] || "");
   return {
-    id: product.id,
-    name: product.name,
-    category: product.category,
-    description: product.description,
-    price: product.price,
+    id: decorated.id,
+    name: decorated.name,
+    category: decorated.category,
+    description: decorated.description,
+    price: decorated.price,
     image,
-    image_url: product.image_url || image || "",
+    image_url: decorated.image_url || image || "",
     images: images.length ? [...new Set([image, ...images].filter(Boolean))] : [image].filter(Boolean),
-    sizes: product.sizes,
-    badge: product.badge,
-    active: product.active,
-    featured: product.featured,
-    colors: Array.isArray(product.colors) ? product.colors : []
+    sizes: decorated.sizes,
+    badge: decorated.badge,
+    active: decorated.active,
+    featured: decorated.featured,
+    colors: Array.isArray(decorated.colors) ? decorated.colors : []
   };
 }
 
@@ -651,6 +653,44 @@ function toAbsoluteHttpUrl(value, baseUrl) {
   }
 
   return "";
+}
+
+function toDisplayImageUrl(value, baseUrl = process.env.PUBLIC_BACKEND_URL || process.env.BACKEND_URL || "") {
+  const raw = normalizeText(value);
+  if (!raw) return "";
+  if (/^(https?:|data:image\/)/i.test(raw)) return raw;
+  if (raw.startsWith("/") && baseUrl) {
+    try {
+      return new URL(raw, baseUrl).toString();
+    } catch {
+      return raw;
+    }
+  }
+  return raw;
+}
+
+function decorateProductImages(product = {}, baseUrl) {
+  const image = toDisplayImageUrl(product.image || product.image_url || "", baseUrl);
+  const imageUrl = toDisplayImageUrl(product.image_url || product.image || "", baseUrl);
+  const images = Array.isArray(product.images)
+    ? product.images.map((url) => toDisplayImageUrl(url, baseUrl)).filter(Boolean)
+    : [];
+  const colors = Array.isArray(product.colors)
+    ? product.colors.map((color) => ({
+      ...color,
+      images: Array.isArray(color?.images)
+        ? color.images.map((url) => toDisplayImageUrl(url, baseUrl)).filter(Boolean)
+        : []
+    }))
+    : product.colors;
+
+  return {
+    ...product,
+    image,
+    image_url: imageUrl || image,
+    images: images.length ? [...new Set([image, ...images].filter(Boolean))] : [image].filter(Boolean),
+    colors
+  };
 }
 
 function normalizeOriginValue(value) {
@@ -1664,7 +1704,7 @@ async function createImageUrl(file) {
   const optimized = await optimizeImageBuffer(file);
   const safeName = `${safeBaseName}${optimized.extension}`;
 
-  if (useSupabase) {
+  if (useSupabaseStorage) {
     const bucket = process.env.SUPABASE_BUCKET || "product-images";
     const objectPath = `products/${safeName}`;
     const uploadResult = await supabase.storage.from(bucket).upload(objectPath, optimized.buffer, {
@@ -1680,7 +1720,7 @@ async function createImageUrl(file) {
 
   const targetPath = path.join(uploadsDir, safeName);
   await fs.writeFile(targetPath, optimized.buffer);
-  return `/uploads/${safeName}`;
+  return toDisplayImageUrl(`/uploads/${safeName}`);
 }
 
 async function optimizeImageBuffer(file) {
@@ -2667,10 +2707,10 @@ app.get("/api/auth/me", authMiddleware, (req, res) => {
   res.json({ user: req.admin });
 });
 
-app.get("/api/products", async (_req, res) => {
+app.get("/api/products", async (req, res) => {
   try {
     const products = await readProducts();
-    res.json(products.filter((product) => product.active !== false).map(toPublicProduct));
+    res.json(products.filter((product) => product.active !== false).map((product) => toPublicProduct(product, makeBaseUrl(req))));
   } catch (error) {
     sendServerError(res);
   }
@@ -2684,7 +2724,7 @@ app.get("/api/products/:id", async (req, res) => {
     if (!product) {
       return res.status(404).json({ error: "Produto não encontrado." });
     }
-    res.json(toPublicProduct(product));
+    res.json(toPublicProduct(product, makeBaseUrl(req)));
   } catch (error) {
     sendServerError(res);
   }
@@ -2778,6 +2818,7 @@ app.get("/api/admin/products", authMiddleware, async (req, res) => {
     const allProducts = await readProducts();
     const products = filterProducts(allProducts, req.query);
     const page = paginate(products, req.query.page, req.query.limit || 8);
+    page.items = page.items.map((product) => decorateProductImages(product, makeBaseUrl(req)));
     const categories = [...new Set(allProducts.map((product) => normalizeText(product.category)).filter(Boolean))].sort((a, b) => a.localeCompare(b, "pt-BR"));
     page.summary = {
       total: allProducts.length,
@@ -2994,7 +3035,7 @@ app.post("/api/admin/products", authMiddleware, async (req, res) => {
     }
 
     await insertProduct(incoming);
-    res.status(201).json(incoming);
+    res.status(201).json(decorateProductImages(incoming, makeBaseUrl(req)));
   } catch (error) {
     sendServerError(res);
   }
@@ -3016,7 +3057,7 @@ app.put("/api/admin/products/:id", authMiddleware, async (req, res) => {
     }
 
     await updateProductById(id, updated);
-    res.json(updated);
+    res.json(decorateProductImages(updated, makeBaseUrl(req)));
   } catch (error) {
     sendServerError(res);
   }

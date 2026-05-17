@@ -149,6 +149,9 @@ export function ProductForm({ product, onCancel, onSubmit }) {
         body: fd,
       });
       const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data?.error || "Nao foi possivel enviar a imagem.");
+      }
       if (data.imageUrl) uploaded.push(data.imageUrl);
     }
     return uploaded;
@@ -166,6 +169,7 @@ export function ProductForm({ product, onCancel, onSubmit }) {
       });
     } catch (err) {
       console.error(err);
+      window.alert(err.message || "Nao foi possivel enviar as imagens.");
     } finally {
       setUploading(false);
       e.target.value = "";
@@ -210,6 +214,7 @@ export function ProductForm({ product, onCancel, onSubmit }) {
       });
     } catch (err) {
       console.error(err);
+      window.alert(err.message || "Nao foi possivel enviar as imagens.");
     } finally {
       setUploading(false);
       e.target.value = "";

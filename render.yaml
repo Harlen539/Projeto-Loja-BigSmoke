@@ -25,7 +25,7 @@ services:
       - key: ADMIN_FRONTEND_URL
         value: https://bigsmokestyle-admin.vercel.app
       - key: PUBLIC_BACKEND_URL
-        value: https://bigsmoke-backend.onrender.com
+        value: https://bigsmokestyle-backend.onrender.com
       - key: SITE_URL
         value: https://bigsmokestyle.vercel.app
       - key: STORE_URL
