@@ -49,6 +49,14 @@ const LOCALE_KEY = "bigsmoke-language";
 const AUTH_USERS_KEY = "bigsmoke_users";
 const AUTH_CUSTOMER_KEY = "bigsmoke_customer";
 const AUTH_CUSTOMER_TOKEN_KEY = "bigsmoke_customer_token";
+const CHECKOUT_ADDRESS_FIELD_IDS = [
+  "customer-cep",
+  "customer-street",
+  "customer-number",
+  "customer-neighborhood",
+  "customer-city",
+  "customer-state"
+];
 
 function getRuntimeValue(name) {
   const value = String(window[name] || "").trim();
@@ -117,6 +125,7 @@ const LOCALES = {
     checkoutTitle: "Finalizar compra",
     checkoutKicker: "Checkout",
     deliveryTitle: "Entrega",
+    checkoutDeliveryHint: "Escolha retirada, entrega local ou envio nacional. Para entrega ou envio, preencha o endereco antes de seguir para o pagamento.",
     deliveryPickup: "Retirada",
     deliveryPickupSmall: "Sem frete",
     deliveryLocal: "Entrega local",
@@ -211,6 +220,7 @@ const LOCALES = {
     checkoutTitle: "Checkout",
     checkoutKicker: "Checkout",
     deliveryTitle: "Delivery",
+    checkoutDeliveryHint: "Choose pickup, local delivery, or national shipping. For delivery or shipping, fill in the address before payment.",
     deliveryPickup: "Pickup",
     deliveryPickupSmall: "No shipping fee",
     deliveryLocal: "Local delivery",
@@ -305,6 +315,7 @@ const LOCALES = {
     checkoutTitle: "Finalizar compra",
     checkoutKicker: "Checkout",
     deliveryTitle: "Entrega",
+    checkoutDeliveryHint: "Elige retiro, entrega local o envio nacional. Para entrega o envio, completa la direccion antes de pagar.",
     deliveryPickup: "Retiro",
     deliveryPickupSmall: "Sin costo de envío",
     deliveryLocal: "Entrega local",
@@ -630,6 +641,7 @@ function applyLocale(locale) {
   setText(".checkout-modal .section-kicker", copy.checkoutKicker);
   setText(".checkout-modal h2", copy.checkoutTitle);
   setText(".checkout-panel h3", copy.deliveryTitle);
+  setText("#checkout-delivery-hint", copy.checkoutDeliveryHint);
   const deliveryCards = document.querySelectorAll(".delivery-methods .option-card");
   if (deliveryCards[0]) {
     deliveryCards[0].querySelector("span").textContent = copy.deliveryPickup;
@@ -1699,9 +1711,11 @@ function openCheckout() {
 
   toggleCart(false);
   prefillCheckoutFromAccount();
+  syncCheckoutDeliveryFields();
   modal.classList.add("active");
   overlay.classList.add("active");
   document.body.style.overflow = "hidden";
+  updateShippingEstimate();
   updateCheckoutSummary();
 }
 
@@ -2059,6 +2073,11 @@ async function updateShippingEstimate() {
   shippingState.price = estimate.price;
   shippingState.label = estimate.label;
 
+  if (!statusEl) {
+    updateCartUI();
+    return;
+  }
+
   if (deliveryMethod === "retirada") {
     statusEl.textContent = t("locationSuccessPickup");
   } else if (shippingState.cepData) {
@@ -2068,6 +2087,23 @@ async function updateShippingEstimate() {
   }
 
   updateCartUI();
+}
+
+function checkoutNeedsAddress(method = getSelectedValue("delivery-method")) {
+  return Boolean(method && method !== "retirada" && method !== "pix_checkout" && method !== "card_checkout");
+}
+
+function syncCheckoutDeliveryFields() {
+  const needsAddress = checkoutNeedsAddress();
+  const formGrid = document.querySelector(".checkout-form-grid");
+  formGrid?.classList.toggle("requires-address", needsAddress);
+
+  CHECKOUT_ADDRESS_FIELD_IDS.forEach((id) => {
+    const field = document.getElementById(id);
+    if (!field) return;
+    field.required = needsAddress;
+    field.setAttribute("aria-required", needsAddress ? "true" : "false");
+  });
 }
 
 function useCurrentLocation() {
@@ -2181,19 +2217,22 @@ function validateCheckout(data) {
     document.getElementById("customer-phone")?.classList.add("field-error");
   }
 
-  if (data.deliveryMethod !== "retirada") {
-    if (!data.address.cep) {
-      errors.push("Informe o CEP para calcular o frete.");
-      document.getElementById("customer-cep")?.classList.add("field-error");
-    }
-    if (!data.address.city) {
-      errors.push("Informe a cidade.");
-      document.getElementById("customer-city")?.classList.add("field-error");
-    }
-    if (!data.address.state) {
-      errors.push("Informe o estado (UF).");
-      document.getElementById("customer-state")?.classList.add("field-error");
-    }
+  if (checkoutNeedsAddress(data.deliveryMethod)) {
+    const requiredAddressFields = [
+      ["cep", "customer-cep", "Informe o CEP para calcular o frete."],
+      ["street", "customer-street", "Informe a rua ou avenida da entrega."],
+      ["number", "customer-number", "Informe o número da entrega."],
+      ["neighborhood", "customer-neighborhood", "Informe o bairro da entrega."],
+      ["city", "customer-city", "Informe a cidade."],
+      ["state", "customer-state", "Informe o estado (UF)."]
+    ];
+
+    requiredAddressFields.forEach(([key, id, message]) => {
+      if (!data.address[key]) {
+        errors.push(message);
+        document.getElementById(id)?.classList.add("field-error");
+      }
+    });
   }
 
   if (errors.length) {
@@ -2810,7 +2849,7 @@ function setupPaymentSuccessStyles() {
 }
 
 function setupCheckout() {
-  document.getElementById("checkout-button")?.addEventListener("click", (event) => redirectCartToPayment(event.currentTarget));
+  document.getElementById("checkout-button")?.addEventListener("click", openCheckout);
   document.getElementById("confirm-checkout")?.addEventListener("click", handleCheckoutSubmit);
   document.querySelectorAll("[data-payment-method]").forEach((button) => {
     button.addEventListener("click", () => setPaymentMethod(button.dataset.paymentMethod));
@@ -2839,7 +2878,10 @@ function setupCheckout() {
   });
 
   document.querySelectorAll('input[name="delivery-method"]').forEach((input) => {
-    input.addEventListener("change", updateShippingEstimate);
+    input.addEventListener("change", () => {
+      syncCheckoutDeliveryFields();
+      updateShippingEstimate();
+    });
   });
 
   [
@@ -2857,13 +2899,15 @@ function setupCheckout() {
     document.getElementById(id)?.addEventListener("input", updateCartUI);
   });
 
-  ["customer-name", "customer-phone", "customer-cep", "customer-city", "customer-state"].forEach((id) => {
+  ["customer-name", "customer-phone", ...CHECKOUT_ADDRESS_FIELD_IDS].forEach((id) => {
     document.getElementById(id)?.addEventListener("input", function () {
       this.classList.remove("field-error");
       const banner = document.getElementById("checkout-error-banner");
       if (banner) banner.remove();
     });
   });
+
+  syncCheckoutDeliveryFields();
 }
 
 function setupSmokeEffect() {

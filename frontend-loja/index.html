@@ -335,6 +335,9 @@
     <div class="checkout-form-column">
       <div class="checkout-panel">
         <h3>Entrega</h3>
+        <p class="checkout-helper" id="checkout-delivery-hint">
+          Escolha retirada, entrega local ou envio nacional. Para entrega ou envio, preencha o endereço antes de seguir para o pagamento.
+        </p>
         <div class="delivery-methods">
           <label class="option-card">
             <input type="radio" name="delivery-method" value="retirada" checked>
@@ -354,16 +357,16 @@
         </div>
 
         <div class="checkout-form-grid">
-          <input id="customer-name" type="text" placeholder="Nome completo">
-          <input id="customer-email" type="email" placeholder="E-mail">
-          <input id="customer-phone" type="tel" placeholder="WhatsApp">
-          <input id="customer-cep" type="text" inputmode="numeric" placeholder="CEP">
-          <input id="customer-street" type="text" placeholder="Rua / Avenida">
-          <input id="customer-number" type="text" placeholder="Número">
-          <input id="customer-neighborhood" type="text" placeholder="Bairro">
-          <input id="customer-city" type="text" placeholder="Cidade">
-          <input id="customer-state" type="text" placeholder="UF">
-          <input id="customer-complement" type="text" placeholder="Complemento">
+          <input id="customer-name" type="text" placeholder="Nome completo" autocomplete="name">
+          <input id="customer-email" type="email" placeholder="E-mail (opcional)" autocomplete="email">
+          <input id="customer-phone" type="tel" placeholder="WhatsApp para contato" autocomplete="tel">
+          <input id="customer-cep" type="text" inputmode="numeric" placeholder="CEP da entrega" autocomplete="postal-code" data-delivery-address>
+          <input id="customer-street" type="text" placeholder="Rua / Avenida" autocomplete="address-line1" data-delivery-address>
+          <input id="customer-number" type="text" placeholder="Número" autocomplete="address-line2" data-delivery-address>
+          <input id="customer-neighborhood" type="text" placeholder="Bairro" data-delivery-address>
+          <input id="customer-city" type="text" placeholder="Cidade" autocomplete="address-level2" data-delivery-address>
+          <input id="customer-state" type="text" placeholder="UF" autocomplete="address-level1" data-delivery-address maxlength="2">
+          <input id="customer-complement" type="text" placeholder="Complemento (opcional)" autocomplete="address-line3">
         </div>
 
         <div class="checkout-inline-actions">

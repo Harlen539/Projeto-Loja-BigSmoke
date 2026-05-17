@@ -3512,6 +3512,13 @@ body.cart-is-open .whatsapp-float {
   margin-bottom: 0.8rem;
 }
 
+.checkout-helper {
+  margin: -0.35rem 0 0.9rem;
+  color: var(--text-secondary);
+  font-size: 0.86rem;
+  line-height: 1.45;
+}
+
 .delivery-methods,
 .payment-methods {
   display: grid;
@@ -3591,6 +3598,10 @@ body.cart-is-open .whatsapp-float {
   outline: none;
   border-color: rgba(245,240,232,0.38);
   box-shadow: 0 0 0 3px rgba(245,240,232,0.06);
+}
+
+.checkout-form-grid.requires-address input[data-delivery-address] {
+  border-color: rgba(201, 168, 76, 0.34);
 }
 
 .checkout-form-grid input::placeholder {

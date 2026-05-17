@@ -3226,8 +3226,9 @@ async function handlePaymentCheckout(req, res) {
     }
 
     // Validação do endereço para entrega nacional
-    const deliveryMethodRaw = normalizeText(req.body?.deliveryMethod) || "pix_checkout";
-    if (deliveryMethodRaw === "national" || deliveryMethodRaw === "entrega") {
+    const deliveryMethodRaw = (normalizeText(req.body?.deliveryMethod) || "pix_checkout").toLowerCase();
+    const deliveryRequiresAddress = ["national", "entrega", "correios", "envio", "shipping"].includes(deliveryMethodRaw);
+    if (deliveryRequiresAddress) {
       const cep = normalizeText(address.cep).replace(/\D/g, "");
       if (!cep || cep.length !== 8) {
         return res.status(400).json({ error: "CEP inválido. Informe 8 dígitos." });
@@ -3235,8 +3236,17 @@ async function handlePaymentCheckout(req, res) {
       if (!normalizeText(address.street)) {
         return res.status(400).json({ error: "Endereço (rua) é obrigatório para entrega." });
       }
+      if (!normalizeText(address.number)) {
+        return res.status(400).json({ error: "Numero e obrigatorio para entrega." });
+      }
+      if (!normalizeText(address.neighborhood)) {
+        return res.status(400).json({ error: "Bairro e obrigatorio para entrega." });
+      }
       if (!normalizeText(address.city)) {
         return res.status(400).json({ error: "Cidade é obrigatória para entrega." });
+      }
+      if (!normalizeText(address.state)) {
+        return res.status(400).json({ error: "Estado (UF) e obrigatorio para entrega." });
       }
     }
     const deliveryMethod = deliveryMethodRaw;
