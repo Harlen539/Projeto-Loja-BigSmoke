@@ -49,6 +49,11 @@ const LOCALE_KEY = "bigsmoke-language";
 const AUTH_USERS_KEY = "bigsmoke_users";
 const AUTH_CUSTOMER_KEY = "bigsmoke_customer";
 const AUTH_CUSTOMER_TOKEN_KEY = "bigsmoke_customer_token";
+const LANGUAGE_FLAGS = {
+  pt: new URL("./imagens/bandeira_BRA.jpg", import.meta.url).href,
+  en: new URL("./imagens/bandeira_EUA.jpg", import.meta.url).href,
+  es: new URL("./imagens/bandeira_ESP.png", import.meta.url).href
+};
 
 function getRuntimeValue(name) {
   const value = String(window[name] || "").trim();
@@ -476,13 +481,7 @@ function setAllPlaceholder(selector, value) {
 }
 
 function getLanguageFlag(locale) {
-  const imageBase = window.location.port === "5173" ? "/src/imagens" : "/imagens";
-  const flags = {
-    pt: `${imageBase}/bandeira_BRA.jpg`,
-    en: `${imageBase}/bandeira_EUA.jpg`,
-    es: `${imageBase}/bandeira_ESP.png`
-  };
-  return flags[locale] || flags.pt;
+  return LANGUAGE_FLAGS[locale] || LANGUAGE_FLAGS.pt;
 }
 
 function closeLanguageMenu() {
