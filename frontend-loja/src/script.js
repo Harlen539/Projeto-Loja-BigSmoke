@@ -682,14 +682,23 @@ function getStoredProducts() {
 function mergeProducts(baseProducts, extraProducts) {
   const map = new Map();
   const rankProduct = (product) => {
-    const images = Array.isArray(product?.images) ? product.images.map((url) => String(url || "").trim()).filter(Boolean) : [];
-    const image = String(product?.image || product?.image_url || images[0] || "").trim();
+    const rawImages = Array.isArray(product?.images) ? product.images : [];
+    const colorImages = Array.isArray(product?.colors)
+      ? product.colors.flatMap((color) => Array.isArray(color?.images) ? color.images : [])
+      : [];
+    const images = [
+      product?.image,
+      product?.image_url,
+      ...rawImages,
+      ...colorImages
+    ].map((url) => safeUrl(url, { allowDataImage: true })).filter(Boolean);
+    const image = images.find((url) => !/placehold\.co/i.test(url)) || images[0] || "";
     const hasRealImage = Boolean(image) && !/placehold\.co/i.test(image);
     const updatedAt = new Date(product?.updatedAt || product?.createdAt || 0).getTime();
     return {
       ...product,
       image,
-      image_url: String(product?.image_url || image || "").trim(),
+      image_url: image,
       images: images.length ? [...new Set([image, ...images].filter(Boolean))] : (image ? [image] : []),
       __rank: [
         hasRealImage ? 1 : 0,
@@ -752,6 +761,20 @@ function safeUrl(value, { allowDataImage = false } = {}) {
   } catch {
     return "";
   }
+}
+
+function resolveProductImage(product) {
+  const colorImages = Array.isArray(product?.colors)
+    ? product.colors.flatMap((color) => Array.isArray(color?.images) ? color.images : [])
+    : [];
+  const candidates = [
+    product?.image,
+    product?.image_url,
+    ...(Array.isArray(product?.images) ? product.images : []),
+    ...colorImages
+  ].map((url) => safeUrl(url, { allowDataImage: true })).filter(Boolean);
+
+  return candidates.find((url) => !/placehold\.co/i.test(url)) || candidates[0] || PLACEHOLDER_IMAGE;
 }
 
 async function readApiJson(response) {
@@ -1390,7 +1413,7 @@ function renderProducts() {
     card.classList.toggle("is-highlighted", product.id === previewProductId);
     const productPagePath = storePagePath("produto.html");
     const productLink = `${productPagePath}?id=${encodeURIComponent(product.id)}`;
-    const productImage = safeUrl(product.image || product.image_url || (Array.isArray(product.images) ? product.images[0] : "") || PLACEHOLDER_IMAGE, { allowDataImage: true }) || PLACEHOLDER_IMAGE;
+    const productImage = resolveProductImage(product);
 
     const priceLabel = product.price > 0 ? formatCurrency(product.price) : t("priceTbd");
     const isOutOfStock = typeof product.stock === "number" && product.stock === 0;
@@ -1432,7 +1455,7 @@ function renderProducts() {
     card.innerHTML = `
       <a class="card-media-link" href="${productLink}" aria-label="Ver ${sanitizeText(product.name)}">
         <div class="card-media">
-          <img src="${sanitizeText(productImage)}" alt="${sanitizeText(product.name)}" loading="lazy" onerror="this.onerror=null;this.src='${PLACEHOLDER_IMAGE}'">
+          <img src="${sanitizeText(productImage)}" alt="${sanitizeText(product.name)}" loading="lazy" decoding="async" onerror="this.onerror=null;this.src='${PLACEHOLDER_IMAGE}'">
           ${stockBadge}
         </div>
       </a>
@@ -1580,7 +1603,7 @@ function updateCartUI() {
     itemCount += item.quantity;
     const product = resolveProductById(item.productId) || {};
     const sizeOptions = parseProductSizes(product);
-    const productImage = safeUrl(item.image || product.image || product.image_url || (Array.isArray(product.images) ? product.images[0] : "") || PLACEHOLDER_IMAGE, { allowDataImage: true }) || PLACEHOLDER_IMAGE;
+    const productImage = safeUrl(item.image, { allowDataImage: true }) || resolveProductImage(product);
 
     const li = document.createElement("li");
     li.className = "cart-item";
