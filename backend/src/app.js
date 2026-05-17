@@ -671,7 +671,10 @@ function normalizeOriginValue(value) {
 function getAllowedOrigins() {
   const raw = [
     process.env.SITE_URL,
-    process.env.ADMIN_URL
+    process.env.STORE_URL,
+    process.env.FRONTEND_URL,
+    process.env.ADMIN_URL,
+    process.env.ADMIN_FRONTEND_URL
   ];
 
   if (process.env.NODE_ENV !== "production") {
@@ -3407,7 +3410,8 @@ async function healthHandler(_req, res) {
   try {
     await checkDatabaseHealth();
     res.json({
-      status: "ok",
+      ok: true,
+      status: "online",
       service: SERVICE_NAME
     });
   } catch (error) {
