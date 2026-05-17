@@ -25,7 +25,7 @@ const FALLBACK_PRODUCTS = [
     category: "Moletons",
     description: "Peça premium para dias frios, pronta para campanha e venda assistida.",
     price: 249.9,
-    image: "https://placehold.co/900x1200/141414/F5F0E8?text=Moletom+Classic",
+    image: "/src/imagens/logo_sem_fundo.png",
     sizes: "M, G, GG",
     badge: "Mais pedido",
     active: true,
@@ -33,7 +33,8 @@ const FALLBACK_PRODUCTS = [
   }
 ];
 
-const PLACEHOLDER_IMAGE = "https://placehold.co/900x1200/111111/F5F0E8?text=BigSmoke+Drop";
+const PLACEHOLDER_IMAGE = "/src/imagens/logo_sem_fundo.png";
+const PRODUCTION_API_BASE = "https://bigsmokestyle-backend.onrender.com";
 const NORTHEAST_STATES = ["AL", "BA", "CE", "MA", "PB", "PE", "PI", "RN", "SE"];
 const NORTH_STATES = ["AC", "AM", "AP", "PA", "RO", "RR", "TO"];
 const FREE_SHIPPING_CITIES = new Set(["joao pessoa", "joão pessoa", "bayeux", "cabedelo"]);
@@ -753,6 +754,8 @@ function sanitizeText(value) {
 function safeUrl(value, { allowDataImage = false } = {}) {
   const raw = String(value || "").trim();
   if (!raw) return "";
+  if (/^\/uploads\//i.test(raw)) return buildApiUrl(raw);
+  if (/^uploads\//i.test(raw)) return buildApiUrl(`/${raw}`);
   if (/^\/(?!\/)/.test(raw)) return raw;
   if (allowDataImage && /^data:image\/(png|jpe?g|webp|gif);base64,/i.test(raw)) return raw;
   try {
@@ -1255,7 +1258,7 @@ function getSelectedValue(name) {
 function buildApiUrl(path) {
   const normalizedPath = path.startsWith("/") ? path : `/${path}`;
   const isLocalhost = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1";
-  const fallbackBase = window.location.protocol === "file:" || isLocalhost ? "http://localhost:3000" : "";
+  const fallbackBase = window.location.protocol === "file:" || isLocalhost ? "http://localhost:3000" : PRODUCTION_API_BASE;
   const base = apiBaseUrl || fallbackBase;
   return base ? new URL(normalizedPath, base).toString() : normalizedPath;
 }
@@ -1264,7 +1267,7 @@ async function detectApiBase() {
   const isLocalhost = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1";
   const candidates = window.location.protocol === "file:" || isLocalhost
     ? [CONFIGURED_API_BASE, "http://127.0.0.1:3000", "http://localhost:3000"]
-    : [CONFIGURED_API_BASE];
+    : [CONFIGURED_API_BASE, PRODUCTION_API_BASE];
 
   for (const base of [...new Set(candidates.filter(Boolean))]) {
     try {
@@ -1277,7 +1280,7 @@ async function detectApiBase() {
         continue;
       }
       const data = await response.json();
-      if (data?.ok === true) {
+      if (data?.ok === true || data?.status === "ok" || data?.status === "online") {
         apiBaseUrl = base;
         return;
       }
@@ -1286,7 +1289,7 @@ async function detectApiBase() {
     }
   }
 
-  apiBaseUrl = (window.location.protocol === "file:" || isLocalhost) ? "http://localhost:3000" : "";
+  apiBaseUrl = (window.location.protocol === "file:" || isLocalhost) ? "http://localhost:3000" : (CONFIGURED_API_BASE || PRODUCTION_API_BASE);
 }
 
 function renderCategoryFilters() {

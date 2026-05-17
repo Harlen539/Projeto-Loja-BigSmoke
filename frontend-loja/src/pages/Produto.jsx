@@ -4,6 +4,7 @@ import { useParams, useSearchParams } from "react-router-dom";
 import logo from "../assets/logo_sem_fundo.png";
 import { ProductCard } from "../components/product/ProductCard.jsx";
 import { useProducts } from "../hooks/useProducts.js";
+import { resolveProductImage } from "../services/images.js";
 
 export function Produto() {
   const { id } = useParams();
@@ -11,6 +12,7 @@ export function Produto() {
   const { products } = useProducts();
   const productId = id || params.get("id") || products[0]?.id;
   const product = useMemo(() => products.find((item) => item.id === productId) || products[0], [productId, products]);
+  const imageSrc = resolveProductImage(product, logo);
 
   if (!product) {
     return <main className="page-shell"><p>Produto não encontrado.</p></main>;
@@ -19,7 +21,15 @@ export function Produto() {
   return (
     <main className="page-shell">
       <div className="product-detail">
-        <img src={product.image || logo} alt={product.name} onError={(event) => { event.currentTarget.src = logo; }} />
+        <img
+          src={imageSrc}
+          alt={product.name}
+          onError={(event) => {
+            if (event.currentTarget.dataset.fallbackApplied === "true") return;
+            event.currentTarget.dataset.fallbackApplied = "true";
+            event.currentTarget.src = logo;
+          }}
+        />
         <div>
           <p className="eyebrow">{product.category}</p>
           <h1>{product.name}</h1>

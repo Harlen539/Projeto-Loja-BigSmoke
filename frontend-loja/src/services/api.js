@@ -1,4 +1,17 @@
-const API_BASE_URL = import.meta.env.VITE_API_URL || "";
+const PRODUCTION_API_URL = "https://bigsmokestyle-backend.onrender.com";
+const API_BASE_URL = (import.meta.env.VITE_API_URL || "").trim();
+
+export function getApiBaseUrl() {
+  if (API_BASE_URL) {
+    return API_BASE_URL;
+  }
+
+  const isLocalhost =
+    window.location.hostname === "localhost" ||
+    window.location.hostname === "127.0.0.1";
+
+  return isLocalhost ? "http://localhost:3000" : PRODUCTION_API_URL;
+}
 
 export function buildApiUrl(path) {
   if (/^https?:\/\//i.test(path)) {
@@ -6,15 +19,7 @@ export function buildApiUrl(path) {
   }
 
   const normalizedPath = path.startsWith("/") ? path : `/${path}`;
-  const isLocalhost =
-    window.location.hostname === "localhost" ||
-    window.location.hostname === "127.0.0.1";
-  const fallbackBase = isLocalhost ? "http://localhost:3000" : "";
-  const base = API_BASE_URL || fallbackBase;
-
-  if (!base) {
-    return normalizedPath;
-  }
+  const base = getApiBaseUrl();
 
   return new URL(normalizedPath, base).toString();
 }

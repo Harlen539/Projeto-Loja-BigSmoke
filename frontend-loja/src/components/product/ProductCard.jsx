@@ -4,6 +4,7 @@ import { Link } from "react-router-dom";
 import logo from "../../assets/logo_sem_fundo.png";
 import { useCart } from "../../hooks/useCart.js";
 import { useLocale } from "../../hooks/useLocale.js";
+import { resolveProductImage } from "../../services/images.js";
 import { Badge } from "../ui/Badge.jsx";
 
 function parseSizes(value) {
@@ -16,6 +17,7 @@ export function ProductCard({ product }) {
   const { copy } = useLocale();
   const sizes = parseSizes(product.sizes);
   const [size, setSize] = useState(sizes[0] || "Unico");
+  const imageSrc = resolveProductImage(product, logo);
 
   function addSelectedProductToCart() {
     cart.add({ ...product, sizes }, size);
@@ -24,7 +26,15 @@ export function ProductCard({ product }) {
   return (
     <article className="product-card">
       <Link to={`/produto/${product.id}`} className="product-image-wrap">
-        <img src={product.image || logo} alt={product.name} onError={(event) => { event.currentTarget.src = logo; }} />
+        <img
+          src={imageSrc}
+          alt={product.name}
+          onError={(event) => {
+            if (event.currentTarget.dataset.fallbackApplied === "true") return;
+            event.currentTarget.dataset.fallbackApplied = "true";
+            event.currentTarget.src = logo;
+          }}
+        />
         {product.badge ? <Badge>{product.badge}</Badge> : null}
       </Link>
       <div className="product-card-body">

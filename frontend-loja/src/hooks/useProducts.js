@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 
+import logo from "../assets/logo_sem_fundo.png";
 import { apiFetch } from "../services/api.js";
 
 const FALLBACK_PRODUCTS = [
@@ -8,7 +9,7 @@ const FALLBACK_PRODUCTS = [
     name: "Moletom Classic BigSmoke",
     category: "Moletons",
     price: 199.9,
-    image: "/src/assets/logo_sem_fundo.png",
+    image: logo,
     badge: "BigSmoke",
     sizes: ["P", "M", "G", "GG"],
     description: "Peça streetwear BigSmoke com presença e conforto.",
