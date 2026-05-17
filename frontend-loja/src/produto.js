@@ -83,7 +83,12 @@ function setDescription(text = "") {
 function normalizeImageList(product) {
   const primary = String(product?.image || product?.image_url || "").trim();
   const list = Array.isArray(product?.images) ? product.images : [];
-  const merged = [primary, ...list].map((item) => String(item || "").trim()).filter(Boolean);
+  const variantImages = Array.isArray(product?.colors)
+    ? product.colors.flatMap((color) => Array.isArray(color?.images) ? color.images : [])
+    : [];
+  const merged = [primary, ...list, ...variantImages]
+    .map((item) => safeImageUrl(item))
+    .filter(Boolean);
   return [...new Set(merged)];
 }
 
@@ -144,7 +149,8 @@ function renderThumbs(images) {
     const img = document.createElement("img");
     img.src = safeImageUrl(url);
     img.alt = `Foto ${index + 1}`;
-    img.loading = "lazy";
+    img.loading = index === 0 ? "eager" : "lazy";
+    img.decoding = "async";
     thumb.appendChild(img);
     thumb.addEventListener("click", () => trocarFoto(index));
     thumbsEl.appendChild(thumb);
@@ -155,7 +161,14 @@ function trocarFoto(index) {
   if (!todasFotos.length) return;
   fotoAtual = index;
   const principal = document.getElementById("foto-principal");
-  principal.src = safeImageUrl(todasFotos[index]);
+  if (!principal) return;
+  const nextSrc = safeImageUrl(todasFotos[index]) || safeImageUrl(todasFotos[0]);
+  if (!nextSrc) return;
+  principal.classList.remove("switching");
+  principal.loading = "eager";
+  principal.decoding = "async";
+  principal.src = nextSrc;
+  principal.dataset.currentSrc = nextSrc;
   document.querySelectorAll(".thumb-item").forEach((el, currentIndex) => {
     el.classList.toggle("active", currentIndex === index);
   });
@@ -466,6 +479,13 @@ async function carregarProduto() {
     todasFotos = ["../imagens/logo_sem_fundo.png"];
   }
 
+  const principal = document.getElementById("foto-principal");
+  const initialImage = safeImageUrl(todasFotos[0]);
+  if (principal && initialImage) {
+    principal.classList.remove("switching");
+    principal.src = initialImage;
+    principal.dataset.currentSrc = initialImage;
+  }
   renderThumbs(todasFotos);
   trocarFoto(0);
 
@@ -933,6 +953,13 @@ async function carregarProduto() {
     todasFotos = ["../imagens/logo_sem_fundo.png"];
   }
 
+  const principal = document.getElementById("foto-principal");
+  const initialImage = safeImageUrl(todasFotos[0]);
+  if (principal && initialImage) {
+    principal.classList.remove("switching");
+    principal.src = initialImage;
+    principal.dataset.currentSrc = initialImage;
+  }
   renderThumbs(todasFotos);
   trocarFoto(0);
 
@@ -1072,21 +1099,33 @@ function updateStockBadge(colorObj) {
   if (addBtn) addBtn.disabled = false;
 }
 
-function trocarGaleriaParaCor(colorObj) {
+function trocarGaleriaParaCor(colorObj, options = {}) {
   if (!Array.isArray(colorObj?.images) || !colorObj.images.length) return;
   const principal = document.getElementById("foto-principal");
   if (!principal) return;
 
+  if (options.immediate || !principal.dataset.currentSrc) {
+    todasFotos = colorObj.images.map((url) => safeImageUrl(url)).filter(Boolean);
+    if (!todasFotos.length) return;
+    renderThumbs(todasFotos);
+    trocarFoto(0);
+    return;
+  }
+
   principal.classList.add("switching");
   window.setTimeout(() => {
-    todasFotos = colorObj.images.slice();
+    todasFotos = colorObj.images.map((url) => safeImageUrl(url)).filter(Boolean);
+    if (!todasFotos.length) {
+      principal.classList.remove("switching");
+      return;
+    }
     renderThumbs(todasFotos);
     trocarFoto(0);
     principal.classList.remove("switching");
   }, 220);
 }
 
-function selectColorObject(name, colorObj, button) {
+function selectColorObject(name, colorObj, button, options = {}) {
   corSelecionada = name;
   window.corSelecionada = corSelecionada;
   const nameEl = document.getElementById("color-selected-name");
@@ -1094,7 +1133,7 @@ function selectColorObject(name, colorObj, button) {
 
   document.querySelectorAll("#color-chips-produto .color-chip").forEach((chip) => chip.classList.remove("active"));
   button.classList.add("active");
-  trocarGaleriaParaCor(colorObj);
+  trocarGaleriaParaCor(colorObj, options);
   updateStockBadge(colorObj);
 }
 
@@ -1136,7 +1175,7 @@ function renderColorPicker(colors) {
     chips.appendChild(button);
 
     if (index === 0) {
-      selectColorObject(name, normalized, button);
+      selectColorObject(name, normalized, button, { immediate: true });
     }
   });
 }
