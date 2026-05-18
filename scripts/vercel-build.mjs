@@ -2,20 +2,12 @@ import { cpSync, existsSync, mkdirSync, rmSync } from "node:fs";
 import { resolve } from "node:path";
 import { spawnSync } from "node:child_process";
 
-const projectId = process.env.VERCEL_PROJECT_ID;
-
-const projectMap = new Map([
-  ["prj_9YIAro54fNw1dRN5ewr0FYC2y60g", "frontend-admin"],
-  ["prj_UAzpzpWqWMdS8XLuV2R61nFxPaea", "frontend-loja"]
-]);
-
-const fallbackProject = process.env.VERCEL_TARGET_PROJECT || "frontend-admin";
-const targetProject = projectMap.get(projectId) || fallbackProject;
+const targetProject = "frontend-loja";
 const projectDir = resolve(process.cwd(), targetProject);
 const distDir = resolve(projectDir, "dist");
 const rootDistDir = resolve(process.cwd(), "dist");
 
-console.log(`Projeto Vercel detectado: ${projectId || "sem-id"} -> ${targetProject}`);
+console.log(`Build Vercel configurado somente para ${targetProject}.`);
 
 if (!existsSync(projectDir)) {
   console.error(`Projeto de deploy nao encontrado: ${targetProject}`);

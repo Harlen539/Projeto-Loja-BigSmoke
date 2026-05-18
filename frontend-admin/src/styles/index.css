@@ -3065,7 +3065,9 @@ button.settings-clean-row:hover {
     border-radius: 13px;
     color: #9ca0a6;
     font-weight: 800;
-    font-size: .66rem;
+    font-size: .58rem;
+    line-height: 1.05;
+    text-align: center;
   }
 
   .bottom-admin-nav svg {

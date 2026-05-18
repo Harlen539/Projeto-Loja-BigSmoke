@@ -2,11 +2,7 @@ import { useNavigate } from "react-router-dom";
 
 import logo from "../../assets/logo.png";
 import { NotificationCenter } from "./NotificationCenter.jsx";
-
-const storeUrl =
-  window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1"
-    ? "http://localhost:5173"
-    : "https://bigsmokestyle.vercel.app";
+import { getStoreUrl } from "../../services/storeUrl.js";
 
 export function Topbar() {
   const navigate = useNavigate();
@@ -27,7 +23,7 @@ export function Topbar() {
 
       <div className="topbar-actions soc-topbar-actions">
         <NotificationCenter />
-        <a className="soc-store-btn" href={storeUrl} target="_blank" rel="noreferrer">Abrir loja</a>
+        <a className="soc-store-btn" href={getStoreUrl("/")} target="_blank" rel="noreferrer">Abrir loja</a>
         <button className="soc-new-btn" onClick={() => navigate("/produtos")} type="button">+ Novo produto</button>
       </div>
     </header>

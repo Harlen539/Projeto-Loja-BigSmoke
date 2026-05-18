@@ -21,6 +21,7 @@ const ORDER_STATUS_PROGRESS = {
   delivered: 4,
   canceled: -1
 };
+const DEFAULT_STORE_URL = "https://bigsmokestyle.vercel.app";
 
 const FALLBACK_PRODUCTS = [
   {
@@ -248,12 +249,21 @@ function buildUrl(path, params = {}) {
 
 function getStoreUrl(path = "/") {
   const { protocol, hostname, port, origin } = window.location;
+  const configuredStoreUrl = String(window.BIGSMOKE_STORE_URL || "").trim().replace(/\/$/, "");
+
+  if (configuredStoreUrl) {
+    return new URL(path, `${configuredStoreUrl}/`).toString();
+  }
 
   if ((hostname === "localhost" || hostname === "127.0.0.1") && port === "5174") {
     return new URL(path, `${protocol}//${hostname}:5173`).toString();
   }
 
-  return new URL(`/loja${path.startsWith("/") ? path : `/${path}`}`, apiBaseUrl || origin).toString();
+  if (hostname === "localhost" || hostname === "127.0.0.1") {
+    return new URL(`/loja${path.startsWith("/") ? path : `/${path}`}`, origin).toString();
+  }
+
+  return new URL(path, `${DEFAULT_STORE_URL}/`).toString();
 }
 
 function normalizeRoute(path) {
@@ -611,11 +621,17 @@ function getPreviewProductUrl(product) {
     savePreviewDraft(product);
   }
 
-  return apiAvailable
-    ? buildUrl("/loja/produto.html", isDraft ? { preview: "draft" } : { id: product.id })
-    : isDraft
-      ? `../loja/produto.html?preview=draft`
-      : `../loja/produto.html?id=${encodeURIComponent(product.id)}`;
+  const isStoreDevServer =
+    (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1") &&
+    window.location.port === "5174";
+  const productPath = isStoreDevServer ? "/src/produto.html" : "/loja/produto.html";
+  const url = new URL(getStoreUrl(productPath));
+  if (isDraft) {
+    url.searchParams.set("preview", "draft");
+  } else {
+    url.searchParams.set("id", product.id);
+  }
+  return url.toString();
 }
 
 

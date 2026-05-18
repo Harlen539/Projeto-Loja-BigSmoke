@@ -6,11 +6,7 @@ import logo from "../assets/logo_sem_fundo.png";
 import { OrderStatusBadge } from "../components/orders/OrderStatusBadge.jsx";
 import { useOrders } from "../hooks/useOrders.js";
 import { useProducts } from "../hooks/useProducts.js";
-
-const storeUrl =
-  window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1"
-    ? "http://localhost:5173"
-    : "https://bigsmokestyle.vercel.app";
+import { getStoreUrl } from "../services/storeUrl.js";
 
 const paidStatuses = ["paid", "processing", "shipped", "fulfilled", "delivered"];
 const categoryColors = ["#22d3ee", "#4ade80", "#facc15", "#a78bfa", "#fb7185", "#fb923c"];
@@ -231,7 +227,7 @@ export function Dashboard() {
           <p>Visao geral da loja</p>
         </div>
         <div className="dashboard-actions">
-          <a className="dashboard-btn secondary" href={storeUrl} target="_blank" rel="noreferrer">
+          <a className="dashboard-btn secondary" href={getStoreUrl("/")} target="_blank" rel="noreferrer">
             <Icon name="external" />
             Abrir loja
           </a>
