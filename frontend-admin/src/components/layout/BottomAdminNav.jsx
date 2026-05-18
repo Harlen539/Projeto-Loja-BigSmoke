@@ -1,5 +1,7 @@
 import { NavLink } from "react-router-dom";
 
+import { useAuth } from "../../hooks/useAuth.js";
+
 const items = [
   {
     to: "/",
@@ -29,6 +31,8 @@ const items = [
 ];
 
 export function BottomAdminNav() {
+  const { logout } = useAuth();
+
   return (
     <nav className="bottom-admin-nav" aria-label="Navegacao principal mobile">
       {items.map((item) => (
@@ -39,6 +43,14 @@ export function BottomAdminNav() {
           <span>{item.label}</span>
         </NavLink>
       ))}
+      <button aria-label="Sair da conta" onClick={logout} title="Sair da conta" type="button">
+        <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+          <path d="M10 17l5-5-5-5" />
+          <path d="M15 12H3" />
+          <path d="M14 4h4a3 3 0 0 1 3 3v10a3 3 0 0 1-3 3h-4" />
+        </svg>
+        <span>Sair</span>
+      </button>
     </nav>
   );
 }

@@ -3042,7 +3042,7 @@ button.settings-clean-row:hover {
     z-index: 40;
     min-height: 66px;
     display: grid;
-    grid-template-columns: repeat(5, minmax(0, 1fr));
+    grid-template-columns: repeat(6, minmax(0, 1fr));
     gap: .2rem;
     padding: .38rem;
     border: 1px solid rgba(245,240,232,.14);
@@ -3054,7 +3054,8 @@ button.settings-clean-row:hover {
     box-shadow: 0 22px 60px rgba(0,0,0,.5), inset 0 1px 0 rgba(255,255,255,.05);
   }
 
-  .bottom-admin-nav a {
+  .bottom-admin-nav a,
+  .bottom-admin-nav button {
     min-width: 0;
     min-height: 52px;
     display: grid;
@@ -3063,17 +3064,24 @@ button.settings-clean-row:hover {
     gap: .18rem;
     border: 1px solid transparent;
     border-radius: 13px;
+    background: transparent;
     color: #9ca0a6;
+    font: inherit;
     font-weight: 800;
-    font-size: .58rem;
+    font-size: .54rem;
     line-height: 1.05;
     text-align: center;
+    cursor: pointer;
   }
 
   .bottom-admin-nav svg {
     width: 22px;
     height: 22px;
     stroke-width: 1.95;
+  }
+
+  .bottom-admin-nav button {
+    color: #f0b5b5;
   }
 
   .bottom-admin-nav a.active {
