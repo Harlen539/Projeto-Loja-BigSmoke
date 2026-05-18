@@ -68,20 +68,26 @@ function openPaymentUrl(url) {
 }
 
 function normalizePaymentResponse(data) {
+  const method = data?.method || data?.paymentMethod || data?.data?.method || data?.data?.paymentMethod || "";
+  const qrCode = data?.pix?.qrCode || data?.qrCode || data?.brCodeBase64 || data?.data?.pix?.qrCode || data?.data?.brCodeBase64 || "";
+  const pixCopyPaste = data?.pix?.copyPaste || data?.pixCopyPaste || data?.brCode || data?.data?.pix?.copyPaste || data?.data?.brCode || "";
+  const hasPixData = Boolean(qrCode || pixCopyPaste);
   // CORREÇÃO: garante que checkoutUrl vem de qualquer campo que a AbacatePay retorne
   const checkoutUrl =
-    data?.paymentUrl ||
-    data?.checkoutUrl ||
-    data?.url ||
-    data?.data?.paymentUrl ||
-    data?.data?.url ||
-    data?.data?.checkoutUrl ||
-    "";
+    hasPixData || method === "pix"
+      ? ""
+      : data?.paymentUrl ||
+        data?.checkoutUrl ||
+        data?.url ||
+        data?.data?.paymentUrl ||
+        data?.data?.url ||
+        data?.data?.checkoutUrl ||
+        "";
   return {
     ...data,
     checkoutUrl,
-    qrCode: data?.pix?.qrCode || data?.qrCode || data?.brCodeBase64 || data?.data?.pix?.qrCode || data?.data?.brCodeBase64 || "",
-    pixCopyPaste: data?.pix?.copyPaste || data?.pixCopyPaste || data?.brCode || data?.data?.pix?.copyPaste || data?.data?.brCode || "",
+    qrCode,
+    pixCopyPaste,
     paymentId: data?.paymentId || data?.id || data?.data?.id || "",
     success: data?.success !== false,
   };
@@ -134,14 +140,14 @@ export async function startPaymentCheckout(items, couponCode = "", paymentMethod
     localStorage.setItem("bigsmoke-last-order-session", data.orderAccessCode || data.orderId || data.paymentId);
   }
 
-  // CORREÇÃO: redireciona mesmo que checkoutUrl venha em data.url ou data.data.url
-  if (data.checkoutUrl) {
-    openPaymentUrl(data.checkoutUrl);
+  if (data.pixCopyPaste || data.qrCode) {
+    showPixPayment(data);
     return;
   }
 
-  if (data.pixCopyPaste || data.qrCode) {
-    showPixPayment(data);
+  // CORREÇÃO: redireciona mesmo que checkoutUrl venha em data.url ou data.data.url
+  if (data.checkoutUrl) {
+    openPaymentUrl(data.checkoutUrl);
     return;
   }
 

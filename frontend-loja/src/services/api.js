@@ -45,7 +45,7 @@ export async function apiFetch(path, options = {}) {
     }
   }
   if (!response.ok) {
-    throw new Error(data?.error || "A API não respondeu em JSON. Verifique se o backend está rodando na porta 3000.");
+    throw new Error(data?.message || data?.error || "A API nao respondeu em JSON. Verifique se o backend esta rodando na porta 3000.");
   }
   return data;
 }

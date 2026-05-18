@@ -19,18 +19,20 @@ export function Products() {
     setFormOpen(false);
     setEditing(null);
     await reload();
+    window.dispatchEvent(new Event("bigsmoke-admin-data-updated"));
   }
 
   async function remove(product) {
     await apiFetch(`/api/admin/products/${product.id}`, { method: "DELETE", headers: { Authorization: `Bearer ${token}` } });
     await reload();
+    window.dispatchEvent(new Event("bigsmoke-admin-data-updated"));
   }
 
   return (
     <main className="page">
       <div className="page-head">
         <h2>Produtos</h2>
-        <button onClick={() => { setEditing(null); setFormOpen(true); }} type="button">Novo produto</button>
+        <button className="product-new-button" onClick={() => { setEditing(null); setFormOpen(true); }} type="button">+ Novo produto</button>
       </div>
       <ProductTable products={products} onDelete={remove} onEdit={(product) => { setEditing(product); setFormOpen(true); }} />
       {formOpen ? <ProductForm product={editing} onCancel={() => setFormOpen(false)} onSubmit={save} /> : null}

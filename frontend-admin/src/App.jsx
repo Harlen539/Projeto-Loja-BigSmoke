@@ -1,7 +1,10 @@
 import { Navigate, Route, Routes } from "react-router-dom";
 
+import { BottomAdminNav } from "./components/layout/BottomAdminNav.jsx";
+import { MobileAdminHeader } from "./components/layout/MobileAdminHeader.jsx";
 import { Sidebar } from "./components/layout/Sidebar.jsx";
 import { Topbar } from "./components/layout/Topbar.jsx";
+import { AdminNotificationsProvider } from "./context/NotificationsContext.jsx";
 import { useAuth } from "./hooks/useAuth.js";
 import { Customers } from "./pages/Customers.jsx";
 import { Dashboard } from "./pages/Dashboard.jsx";
@@ -17,13 +20,17 @@ function PrivateRoute({ children }) {
 
 function Shell({ children }) {
   return (
-    <div className="admin-shell">
-      <Sidebar />
-      <div className="admin-main">
-        <Topbar />
-        {children}
+    <AdminNotificationsProvider>
+      <div className="admin-shell">
+        <Sidebar />
+        <div className="admin-main">
+          <MobileAdminHeader />
+          <Topbar />
+          {children}
+          <BottomAdminNav />
+        </div>
       </div>
-    </div>
+    </AdminNotificationsProvider>
   );
 }
 

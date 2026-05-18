@@ -20,11 +20,15 @@ const emptyForm = {
 };
 
 function normalizeCheckoutData(data) {
+  const method = data?.method || data?.paymentMethod || data?.data?.method || data?.data?.paymentMethod || "";
+  const brCode = data?.pix?.copyPaste || data?.brCode || data?.pixCopyPaste || data?.data?.pix?.copyPaste || data?.data?.brCode || data?.data?.pixCopyPaste || "";
+  const brCodeBase64 = data?.pix?.qrCode || data?.brCodeBase64 || data?.qrCode || data?.data?.pix?.qrCode || data?.data?.brCodeBase64 || data?.data?.qrCode || "";
+  const hasPixData = Boolean(brCode || brCodeBase64);
   return {
     ...data,
-    checkoutUrl: data?.paymentUrl || data?.checkoutUrl || data?.url || data?.data?.paymentUrl || data?.data?.checkoutUrl || data?.data?.url || data?.data?.payment_url || "",
-    brCode: data?.pix?.copyPaste || data?.brCode || data?.pixCopyPaste || data?.data?.pix?.copyPaste || data?.data?.brCode || data?.data?.pixCopyPaste || "",
-    brCodeBase64: data?.pix?.qrCode || data?.brCodeBase64 || data?.qrCode || data?.data?.pix?.qrCode || data?.data?.brCodeBase64 || data?.data?.qrCode || "",
+    checkoutUrl: hasPixData || method === "pix" ? "" : data?.paymentUrl || data?.checkoutUrl || data?.url || data?.data?.paymentUrl || data?.data?.checkoutUrl || data?.data?.url || data?.data?.payment_url || "",
+    brCode,
+    brCodeBase64,
     orderId: data?.orderId || data?.paymentId || data?.id || data?.data?.orderId || data?.data?.paymentId || data?.data?.id || "",
     orderNumberFormatted: data?.orderNumberFormatted || data?.data?.orderNumberFormatted || ""
   };
@@ -109,13 +113,13 @@ export function CheckoutForm() {
         }),
       }));
 
-      if (data?.checkoutUrl) {
-        window.location.href = data.checkoutUrl;
-        return;
-      }
       if (data?.brCode || data?.brCodeBase64) {
         showPixPayment(data);
         setStatus(`PIX gerado: ${data?.orderNumberFormatted || data?.orderId || "ok"}`);
+        return;
+      }
+      if (data?.checkoutUrl) {
+        window.location.href = data.checkoutUrl;
         return;
       }
 

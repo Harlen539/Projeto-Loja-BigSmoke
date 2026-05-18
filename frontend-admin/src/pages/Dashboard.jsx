@@ -1,11 +1,26 @@
-import { useMemo, useRef, useState } from "react";
+import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { Area, AreaChart, CartesianGrid, Cell, Pie, PieChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 
 import logo from "../assets/logo_sem_fundo.png";
 import { OrderStatusBadge } from "../components/orders/OrderStatusBadge.jsx";
 import { useOrders } from "../hooks/useOrders.js";
 import { useProducts } from "../hooks/useProducts.js";
-import { ChartsPanel } from "./Charts.jsx";
+
+const storeUrl =
+  window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1"
+    ? "http://localhost:5173"
+    : "https://bigsmokestyle.vercel.app";
+
+const paidStatuses = ["paid", "processing", "shipped", "fulfilled", "delivered"];
+const categoryColors = ["#22d3ee", "#4ade80", "#facc15", "#a78bfa", "#fb7185", "#fb923c"];
+const tooltipStyle = {
+  background: "#f5f0e8",
+  border: "1px solid rgba(245,240,232,.55)",
+  borderRadius: "10px",
+  color: "#070707",
+  boxShadow: "0 18px 38px rgba(0,0,0,.35)",
+};
 
 function money(value) {
   return Number(value || 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
@@ -16,28 +31,170 @@ function orderTotal(order) {
 }
 
 function productImage(product) {
-  return product.image || product.image_url || (Array.isArray(product.images) ? product.images[0] : "") || logo;
+  return product?.image || product?.image_url || (Array.isArray(product?.images) ? product.images[0] : "") || logo;
+}
+
+function orderImage(order) {
+  const items = order.items || order.products || order.orderItems || [];
+  const first = Array.isArray(items) ? items[0] : null;
+  return productImage(first?.product || first || {});
+}
+
+function orderCustomer(order) {
+  return order.customer?.name || order.customerName || order.name || "Cliente";
+}
+
+function formatDate(value) {
+  if (!value) return "Agora";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "Agora";
+  return date.toLocaleString("pt-BR", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" });
 }
 
 function filterByRange(items, range) {
-  const now = new Date();
   const days = Number(range);
   if (!days) return items;
-  const min = new Date(now);
-  min.setDate(now.getDate() - days);
+  const min = new Date();
+  min.setDate(min.getDate() - days);
   return items.filter((item) => new Date(item.createdAt || item.updatedAt || 0) >= min);
 }
 
-function KpiCard({ icon, label, value, delta, tone = "good", onClick }) {
+function buildDailySeries(orders, range) {
+  const days = Number(range) || 7;
+  const labels = Array.from({ length: Math.min(days, 14) }, (_, index) => {
+    const date = new Date();
+    date.setDate(date.getDate() - (Math.min(days, 14) - 1 - index));
+    const key = date.toISOString().slice(0, 10);
+    return {
+      key,
+      name: date.toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" }),
+      receita: 0,
+      pedidos: 0,
+    };
+  });
+  const byDay = new Map(labels.map((item) => [item.key, item]));
+
+  orders.forEach((order) => {
+    const date = new Date(order.createdAt || order.updatedAt || Date.now());
+    const key = date.toISOString().slice(0, 10);
+    const item = byDay.get(key);
+    if (!item) return;
+    item.receita += orderTotal(order);
+    item.pedidos += 1;
+  });
+
+  return labels;
+}
+
+function normalizeCategory(category) {
+  const value = String(category || "Sem categoria").trim();
+  const lower = value.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+  if (lower.includes("bone")) return "Bones";
+  if (lower.includes("moletom")) return "Moletom";
+  if (lower.includes("camiseta") || lower.includes("shirt")) return "Camisetas";
+  return value || "Sem categoria";
+}
+
+function Icon({ name }) {
+  const icons = {
+    revenue: <><circle cx="12" cy="12" r="8" /><path d="M12 7v10M15 9.2h-4a2 2 0 0 0 0 4h2a2 2 0 0 1 0 4H9" /></>,
+    paid: <><rect x="6" y="5" width="12" height="16" rx="2" /><path d="M9 5V3h6v2M9.5 13l2 2 3.5-5" /></>,
+    ticket: <><path d="M5 8.5 16.8 5l2.2 7.5-11.8 3.5L5 8.5Z" /><path d="m9 10 6-1.8" /></>,
+    conversion: <><path d="M19 5 5 19" /><circle cx="7" cy="7" r="2" /><circle cx="17" cy="17" r="2" /></>,
+    box: <><path d="m21 8-9-5-9 5 9 5 9-5Z" /><path d="M3 8v8l9 5 9-5V8M12 13v8" /></>,
+    active: <><circle cx="12" cy="12" r="9" /><path d="m8 12 2.5 2.5L16 9" /></>,
+    search: <><circle cx="11" cy="11" r="8" /><path d="M21 21l-4.35-4.35" /></>,
+    calendar: <><rect x="3" y="4" width="18" height="18" rx="2" /><path d="M16 2v4M8 2v4M3 10h18" /></>,
+    external: <><path d="M14 3h7v7" /><path d="M10 14 21 3" /><path d="M21 14v5a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5" /></>,
+    plus: <path d="M12 5v14M5 12h14" />,
+  };
+  return <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9">{icons[name]}</svg>;
+}
+
+function AdminSearchBar() {
   return (
-    <button className="soc-kpi kpi-button" onClick={onClick} type="button">
-      <div>
-        <span>{label}</span>
-        <strong>{value}</strong>
-        <p className={`soc-delta ${tone}`}>{delta}</p>
-      </div>
-      <i>{icon}</i>
+    <label className="admin-search-bar">
+      <Icon name="search" />
+      <input placeholder="Buscar produtos, pedidos..." type="search" />
+    </label>
+  );
+}
+
+function PeriodFilter({ value, onChange }) {
+  return (
+    <label className="period-filter">
+      <Icon name="calendar" />
+      <select value={value} onChange={(event) => onChange(event.target.value)} aria-label="Periodo do dashboard">
+        <option value="7">Ultimos 7 dias</option>
+        <option value="15">Ultimos 15 dias</option>
+        <option value="30">Ultimos 30 dias</option>
+        <option value="0">Todo periodo</option>
+      </select>
+    </label>
+  );
+}
+
+function MetricCard({ icon, title, value, subtext, tone = "default", onClick }) {
+  return (
+    <button className={`metric-card-v2 ${tone}`} onClick={onClick} type="button">
+      <span className="metric-icon"><Icon name={icon} /></span>
+      <span className="metric-title">{title}</span>
+      <strong>{value}</strong>
+      <small>{subtext}</small>
     </button>
+  );
+}
+
+function DashboardChartCard({ title, action, children }) {
+  return (
+    <article className="dashboard-chart-card">
+      <div className="dashboard-card-head">
+        <h3>{title}</h3>
+        {action}
+      </div>
+      {children}
+    </article>
+  );
+}
+
+function EmptyState({ title, text }) {
+  return (
+    <div className="dashboard-empty-state">
+      <strong>{title}</strong>
+      <span>{text}</span>
+    </div>
+  );
+}
+
+function RecentOrderCard({ order }) {
+  return (
+    <article className="recent-order-card">
+      <img src={orderImage(order)} alt="" onError={(event) => { event.currentTarget.src = logo; }} />
+      <div className="recent-order-main">
+        <strong>{order.orderNumberFormatted || `#${String(order.id || "").slice(0, 6) || "0000"}`}</strong>
+        <span>{orderCustomer(order)}</span>
+        <small>{formatDate(order.createdAt || order.updatedAt)}</small>
+      </div>
+      <div className="recent-order-side">
+        <strong>{money(orderTotal(order))}</strong>
+        <OrderStatusBadge status={order.status} />
+      </div>
+    </article>
+  );
+}
+
+function StockAlertCard({ product }) {
+  const stock = Number(product.stock || 0);
+  return (
+    <article className="stock-alert-card">
+      <img src={productImage(product)} alt="" onError={(event) => { event.currentTarget.src = logo; }} />
+      <div>
+        <strong>{product.name || "Produto"}</strong>
+        <span>Estoque baixo</span>
+        <small>{stock} restantes</small>
+      </div>
+      <i aria-hidden="true" />
+    </article>
   );
 }
 
@@ -46,134 +203,145 @@ export function Dashboard() {
   const { products } = useProducts();
   const { orders } = useOrders();
   const [range, setRange] = useState("7");
-  const chartsRef = useRef(null);
+  const [chartMetric, setChartMetric] = useState("receita");
 
   const filteredOrders = useMemo(() => filterByRange(orders, range), [orders, range]);
-  const paid = filteredOrders.filter((order) => ["paid", "processing", "shipped", "delivered"].includes(order.status));
+  const paid = filteredOrders.filter((order) => paidStatuses.includes(String(order.status || "").toLowerCase()));
   const revenue = paid.reduce((sum, order) => sum + orderTotal(order), 0);
   const activeProducts = products.filter((product) => product.active !== false);
-  const featuredProducts = products.filter((product) => product.featured);
-  const stockTotal = products.reduce((sum, product) => sum + Number(product.stock || 0), 0);
-  const latestOrders = filteredOrders.slice(0, 5);
-  const topProducts = products.slice(0, 4);
-  const lowStock = products.filter((product) => Number(product.stock || 0) <= 6).slice(0, 3);
-  const rangeLabel = range === "0" ? "Todo período" : `Últimos ${range} dias`;
-  const scrollToCharts = () => chartsRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+  const latestOrders = filteredOrders.slice(0, 3);
+  const lowStock = products.filter((product) => Number(product.stock || 0) <= 30).slice(0, 3);
+  const dailySeries = useMemo(() => buildDailySeries(paid, range), [paid, range]);
+  const dailyHasData = dailySeries.some((item) => item.receita > 0 || item.pedidos > 0);
+  const categoryData = useMemo(() => {
+    const map = new Map();
+    products.forEach((product) => {
+      const name = normalizeCategory(product.category);
+      map.set(name, (map.get(name) || 0) + 1);
+    });
+    return [...map.entries()].map(([name, value]) => ({ name, value }));
+  }, [products]);
+  const categoryTotal = categoryData.reduce((sum, item) => sum + item.value, 0);
 
   return (
-    <main className="page soc-dashboard">
-      <section className="soc-hero">
-        <label className="soc-date-pill">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
-            <rect x="3" y="4" width="18" height="18" rx="2" />
-            <path d="M16 2v4M8 2v4M3 10h18" />
-          </svg>
-          <select value={range} onChange={(event) => setRange(event.target.value)} aria-label="Periodo do dashboard">
-            <option value="7">Últimos 7 dias</option>
-            <option value="15">Últimos 15 dias</option>
-            <option value="30">Últimos 30 dias</option>
-            <option value="0">Todo período</option>
-          </select>
-        </label>
+    <main className="page admin-dashboard-page">
+      <section className="dashboard-topline">
+        <div className="dashboard-title">
+          <h1>Dashboard</h1>
+          <p>Visao geral da loja</p>
+        </div>
+        <div className="dashboard-actions">
+          <a className="dashboard-btn secondary" href={storeUrl} target="_blank" rel="noreferrer">
+            <Icon name="external" />
+            Abrir loja
+          </a>
+          <button className="dashboard-btn primary" onClick={() => navigate("/produtos")} type="button">
+            <Icon name="plus" />
+            Novo produto
+          </button>
+        </div>
       </section>
 
-      <section className="soc-kpi-grid">
-        <KpiCard icon="$" label="Receita bruta" value={money(revenue)} delta={rangeLabel} onClick={scrollToCharts} />
-        <KpiCard icon="+" label="Pedidos pagos" value={paid.length} delta="Abrir pedidos" onClick={() => navigate("/pedidos")} />
-        <KpiCard icon="R$" label="Ticket médio" value={money(paid.length ? revenue / paid.length : 0)} delta="Calculado por pedido pago" onClick={() => navigate("/pedidos")} />
-        <KpiCard icon="%" label="Conversão" value={filteredOrders.length ? `${((paid.length / filteredOrders.length) * 100).toFixed(2)}%` : "0,00%"} delta="Pedidos pagos / total" onClick={scrollToCharts} />
-        <KpiCard icon="P" label="Produtos" value={products.length} delta="Ver catálogo" tone="neutral" onClick={() => navigate("/produtos")} />
-        <KpiCard icon="OK" label="Ativos" value={activeProducts.length} delta="Produtos publicados" onClick={() => navigate("/produtos")} />
-        <KpiCard icon="*" label="Em destaque" value={featuredProducts.length} delta="Destaques da loja" tone="neutral" onClick={() => navigate("/produtos")} />
-        <KpiCard icon="#" label="Estoque total" value={stockTotal.toLocaleString("pt-BR")} delta="Rastrear estoque" onClick={() => navigate("/produtos")} />
+      <section className="dashboard-toolbar">
+        <AdminSearchBar />
+        <PeriodFilter value={range} onChange={setRange} />
       </section>
 
-      <div ref={chartsRef}>
-        <ChartsPanel className="dashboard-charts" />
-      </div>
+      <section className="metrics-grid-v2" aria-label="Metricas do dashboard">
+        <MetricCard icon="revenue" title="Receita bruta" value={money(revenue)} subtext="0% vs. periodo anterior" tone="positive" />
+        <MetricCard icon="paid" title="Pedidos pagos" value={paid.length} subtext="0% vs. periodo anterior" />
+        <MetricCard icon="ticket" title="Ticket medio" value={money(paid.length ? revenue / paid.length : 0)} subtext="0% vs. periodo anterior" />
+        <MetricCard icon="conversion" title="Conversao" value={filteredOrders.length ? `${((paid.length / filteredOrders.length) * 100).toFixed(2).replace(".", ",")}%` : "0,00%"} subtext="0% vs. periodo anterior" />
+        <MetricCard icon="box" title="Produtos" value={products.length} subtext="Ver catalogo" tone="link" onClick={() => navigate("/produtos")} />
+        <MetricCard icon="active" title="Ativos" value={activeProducts.length} subtext="Produtos publicados" tone="positive" onClick={() => navigate("/produtos")} />
+      </section>
 
-      <section className="soc-grid">
-        <article className="soc-panel soc-line-panel">
-          <div className="soc-panel-head">
-            <div>
-              <span>Vendas</span>
-              <strong>{money(revenue)} <em>{rangeLabel}</em></strong>
+      <section className="dashboard-chart-grid">
+        <DashboardChartCard
+          title="Receita por dia"
+          action={
+            <div className="dashboard-segments">
+              <button className={chartMetric === "receita" ? "active" : ""} onClick={() => setChartMetric("receita")} type="button">Receita</button>
+              <button className={chartMetric === "pedidos" ? "active" : ""} onClick={() => setChartMetric("pedidos")} type="button">Pedidos</button>
             </div>
-            <button onClick={scrollToCharts} type="button">Ver gráficos</button>
-          </div>
-          <div className="soc-line-chart" aria-hidden="true">
-            {[78, 56, 53, 31, 44, 39, 15].map((y, index) => <span key={index} style={{ "--x": `${index * 16.66}%`, "--y": `${y}%` }} />)}
-            {["D-6", "D-5", "D-4", "D-3", "D-2", "Ontem", "Hoje"].map((day) => <small key={day}>{day}</small>)}
-          </div>
-        </article>
+          }
+        >
+          {dailyHasData ? (
+            <ResponsiveContainer width="100%" height={260}>
+              <AreaChart data={dailySeries} margin={{ top: 12, right: 8, bottom: 0, left: -24 }}>
+                <defs>
+                  <linearGradient id="dashboardRevenue" x1="0" x2="0" y1="0" y2="1">
+                    <stop offset="0%" stopColor="#20e7df" stopOpacity={0.5} />
+                    <stop offset="100%" stopColor="#20e7df" stopOpacity={0.02} />
+                  </linearGradient>
+                </defs>
+                <CartesianGrid stroke="rgba(245,240,232,.1)" strokeDasharray="4 4" vertical={false} />
+                <XAxis dataKey="name" stroke="#9ca3af" tickLine={false} axisLine={false} fontSize={12} />
+                <YAxis stroke="#9ca3af" tickLine={false} axisLine={false} fontSize={12} />
+                <Tooltip contentStyle={tooltipStyle} formatter={(value) => chartMetric === "receita" ? money(value) : value} />
+                <Area dataKey={chartMetric} stroke="#20e7df" strokeWidth={3} fill="url(#dashboardRevenue)" dot={{ r: 3, fill: "#20e7df" }} activeDot={{ r: 5 }} />
+              </AreaChart>
+            </ResponsiveContainer>
+          ) : (
+            <EmptyState title="Sem dados no periodo" text="As vendas aparecerao aqui quando novos pedidos forem pagos." />
+          )}
+        </DashboardChartCard>
 
-        <article className="soc-panel soc-bars-panel">
-          <div className="soc-panel-head">
-            <div>
-              <span>Pedidos por dia</span>
-              <strong>{filteredOrders.length} <em>{rangeLabel}</em></strong>
+        <DashboardChartCard title="Produtos por categoria">
+          {categoryData.length ? (
+            <div className="category-donut-layout">
+              <ResponsiveContainer width="100%" height={210}>
+                <PieChart>
+                  <Pie data={categoryData} dataKey="value" nameKey="name" innerRadius={54} outerRadius={84} paddingAngle={3}>
+                    {categoryData.map((item, index) => <Cell key={item.name} fill={categoryColors[index % categoryColors.length]} />)}
+                  </Pie>
+                  <Tooltip contentStyle={tooltipStyle} formatter={(value) => [`${value} produto${value === 1 ? "" : "s"}`, "Total"]} />
+                </PieChart>
+              </ResponsiveContainer>
+              <div className="donut-total">
+                <strong>{categoryTotal}</strong>
+                <span>produtos</span>
+              </div>
+              <div className="category-legend">
+                {categoryData.map((item, index) => (
+                  <div key={item.name}>
+                    <i style={{ background: categoryColors[index % categoryColors.length] }} />
+                    <span>{item.name}</span>
+                    <strong>{Math.round((item.value / categoryTotal) * 100)}% ({item.value})</strong>
+                  </div>
+                ))}
+              </div>
             </div>
-            <button onClick={() => navigate("/pedidos")} type="button">Ver pedidos</button>
-          </div>
-          <div className="soc-bars" aria-hidden="true">
-            {[46, 62, 43, 54, 37, 47, 82].map((height, index) => <i key={index} style={{ "--h": `${height}%` }} />)}
-            {["D-6", "D-5", "D-4", "D-3", "D-2", "Ontem", "Hoje"].map((day) => <small key={day}>{day}</small>)}
-          </div>
-        </article>
+          ) : (
+            <EmptyState title="Nenhuma categoria cadastrada" text="Cadastre produtos para ver a distribuicao por categoria." />
+          )}
+        </DashboardChartCard>
+      </section>
 
-        <article className="soc-panel soc-orders-panel">
-          <div className="soc-panel-head">
-            <span>Últimos pedidos</span>
+      <section className="dashboard-list-grid">
+        <article className="dashboard-list-card">
+          <div className="dashboard-card-head">
+            <h3>Ultimos pedidos</h3>
             <button onClick={() => navigate("/pedidos")} type="button">Ver todos</button>
           </div>
-          <table className="soc-orders-table">
-            <thead><tr><th>Pedido</th><th>Cliente</th><th>Valor</th><th>Status</th></tr></thead>
-            <tbody>
-              {latestOrders.map((order) => (
-                <tr key={order.id}>
-                  <td>{order.orderNumberFormatted || order.id?.slice(0, 8)}</td>
-                  <td>{order.customer?.name || "Cliente"}</td>
-                  <td>{money(orderTotal(order))}</td>
-                  <td><OrderStatusBadge status={order.status} /></td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+          <div className="dashboard-card-list">
+            {latestOrders.length ? latestOrders.map((order) => <RecentOrderCard key={order.id || order.orderNumberFormatted} order={order} />) : (
+              <EmptyState title="Nenhum pedido recente" text="Quando novos pedidos chegarem, eles aparecerao aqui." />
+            )}
+          </div>
         </article>
 
-        <article className="soc-panel soc-list-panel">
-          <div className="soc-panel-head">
-            <span>Produtos para rastrear</span>
+        <article className="dashboard-list-card">
+          <div className="dashboard-card-head">
+            <h3>Alertas de estoque</h3>
             <button onClick={() => navigate("/produtos")} type="button">Ver todos</button>
           </div>
-          <div className="soc-ranked-list">
-            {topProducts.map((product, index) => (
-              <div key={product.id || product.name}>
-                <em>{index + 1}</em>
-                <img src={productImage(product)} alt="" onError={(event) => { event.currentTarget.src = logo; }} />
-                <span>{product.name}<small>{Number(product.stock || 0)} em estoque</small></span>
-                <strong>{money(product.price || 0)}</strong>
-              </div>
-            ))}
+          <div className="dashboard-card-list">
+            {lowStock.length ? lowStock.map((product) => <StockAlertCard key={product.id || product.name} product={product} />) : (
+              <EmptyState title="Nenhum alerta de estoque" text="Todos os produtos estao com estoque controlado." />
+            )}
           </div>
         </article>
-
-        <article className="soc-panel soc-list-panel">
-          <div className="soc-panel-head">
-            <span>Alertas de estoque</span>
-            <button onClick={() => navigate("/produtos")} type="button">Ver todos</button>
-          </div>
-          <div className="soc-stock-alerts">
-            {lowStock.map((product) => (
-              <div className={Number(product.stock || 0) <= 0 ? "danger" : ""} key={product.id || product.name}>
-                <em>!</em>
-                <img src={productImage(product)} alt="" onError={(event) => { event.currentTarget.src = logo; }} />
-                <span>{product.name}<small>{Number(product.stock || 0) <= 0 ? "Sem estoque" : `Estoque baixo: ${product.stock} unidades`}</small></span>
-              </div>
-            ))}
-          </div>
-        </article>
-
       </section>
     </main>
   );

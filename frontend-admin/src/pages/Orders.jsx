@@ -30,6 +30,7 @@ export function Orders() {
       body: JSON.stringify({ status, trackingCode }),
     });
     await reload();
+    window.dispatchEvent(new Event("bigsmoke-admin-data-updated"));
     setSelectedOrder((current) => (current?.id === order.id ? updated : current));
   }
 
@@ -40,6 +41,7 @@ export function Orders() {
       body: JSON.stringify(patch),
     });
     await reload();
+    window.dispatchEvent(new Event("bigsmoke-admin-data-updated"));
     setSelectedOrder(null);
   }
 
@@ -52,6 +54,7 @@ export function Orders() {
       headers: { Authorization: `Bearer ${token}` },
     });
     await reload();
+    window.dispatchEvent(new Event("bigsmoke-admin-data-updated"));
     setSelectedOrder((current) => (current?.id === order.id ? null : current));
   }
 
@@ -134,7 +137,7 @@ export function Orders() {
       {showManual && (
         <ManualOrder
           onClose={() => setShowManual(false)}
-          onSuccess={() => { setShowManual(false); reload(); }}
+          onSuccess={() => { setShowManual(false); reload(); window.dispatchEvent(new Event("bigsmoke-admin-data-updated")); }}
           token={token}
         />
       )}

@@ -1,7 +1,7 @@
 import { useNavigate } from "react-router-dom";
 
 import logo from "../../assets/logo.png";
-import { useAuth } from "../../hooks/useAuth.js";
+import { NotificationCenter } from "./NotificationCenter.jsx";
 
 const storeUrl =
   window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1"
@@ -9,7 +9,6 @@ const storeUrl =
     : "https://bigsmokestyle.vercel.app";
 
 export function Topbar() {
-  const { user } = useAuth();
   const navigate = useNavigate();
 
   return (
@@ -27,12 +26,7 @@ export function Topbar() {
       </label>
 
       <div className="topbar-actions soc-topbar-actions">
-        <button className="soc-bell" title={user?.email || "admin"} type="button">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
-            <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
-            <path d="M13.73 21a2 2 0 0 1-3.46 0" />
-          </svg>
-        </button>
+        <NotificationCenter />
         <a className="soc-store-btn" href={storeUrl} target="_blank" rel="noreferrer">Abrir loja</a>
         <button className="soc-new-btn" onClick={() => navigate("/produtos")} type="button">+ Novo produto</button>
       </div>
