@@ -88,16 +88,6 @@ const LOCALES = {
     productsKicker: "Drops em destaque",
     productsTitle: "Catálogo inicial da BigSmoke",
     searchPlaceholder: "Buscar por nome, categoria ou descrição",
-    aboutKicker: "Manifesto",
-    aboutTitle: "BigSmoke é mais que uma marca. É uma comunidade.",
-    aboutText: "De quem vive a rua, respira música e transforma presença em identidade. De quem não espera oportunidade, cria.",
-    aboutPanelLabels: ["Rua", "Música", "Movimento"],
-    aboutPanelTitles: ["Presença acima de tudo", "Ritmo que veste", "Quem veste, representa"],
-    aboutPanelTexts: [
-      "Peças pensadas para entrar na cena com força, personalidade e leitura imediata.",
-      "A energia da rua e da música aparece no corte, no peso visual e na atitude da coleção.",
-      "Se você veste BigSmoke, você não está seguindo. Você está representando."
-    ],
     contactKicker: "Contato oficial",
     contactTitle: "Bem-vindo ao movimento.",
     contactText: "Atendimento, lista VIP, novidades e próximos drops da BigSmoke passam por aqui.",
@@ -183,16 +173,6 @@ const LOCALES = {
     productsKicker: "Featured drops",
     productsTitle: "BigSmoke initial catalog",
     searchPlaceholder: "Search by name, category, or description",
-    aboutKicker: "Manifesto",
-    aboutTitle: "BigSmoke is more than a brand. It is a community.",
-    aboutText: "From people who live the street, breathe music, and turn presence into identity. From people who do not wait for opportunity - they create it.",
-    aboutPanelLabels: ["Street", "Music", "Movement"],
-    aboutPanelTitles: ["Presence above all", "Rhythm you can wear", "If you wear it, you represent it"],
-    aboutPanelTexts: [
-      "Pieces designed to enter the scene with force, personality, and instant recognition.",
-      "The energy of the street and music appears in the cut, the visual weight, and the collection's attitude.",
-      "If you wear BigSmoke, you are not following. You are representing."
-    ],
     contactKicker: "Official contact",
     contactTitle: "Welcome to the movement.",
     contactText: "Support, VIP lists, news, and upcoming BigSmoke drops all pass through here.",
@@ -278,16 +258,6 @@ const LOCALES = {
     productsKicker: "Drops destacados",
     productsTitle: "Catálogo inicial de BigSmoke",
     searchPlaceholder: "Buscar por nombre, categoría o descripción",
-    aboutKicker: "Manifiesto",
-    aboutTitle: "BigSmoke es más que una marca. Es una comunidad.",
-    aboutText: "De quienes viven la calle, respiran música y transforman presencia en identidad. De quienes no esperan oportunidades, las crean.",
-    aboutPanelLabels: ["Calle", "Música", "Movimiento"],
-    aboutPanelTitles: ["Presencia ante todo", "Ritmo que se viste", "Si lo vistes, lo representas"],
-    aboutPanelTexts: [
-      "Prendas pensadas para entrar a la escena con fuerza, personalidad y lectura inmediata.",
-      "La energía de la calle y la música aparece en el corte, el peso visual y la actitud de la colección.",
-      "Si vistes BigSmoke, no estás siguiendo. Estás representando."
-    ],
     contactKicker: "Contacto oficial",
     contactTitle: "Bienvenido al movimiento.",
     contactText: "Atención, lista VIP, novedades y próximos drops de BigSmoke pasan por aquí.",
@@ -538,7 +508,7 @@ function syncHeaderNav(copy) {
   const homePath = "/";
   const links = [
     { label: copy.nav[0] || "Drops", href: onStoreHome ? "#products" : `${homePath}#products` },
-    { label: copy.nav[1] || "Marca", href: onStoreHome ? "#about" : `${homePath}#about` },
+    { label: copy.nav[1] || "Marca", href: onStoreHome ? "#brand-cards" : `${homePath}#brand-cards` },
     { label: copy.nav[2] || "Contato", href: onStoreHome ? "#contact" : `${homePath}#contact` },
     { label: copy.nav[3] || "Privacidade", href: storePagePath("politica.html") },
   ];
@@ -581,14 +551,6 @@ function applyLocale(locale) {
   setText("#products .section-heading h2", copy.productsTitle);
   setAllPlaceholder("#product-search", copy.searchPlaceholder);
 
-  setText("#about .section-kicker", copy.aboutKicker);
-  setText("#about .split-heading h2", copy.aboutTitle);
-  const aboutLead = document.querySelector("#about .split-heading p");
-  if (aboutLead) aboutLead.textContent = copy.aboutText;
-  setAllText(".about-panels .panel-label", copy.aboutPanelLabels);
-  setAllText(".about-panels h3", copy.aboutPanelTitles);
-  setAllText(".about-panels .info-panel p", copy.aboutPanelTexts);
-
   setText("#contact .section-kicker", copy.contactKicker);
   setText("#contact h2", copy.contactTitle);
   setText("#contact .contact-text", copy.contactText);
@@ -622,7 +584,7 @@ function applyLocale(locale) {
       if (links[2]) links[2].textContent = currentLocale === "pt" ? "Política de Privacidade & Trocas" : currentLocale === "es" ? "Política de privacidad y cambios" : "Privacy & exchange policy";
     } else {
       footerColumns[0].querySelector("strong").textContent = currentLocale === "pt" ? "Quem somos?" : currentLocale === "es" ? "Quiénes somos?" : "Who are we?";
-      if (links[0]) links[0].textContent = currentLocale === "pt" ? "Manifesto da marca" : currentLocale === "es" ? "Manifiesto de la marca" : "Brand manifesto";
+      if (links[0]) links[0].textContent = currentLocale === "pt" ? "Marca" : currentLocale === "es" ? "Marca" : "Brand";
       if (links[1]) links[1].textContent = currentLocale === "pt" ? "Fale com a BigSmoke" : currentLocale === "es" ? "Habla con BigSmoke" : "Talk to BigSmoke";
       if (links[2]) links[2].textContent = currentLocale === "pt" ? "Meus pedidos" : currentLocale === "es" ? "Mis pedidos" : "My orders";
     }

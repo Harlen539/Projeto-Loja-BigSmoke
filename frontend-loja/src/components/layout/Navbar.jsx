@@ -19,7 +19,7 @@ export function Navbar() {
       </Link>
       <nav className="nav-links">
         <a href="/#products">{copy.nav.drops}</a>
-        <a href="/#about">{copy.nav.brand}</a>
+        <a href="/#brand-cards">{copy.nav.brand}</a>
         <Link to="/pedidos">{copy.nav.orders}</Link>
         <a href="/#contact">{copy.nav.contact}</a>
         <Link to="/politica">{copy.nav.policy}</Link>

@@ -130,7 +130,7 @@ export function Home() {
         </div>
       </section>
 
-      <section className="trust-bar" aria-label="Destaques da marca">
+      <section id="brand-cards" className="trust-bar" aria-label="Destaques da marca">
         {featureCards.map((card) => (
           <article className="trust-card" key={card.title}>
             <div
@@ -164,18 +164,6 @@ export function Home() {
             Nenhum produto encontrado para "{query}".
           </p>
         )}
-      </section>
-
-      <section className="split-section" id="about">
-        <div>
-          <p className="eyebrow">Marca</p>
-          <h2>Visual escuro, presença forte, assinatura própria.</h2>
-        </div>
-        <p>
-          A BigSmoke mistura streetwear, cultura urbana e operação digital com
-          catálogo dinâmico, carrinho persistente e checkout preparado para
-          PIX.
-        </p>
       </section>
 
       <section className="section-shell" id="faq">
