@@ -6,6 +6,9 @@ dist/
 .vercel/
 **/.vercel/
 *.log
+*.out
+*.err
+.codex-logs/
 backend/src/uploads/
 backend/src/data/orders.json
 backend/src/data/order_counter.json

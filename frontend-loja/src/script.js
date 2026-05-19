@@ -568,7 +568,7 @@ function applyLocale(locale) {
   setAllText(".hero-stats span", copy.heroStats.map((item) => item[1]));
 
   setAllText(".trust-bar strong", copy.trustStrong);
-  setAllText(".trust-bar span", copy.trustSpan);
+  setAllText(".trust-bar .trust-card-text", copy.trustSpan);
 
   setText(".shop-nav-copy .section-kicker", copy.quickKicker);
   setText(".shop-nav-copy h2", copy.quickTitle);

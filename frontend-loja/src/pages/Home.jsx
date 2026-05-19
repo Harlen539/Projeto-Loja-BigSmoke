@@ -1,11 +1,66 @@
 import { useMemo, useState } from "react";
 
+import comunidadeBg from "../assets/fundo-comunidade.png";
+import dropBg from "../assets/fundo-drop-constante.png";
+import ruaBg from "../assets/fundo-rua-cultura.png";
 import logo from "../assets/logo_sem_fundo.png";
 import { ProductGrid } from "../components/product/ProductGrid.jsx";
 import { ProductSearch } from "../components/product/ProductSearch.jsx";
 import { Button } from "../components/ui/Button.jsx";
 import { useLocale } from "../hooks/useLocale.js";
 import { useProducts } from "../hooks/useProducts.js";
+
+const featureCards = [
+  {
+    title: "RUA E CULTURA",
+    description: "Peças que carregam atitude e presença.",
+    image: ruaBg,
+    icon: "globe",
+  },
+  {
+    title: "COMUNIDADE",
+    description: "Quem veste BigSmoke representa um movimento.",
+    image: comunidadeBg,
+    icon: "users",
+  },
+  {
+    title: "DROP CONSTANTE",
+    description: "Novas peças, novas histórias, mesma identidade.",
+    image: dropBg,
+    icon: "bolt",
+  },
+];
+
+function FeatureIcon({ name }) {
+  if (name === "users") {
+    return (
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M16 19c0-2.2-1.8-4-4-4s-4 1.8-4 4" />
+        <circle cx="12" cy="8" r="3" />
+        <path d="M21 19c0-1.8-1.2-3.3-2.8-3.8" />
+        <path d="M17 5.2a3 3 0 0 1 0 5.6" />
+        <path d="M3 19c0-1.8 1.2-3.3 2.8-3.8" />
+        <path d="M7 5.2a3 3 0 0 0 0 5.6" />
+      </svg>
+    );
+  }
+
+  if (name === "bolt") {
+    return (
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M13 2 4 14h7l-1 8 10-13h-7l0-7Z" />
+      </svg>
+    );
+  }
+
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <circle cx="12" cy="12" r="8" />
+      <path d="M4 12h16" />
+      <path d="M12 4c2 2.2 3 4.9 3 8s-1 5.8-3 8c-2-2.2-3-4.9-3-8s1-5.8 3-8Z" />
+    </svg>
+  );
+}
 
 function ProductSkeleton() {
   return (
@@ -75,19 +130,23 @@ export function Home() {
         </div>
       </section>
 
-      <section className="trust-bar">
-        <article>
-          <strong>Rua e cultura</strong>
-          <span>Peças com atitude</span>
-        </article>
-        <article>
-          <strong>Checkout seguro</strong>
-          <span>Fluxo integrado à API</span>
-        </article>
-        <article>
-          <strong>Atendimento direto</strong>
-          <span>WhatsApp da marca</span>
-        </article>
+      <section className="trust-bar" aria-label="Destaques da marca">
+        {featureCards.map((card) => (
+          <article className="trust-card" key={card.title}>
+            <div
+              className="trust-card-bg"
+              style={{ backgroundImage: `url(${card.image})` }}
+              aria-hidden="true"
+            />
+            <div className="trust-card-icon" aria-hidden="true">
+              <FeatureIcon name={card.icon} />
+            </div>
+            <div className="trust-card-copy">
+              <strong>{card.title}</strong>
+              <span className="trust-card-text">{card.description}</span>
+            </div>
+          </article>
+        ))}
       </section>
 
       <section className="section-shell" id="products">
