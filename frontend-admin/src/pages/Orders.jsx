@@ -58,14 +58,19 @@ function Icon({ name }) {
 
 function BigSmokeBagIcon() {
   return (
-    <svg className="bigsmoke-bag-icon" aria-hidden="true" viewBox="0 0 96 96" fill="none">
-      <path className="bag-shell" d="M21 32h54l5 43.5C81 82.8 75.7 88 68.5 88h-41C20.3 88 15 82.8 16 75.5L21 32Z" />
-      <path className="bag-lid" d="M24 32 33.5 18h29L72 32" />
-      <path className="bag-lip" d="M21 32h54" />
-      <path className="bag-handle" d="M35 42c3 15 12.5 23 26 0" />
-      <circle className="bag-ring" cx="35" cy="42" r="4.5" />
-      <circle className="bag-ring" cx="61" cy="42" r="4.5" />
-      <path className="bag-logo" d="M42 58v18l15-10-8-7 9-7V70M42 58l13 10M42 76l18-24" />
+    <svg className="bigsmoke-bag-icon" aria-hidden="true" viewBox="0 0 128 128" fill="none">
+      <path className="bag-shell" d="M25 44h78l7 59c1 9-6 16-15 16H33c-9 0-16-7-15-16l7-59Z" />
+      <path className="bag-lid" d="M29 42 43 22h42l14 20H29Z" />
+      <path className="bag-lip" d="M25 44h78" />
+      <path className="bag-handle" d="M47 59c4 24 30 24 34 0" />
+      <circle className="bag-ring" cx="47" cy="59" r="5.5" />
+      <circle className="bag-ring" cx="81" cy="59" r="5.5" />
+      <g className="bag-logo-fill" transform="translate(8 18) scale(.82)">
+        <path d="M47 61h10v43H47V61Z" />
+        <path d="M55 61h12l15 12-14 11H55v-8h10l6-4-6-4H55v-7Z" />
+        <path d="M55 79h15l17 12-21 13H55v-8h9l10-6-8-4H55v-7Z" />
+        <path d="M63 66 81 80 63 96v-9l8-7-8-6v-8Z" />
+      </g>
     </svg>
   );
 }
