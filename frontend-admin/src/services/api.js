@@ -1,4 +1,5 @@
-const API_BASE_URL = import.meta.env.VITE_API_URL || "";
+const PRODUCTION_API_URL = "https://bigsmokestyle-backend.onrender.com";
+const API_BASE_URL = (import.meta.env.VITE_API_URL || "").trim();
 
 export function buildApiUrl(path) {
   if (/^https?:\/\//i.test(path)) {
@@ -9,7 +10,7 @@ export function buildApiUrl(path) {
   const isLocalhost =
     window.location.hostname === "localhost" ||
     window.location.hostname === "127.0.0.1";
-  const fallbackBase = isLocalhost ? "http://localhost:3000" : "";
+  const fallbackBase = isLocalhost ? "http://localhost:3000" : PRODUCTION_API_URL;
   const base = API_BASE_URL || fallbackBase;
 
   if (!base) {
@@ -30,9 +31,17 @@ export async function apiFetch(path, options = {}) {
     }
   });
   const text = await response.text();
-  const data = text ? JSON.parse(text) : null;
-  if (!response.ok) {
-    throw new Error(data?.error || "Erro na API.");
+  let data = null;
+
+  try {
+    data = text ? JSON.parse(text) : null;
+  } catch {
+    data = null;
   }
+
+  if (!response.ok) {
+    throw new Error(data?.error || data?.message || "Não foi possível conectar ao backend.");
+  }
+
   return data;
 }
