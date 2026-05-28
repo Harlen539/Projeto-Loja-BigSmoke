@@ -48,6 +48,17 @@ function formatDate(value) {
 }
 
 function filterByRange(items, range) {
+  if (range === "today") {
+    const today = new Date().toISOString().slice(0, 10);
+    return items.filter((item) => new Date(item.createdAt || item.updatedAt || 0).toISOString().slice(0, 10) === today);
+  }
+  if (range === "month") {
+    const now = new Date();
+    return items.filter((item) => {
+      const date = new Date(item.createdAt || item.updatedAt || 0);
+      return date.getMonth() === now.getMonth() && date.getFullYear() === now.getFullYear();
+    });
+  }
   const days = Number(range);
   if (!days) return items;
   const min = new Date();
@@ -56,7 +67,7 @@ function filterByRange(items, range) {
 }
 
 function buildDailySeries(orders, range) {
-  const days = Number(range) || 7;
+  const days = range === "today" ? 1 : range === "month" ? new Date().getDate() : Number(range) || 7;
   const labels = Array.from({ length: Math.min(days, 14) }, (_, index) => {
     const date = new Date();
     date.setDate(date.getDate() - (Math.min(days, 14) - 1 - index));
@@ -85,9 +96,10 @@ function buildDailySeries(orders, range) {
 function normalizeCategory(category) {
   const value = String(category || "Sem categoria").trim();
   const lower = value.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-  if (lower.includes("bone")) return "Bones";
-  if (lower.includes("moletom")) return "Moletom";
+  if (lower.includes("bone")) return "Bonés";
+  if (lower.includes("moletom")) return "Moletons";
   if (lower.includes("camiseta") || lower.includes("shirt")) return "Camisetas";
+  if (lower.includes("acessor")) return "Acessórios";
   return value || "Sem categoria";
 }
 
@@ -111,7 +123,7 @@ function AdminSearchBar() {
   return (
     <label className="admin-search-bar">
       <Icon name="search" />
-      <input placeholder="Buscar produtos, pedidos..." type="search" />
+      <input placeholder="Buscar produtos, pedidos ou clientes..." type="search" />
     </label>
   );
 }
@@ -120,11 +132,11 @@ function PeriodFilter({ value, onChange }) {
   return (
     <label className="period-filter">
       <Icon name="calendar" />
-      <select value={value} onChange={(event) => onChange(event.target.value)} aria-label="Periodo do dashboard">
-        <option value="7">Ultimos 7 dias</option>
-        <option value="15">Ultimos 15 dias</option>
-        <option value="30">Ultimos 30 dias</option>
-        <option value="0">Todo periodo</option>
+      <select value={value} onChange={(event) => onChange(event.target.value)} aria-label="Período do dashboard">
+        <option value="today">Hoje</option>
+        <option value="7">Últimos 7 dias</option>
+        <option value="30">Últimos 30 dias</option>
+        <option value="month">Este mês</option>
       </select>
     </label>
   );
@@ -179,7 +191,7 @@ function RecentOrderCard({ order }) {
   );
 }
 
-function StockAlertCard({ product }) {
+function StockAlertCard({ product, onRestock }) {
   const stock = Number(product.stock || 0);
   return (
     <article className="stock-alert-card">
@@ -189,7 +201,7 @@ function StockAlertCard({ product }) {
         <span>Estoque baixo</span>
         <small>{stock} restantes</small>
       </div>
-      <i aria-hidden="true" />
+      <button onClick={onRestock} type="button">Repor estoque</button>
     </article>
   );
 }
@@ -204,13 +216,17 @@ export function Dashboard() {
   const filteredOrders = useMemo(() => filterByRange(orders, range), [orders, range]);
   const paid = filteredOrders.filter((order) => paidStatuses.includes(String(order.status || "").toLowerCase()));
   const revenue = paid.reduce((sum, order) => sum + orderTotal(order), 0);
-  const activeProducts = products.filter((product) => product.active !== false);
   const latestOrders = filteredOrders.slice(0, 3);
   const lowStock = products.filter((product) => Number(product.stock || 0) <= 30).slice(0, 3);
   const dailySeries = useMemo(() => buildDailySeries(paid, range), [paid, range]);
   const dailyHasData = dailySeries.some((item) => item.receita > 0 || item.pedidos > 0);
   const categoryData = useMemo(() => {
-    const map = new Map();
+    const map = new Map([
+      ["Bonés", 0],
+      ["Moletons", 0],
+      ["Camisetas", 0],
+      ["Acessórios", 0],
+    ]);
     products.forEach((product) => {
       const name = normalizeCategory(product.category);
       map.set(name, (map.get(name) || 0) + 1);
@@ -218,23 +234,24 @@ export function Dashboard() {
     return [...map.entries()].map(([name, value]) => ({ name, value }));
   }, [products]);
   const categoryTotal = categoryData.reduce((sum, item) => sum + item.value, 0);
+  const categoryChartData = categoryData.filter((item) => item.value > 0);
 
   return (
     <main className="page admin-dashboard-page">
       <section className="dashboard-topline">
         <div className="dashboard-title">
           <h1>Dashboard</h1>
-          <p>Visao geral da loja</p>
+          <p>Visão geral da loja</p>
         </div>
         <div className="dashboard-actions">
-          <a className="dashboard-btn secondary" href={getStoreUrl("/")} target="_blank" rel="noreferrer">
-            <Icon name="external" />
-            Abrir loja
-          </a>
           <button className="dashboard-btn primary" onClick={() => navigate("/produtos")} type="button">
             <Icon name="plus" />
             Novo produto
           </button>
+          <a className="dashboard-btn secondary" href={getStoreUrl("/")} target="_blank" rel="noreferrer">
+            <Icon name="external" />
+            Abrir loja
+          </a>
         </div>
       </section>
 
@@ -244,12 +261,10 @@ export function Dashboard() {
       </section>
 
       <section className="metrics-grid-v2" aria-label="Metricas do dashboard">
-        <MetricCard icon="revenue" title="Receita bruta" value={money(revenue)} subtext="0% vs. periodo anterior" tone="positive" />
-        <MetricCard icon="paid" title="Pedidos pagos" value={paid.length} subtext="0% vs. periodo anterior" />
-        <MetricCard icon="ticket" title="Ticket medio" value={money(paid.length ? revenue / paid.length : 0)} subtext="0% vs. periodo anterior" />
-        <MetricCard icon="conversion" title="Conversao" value={filteredOrders.length ? `${((paid.length / filteredOrders.length) * 100).toFixed(2).replace(".", ",")}%` : "0,00%"} subtext="0% vs. periodo anterior" />
-        <MetricCard icon="box" title="Produtos" value={products.length} subtext="Ver catalogo" tone="link" onClick={() => navigate("/produtos")} />
-        <MetricCard icon="active" title="Ativos" value={activeProducts.length} subtext="Produtos publicados" tone="positive" onClick={() => navigate("/produtos")} />
+        <MetricCard icon="revenue" title="Receita bruta" value={money(revenue)} subtext="0% vs período anterior" tone="positive" />
+        <MetricCard icon="paid" title="Pedidos pagos" value={paid.length} subtext="0% vs período anterior" />
+        <MetricCard icon="ticket" title="Ticket médio" value={money(paid.length ? revenue / paid.length : 0)} subtext="0% vs período anterior" />
+        <MetricCard icon="conversion" title="Conversão" value={filteredOrders.length ? `${((paid.length / filteredOrders.length) * 100).toFixed(2).replace(".", ",")}%` : "0,00%"} subtext="0% vs período anterior" />
       </section>
 
       <section className="dashboard-chart-grid">
@@ -279,17 +294,17 @@ export function Dashboard() {
               </AreaChart>
             </ResponsiveContainer>
           ) : (
-            <EmptyState title="Sem dados no periodo" text="As vendas aparecerao aqui quando novos pedidos forem pagos." />
+            <EmptyState title="Sem vendas neste período" text="Quando pedidos forem pagos, o gráfico será atualizado automaticamente." />
           )}
         </DashboardChartCard>
 
-        <DashboardChartCard title="Produtos por categoria">
-          {categoryData.length ? (
+        <DashboardChartCard title="Produtos por categoria" action={<button onClick={() => navigate("/produtos")} type="button">Ver todos</button>}>
+          {categoryTotal ? (
             <div className="category-donut-layout">
               <ResponsiveContainer width="100%" height={210}>
                 <PieChart>
-                  <Pie data={categoryData} dataKey="value" nameKey="name" innerRadius={54} outerRadius={84} paddingAngle={3}>
-                    {categoryData.map((item, index) => <Cell key={item.name} fill={categoryColors[index % categoryColors.length]} />)}
+                  <Pie data={categoryChartData} dataKey="value" nameKey="name" innerRadius={54} outerRadius={84} paddingAngle={3}>
+                    {categoryChartData.map((item, index) => <Cell key={item.name} fill={categoryColors[index % categoryColors.length]} />)}
                   </Pie>
                   <Tooltip contentStyle={tooltipStyle} formatter={(value) => [`${value} produto${value === 1 ? "" : "s"}`, "Total"]} />
                 </PieChart>
@@ -303,13 +318,13 @@ export function Dashboard() {
                   <div key={item.name}>
                     <i style={{ background: categoryColors[index % categoryColors.length] }} />
                     <span>{item.name}</span>
-                    <strong>{Math.round((item.value / categoryTotal) * 100)}% ({item.value})</strong>
+                    <strong>{categoryTotal ? Math.round((item.value / categoryTotal) * 100) : 0}% ({item.value})</strong>
                   </div>
                 ))}
               </div>
             </div>
           ) : (
-            <EmptyState title="Nenhuma categoria cadastrada" text="Cadastre produtos para ver a distribuicao por categoria." />
+            <EmptyState title="Nenhuma categoria cadastrada" text="Cadastre produtos para ver a distribuição por categoria." />
           )}
         </DashboardChartCard>
       </section>
@@ -317,12 +332,12 @@ export function Dashboard() {
       <section className="dashboard-list-grid">
         <article className="dashboard-list-card">
           <div className="dashboard-card-head">
-            <h3>Ultimos pedidos</h3>
+            <h3>Últimos pedidos</h3>
             <button onClick={() => navigate("/pedidos")} type="button">Ver todos</button>
           </div>
           <div className="dashboard-card-list">
             {latestOrders.length ? latestOrders.map((order) => <RecentOrderCard key={order.id || order.orderNumberFormatted} order={order} />) : (
-              <EmptyState title="Nenhum pedido recente" text="Quando novos pedidos chegarem, eles aparecerao aqui." />
+              <EmptyState title="Nenhum pedido recente" text="Quando novos pedidos chegarem, eles aparecerão aqui." />
             )}
           </div>
         </article>
@@ -333,8 +348,10 @@ export function Dashboard() {
             <button onClick={() => navigate("/produtos")} type="button">Ver todos</button>
           </div>
           <div className="dashboard-card-list">
-            {lowStock.length ? lowStock.map((product) => <StockAlertCard key={product.id || product.name} product={product} />) : (
-              <EmptyState title="Nenhum alerta de estoque" text="Todos os produtos estao com estoque controlado." />
+            {lowStock.length ? lowStock.map((product) => (
+              <StockAlertCard key={product.id || product.name} product={product} onRestock={() => navigate("/produtos")} />
+            )) : (
+              <EmptyState title="Nenhum alerta de estoque" text="Todos os produtos estão com estoque controlado." />
             )}
           </div>
         </article>

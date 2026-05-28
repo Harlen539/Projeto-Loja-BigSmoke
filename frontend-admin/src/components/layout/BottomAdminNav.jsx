@@ -25,7 +25,7 @@ const items = [
   },
   {
     to: "/configuracoes",
-    label: "Configurações",
+    label: "Config.",
     icon: <><circle cx="12" cy="12" r="3" /><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06A1.65 1.65 0 0 0 15 19.4a1.65 1.65 0 0 0-1 .6V21a2 2 0 0 1-4 0v-.09a1.65 1.65 0 0 0-1-.6 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.6 15a1.65 1.65 0 0 0-.6-1H3a2 2 0 0 1 0-4h1a1.65 1.65 0 0 0 .6-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6a1.65 1.65 0 0 0 1-.6V3a2 2 0 0 1 4 0v1a1.65 1.65 0 0 0 1 .6 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9c.6.2 1.02.76 1.02 1.42v.16c0 .66-.42 1.22-1.02 1.42Z" /></>,
   },
 ];
@@ -34,7 +34,7 @@ export function BottomAdminNav() {
   const { logout } = useAuth();
 
   return (
-    <nav className="bottom-admin-nav" aria-label="Navegacao principal mobile">
+    <nav className="bottom-admin-nav" aria-label="Navegação principal mobile">
       {items.map((item) => (
         <NavLink aria-label={item.label} end={item.to === "/"} key={item.to} title={item.label} to={item.to}>
           <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">

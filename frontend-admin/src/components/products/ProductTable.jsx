@@ -12,10 +12,10 @@ export function ProductTable({ products, onEdit, onDelete }) {
           <tr>
             <th>Produto</th>
             <th>Categoria</th>
-            <th>Preco</th>
+            <th>Preço</th>
             <th>Estoque</th>
             <th>Status</th>
-            <th>Acoes</th>
+            <th>Ações</th>
           </tr>
         </thead>
         <tbody>

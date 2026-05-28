@@ -10,9 +10,9 @@ export const defaultSettings = {
   },
   store: {
     name: "BigSmoke",
-    whatsapp: "5583986494691",
+    whatsapp: "(83) 98649-4691",
     instagram: "@bigsmokestyle",
-    email: "contato@bigsmoke.com",
+    email: "contato@bigsmoke.com.br",
   },
   payments: {
     abacatepay: true,

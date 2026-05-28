@@ -58,7 +58,7 @@ export function OrderTable({ orders, onDelete, onSelect, onUpdateStatus }) {
             <th>Cliente</th>
             <th>Total</th>
             <th>Status</th>
-            <th>Acoes</th>
+            <th>Ações</th>
           </tr>
         </thead>
         <tbody>
@@ -93,7 +93,7 @@ export function OrderTable({ orders, onDelete, onSelect, onUpdateStatus }) {
                     onChange={(event) => setDraftTracking((current) => ({ ...current, [order.id]: event.target.value }))}
                     onClick={(event) => event.stopPropagation()}
                     placeholder="Rastreio Correios"
-                    aria-label="Codigo de rastreio dos Correios"
+                    aria-label="Código de rastreio dos Correios"
                   />
                 </div>
               </td>
@@ -111,7 +111,7 @@ export function OrderTable({ orders, onDelete, onSelect, onUpdateStatus }) {
                       } catch (error) {
                         setOptimisticStatus((current) => ({ ...current, [order.id]: previousStatus }));
                         setDraftStatus((current) => ({ ...current, [order.id]: previousStatus }));
-                        window.alert(error?.message || "Nao foi possivel atualizar o status do pedido.");
+                        window.alert(error?.message || "Não foi possível atualizar o status do pedido.");
                       }
                     }}
                     type="button"

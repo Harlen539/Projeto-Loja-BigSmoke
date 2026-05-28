@@ -4,13 +4,17 @@ import { AuthContext } from "../context/AuthContext.jsx";
 import { apiFetch } from "../services/api.js";
 import { getCoupons, getSettings, saveCoupons, saveSettings } from "../services/settingsStorage.js";
 
-const tabs = ["Geral", "Loja", "Entrega", "Notificações", "Checkout"];
+const tabs = ["Geral", "Loja", "Entrega", "Notificações"];
 const emptyCoupon = { id: "", code: "", type: "percent", target: "products", value: "", active: true, minOrderValue: "", usageLimit: "" };
 const money = (value) => Number(value || 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 
 const icons = {
   user: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M20 21a8 8 0 0 0-16 0" /><circle cx="12" cy="7" r="4" /></svg>,
   store: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M4 10h16l-1-6H5l-1 6Z" /><path d="M6 10v10h12V10M9 20v-6h6v6" /><path d="M4 10c0 1.2 1 2 2 2s2-.8 2-2m0 0c0 1.2 1 2 2 2s2-.8 2-2m0 0c0 1.2 1 2 2 2s2-.8 2-2m0 0c0 1.2 1 2 2 2s2-.8 2-2" /></svg>,
+  phone: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.78 19.78 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6A19.78 19.78 0 0 1 2.12 4.2 2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.12.9.33 1.78.62 2.62a2 2 0 0 1-.45 2.11L8 9.73a16 16 0 0 0 6.27 6.27l1.27-1.27a2 2 0 0 1 2.11-.45c.84.29 1.72.5 2.62.62A2 2 0 0 1 22 16.92Z" /></svg>,
+  instagram: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><rect x="3" y="3" width="18" height="18" rx="5" /><circle cx="12" cy="12" r="3.5" /><path d="M17.5 6.5h.01" /></svg>,
+  mail: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><rect x="3" y="5" width="18" height="14" rx="2" /><path d="m3 7 9 6 9-6" /></svg>,
+  pencil: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M12 20h9" /><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5Z" /></svg>,
   card: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><rect x="3" y="5" width="18" height="14" rx="2" /><path d="M3 10h18M7 15h5" /></svg>,
   truck: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M3 6h11v11H3zM14 10h4l3 3v4h-7z" /><circle cx="7" cy="18" r="2" /><circle cx="17" cy="18" r="2" /></svg>,
   bell: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" /><path d="M13.73 21a2 2 0 0 1-3.46 0" /></svg>,
@@ -57,10 +61,11 @@ function SettingsCard({ action, children, description, icon, id, onAction, title
   );
 }
 
-function SettingsRow({ action, children, label, onAction, onClick, value }) {
+function SettingsRow({ action, children, icon, label, onAction, onClick, value }) {
   const Tag = onClick ? "button" : "div";
   return (
     <Tag className={`settings-clean-row ${onClick ? "clickable" : ""}`} onClick={onClick} type={onClick ? "button" : undefined}>
+      {icon ? <i className="settings-row-icon" aria-hidden="true">{icon}</i> : null}
       <span>{label}</span>
       <div className="settings-row-value">
         {children || <strong>{value}</strong>}
@@ -449,8 +454,7 @@ export function Settings() {
   return (
     <main className="page settings-page">
       <div className="settings-title">
-        <p className="section-kicker">Sistema</p>
-        <h2>CONFIGURAÇÕES</h2>
+        <h2>Configurações</h2>
         <span>Gerencie as configurações da sua loja</span>
       </div>
 
@@ -458,11 +462,11 @@ export function Settings() {
 
       <section className="settings-dashboard-grid">
         <div ref={(node) => { sectionRefs.current.Geral = node; sectionRefs.current.Loja = node; }}>
-          <SettingsCard action="Editar dados" description="Informações básicas da sua loja e canais de contato." icon={icons.store} id="settings-store" onAction={() => openModal("store")} title="Dados da Loja">
-            <SettingsRow label="Nome da loja" value={settings.store.name} />
-            <SettingsRow label="WhatsApp" value={settings.store.whatsapp} />
-            <SettingsRow label="Instagram" value={settings.store.instagram} />
-            <SettingsRow label="E-mail" value={settings.store.email} />
+          <SettingsCard action={<><span className="settings-action-icon">{icons.pencil}</span>Editar dados</>} description="Informações básicas da sua loja e canais de contato." icon={icons.store} id="settings-store" onAction={() => openModal("store")} title="Dados da Loja">
+            <SettingsRow icon={icons.store} label="Nome da loja" value={settings.store.name} />
+            <SettingsRow icon={icons.phone} label="WhatsApp" value={settings.store.whatsapp} />
+            <SettingsRow icon={icons.instagram} label="Instagram" value={settings.store.instagram} />
+            <SettingsRow icon={icons.mail} label="E-mail" value={settings.store.email} />
           </SettingsCard>
         </div>
 
