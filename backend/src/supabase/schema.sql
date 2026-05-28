@@ -59,5 +59,22 @@ create index if not exists orders_number_idx        on public.orders (order_numb
 alter table if exists public.products
   add column if not exists colors jsonb not null default '[]'::jsonb;
 
+-- Seguranca Supabase/Data API
+-- O frontend deve acessar os dados pela API do backend. A service_role usada no
+-- backend continua funcionando, mas anon/authenticated nao conseguem ler ou
+-- alterar tabelas diretamente pela URL do projeto.
+alter table public.products enable row level security;
+alter table public.products force row level security;
+
+alter table public.orders enable row level security;
+alter table public.orders force row level security;
+
+alter table public.order_counters enable row level security;
+alter table public.order_counters force row level security;
+
+revoke all on table public.products from anon, authenticated;
+revoke all on table public.orders from anon, authenticated;
+revoke all on table public.order_counters from anon, authenticated;
+
 comment on column public.products.colors is
   'Array de variações de cor: [{name, hex, images: [], stock?}]';
