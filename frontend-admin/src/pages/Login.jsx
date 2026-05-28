@@ -72,9 +72,9 @@ function Icon({ name }) {
 export function Login() {
   const { login } = useAuth();
   const navigate = useNavigate();
-  const [email, setEmail] = useState("admin@bigsmoke.local");
-  const [password, setPassword] = useState("admin123");
-  const [recoveryEmail, setRecoveryEmail] = useState("admin@bigsmoke.local");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [recoveryEmail, setRecoveryEmail] = useState("");
   const [mode, setMode] = useState("login");
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
