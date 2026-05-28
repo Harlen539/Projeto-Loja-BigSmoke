@@ -56,6 +56,20 @@ function Icon({ name }) {
   return <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9">{icons[name]}</svg>;
 }
 
+function BigSmokeBagIcon() {
+  return (
+    <svg className="bigsmoke-bag-icon" aria-hidden="true" viewBox="0 0 96 96" fill="none">
+      <path className="bag-shell" d="M21 32h54l5 43.5C81 82.8 75.7 88 68.5 88h-41C20.3 88 15 82.8 16 75.5L21 32Z" />
+      <path className="bag-lid" d="M24 32 33.5 18h29L72 32" />
+      <path className="bag-lip" d="M21 32h54" />
+      <path className="bag-handle" d="M35 42c3 15 12.5 23 26 0" />
+      <circle className="bag-ring" cx="35" cy="42" r="4.5" />
+      <circle className="bag-ring" cx="61" cy="42" r="4.5" />
+      <path className="bag-logo" d="M42 58v18l15-10-8-7 9-7V70M42 58l13 10M42 76l18-24" />
+    </svg>
+  );
+}
+
 export function Orders() {
   const { token } = useAuth();
   const { orders, reload } = useOrders();
@@ -200,7 +214,7 @@ export function Orders() {
         </section>
       ) : (
         <section className="admin-empty-card admin-empty-large">
-          <span className="empty-illustration"><Icon name="bag" /></span>
+          <span className="empty-illustration bigsmoke-bag-mark"><BigSmokeBagIcon /></span>
           <strong>Nenhum pedido encontrado</strong>
           <span>Parece que ainda não existem pedidos com os filtros selecionados.</span>
           <button className="admin-primary-button" onClick={() => setShowManual(true)} type="button">

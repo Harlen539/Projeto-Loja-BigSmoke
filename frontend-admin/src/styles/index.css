@@ -3635,6 +3635,50 @@ body {
   height: 38px;
 }
 
+.empty-illustration.bigsmoke-bag-mark {
+  width: 116px;
+  height: 116px;
+  border-color: rgba(34,241,229,.36);
+  background:
+    radial-gradient(circle at 50% 42%, rgba(34,241,229,.12), transparent 58%),
+    rgba(34,241,229,.055);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.08), 0 0 28px rgba(34,241,229,.1);
+}
+
+.empty-illustration .bigsmoke-bag-icon {
+  width: 78px;
+  height: 78px;
+  overflow: visible;
+  color: var(--aqua);
+  filter: drop-shadow(0 0 10px rgba(34,241,229,.22));
+}
+
+.bigsmoke-bag-icon .bag-shell,
+.bigsmoke-bag-icon .bag-lid,
+.bigsmoke-bag-icon .bag-lip,
+.bigsmoke-bag-icon .bag-handle,
+.bigsmoke-bag-icon .bag-ring,
+.bigsmoke-bag-icon .bag-logo {
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.bigsmoke-bag-icon .bag-shell,
+.bigsmoke-bag-icon .bag-lid,
+.bigsmoke-bag-icon .bag-lip {
+  stroke-width: 4.8;
+}
+
+.bigsmoke-bag-icon .bag-handle,
+.bigsmoke-bag-icon .bag-ring {
+  stroke-width: 4.4;
+}
+
+.bigsmoke-bag-icon .bag-logo {
+  stroke-width: 4.2;
+}
+
 .customers-controls {
   grid-template-columns: minmax(0, 1fr) 54px;
   align-items: stretch;
