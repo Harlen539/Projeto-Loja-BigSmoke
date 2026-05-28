@@ -15,3 +15,4 @@ backend/src/data/order_counter.json
 .idea/
 .DS_Store
 Thumbs.db
+.vercel

@@ -1,0 +1,15 @@
+.env
+.env.*
+**/.env
+**/.env.*
+!**/.env.example
+!**/.env.production.example
+node_modules
+**/node_modules
+dist
+**/dist
+.vercel
+**/.vercel
+backend/src/uploads
+backend/src/data/orders.json
+backend/src/data/order_counter.json
